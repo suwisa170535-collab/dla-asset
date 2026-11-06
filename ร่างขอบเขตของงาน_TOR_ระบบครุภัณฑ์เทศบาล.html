@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ร่างขอบเขตของงาน (TOR) - ระบบบริหารจัดการครุภัณฑ์และพัสดุคลังย่อย</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+    }
+    body {
+      background: #e2e8f0;
+      color: #0f172a;
+      font-family: 'Sarabun', -apple-system, sans-serif;
+      padding: 24px 12px;
+      line-height: 1.6;
+    }
+    .action-bar {
+      max-width: 210mm;
+      margin: 0 auto 16px auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #1e293b;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    .btn-print {
+      background: #10b981;
+      color: white;
+      border: none;
+      padding: 8px 18px;
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.2s;
+    }
+    .btn-print:hover {
+      background: #059669;
+    }
+    .page-sheet {
+      width: 210mm;
+      min-height: 297mm;
+      padding: 22mm 20mm 20mm 25mm; /* Standard Thai Gov margins */
+      margin: 0 auto 20px auto;
+      background: #ffffff;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      position: relative;
+    }
+    .garuda-header {
+      text-align: center;
+      margin-bottom: 16px;
+    }
+    .garuda-img {
+      width: 55px;
+      height: auto;
+      margin-bottom: 6px;
+    }
+    .doc-title {
+      font-size: 18px;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 4px;
+    }
+    .doc-sub {
+      font-size: 14px;
+      text-align: center;
+      color: #334155;
+      margin-bottom: 18px;
+    }
+    .tor-section {
+      margin-bottom: 14px;
+      text-align: justify;
+      font-size: 13.5px;
+    }
+    .section-title {
+      font-weight: 700;
+      font-size: 14.5px;
+      color: #0f172a;
+      margin-bottom: 4px;
+    }
+    .tor-list {
+      padding-left: 24px;
+      margin-top: 4px;
+      margin-bottom: 6px;
+    }
+    .tor-list li {
+      margin-bottom: 4px;
+    }
+    .table-spec {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 10px 0;
+      font-size: 13px;
+    }
+    .table-spec th, .table-spec td {
+      border: 1px solid #94a3b8;
+      padding: 6px 10px;
+      text-align: left;
+    }
+    .table-spec th {
+      background: #f1f5f9;
+      font-weight: 700;
+      text-align: center;
+    }
+    .sig-area {
+      margin-top: 28px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      text-align: center;
+      font-size: 13px;
+    }
+    .sig-line {
+      border-bottom: 1px dotted #475569;
+      width: 80%;
+      margin: 40px auto 6px auto;
+    }
+    .editable:hover {
+      outline: 1px dashed #0284c7;
+      background: rgba(2, 132, 199, 0.04);
+    }
+    @media print {
+      body {
+        background: transparent;
+        padding: 0;
+      }
+      .action-bar {
+        display: none !important;
+      }
+      .page-sheet {
+        box-shadow: none;
+        margin: 0;
+        width: 100%;
+        min-height: auto;
+        padding: 15mm 15mm 15mm 20mm;
+        page-break-after: always;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Action Bar -->
+  <div class="action-bar">
+    <div>
+      <strong>📄 ร่างขอบเขตของงาน (Terms of Reference - TOR)</strong>
+      <span style="font-size: 12px; color: #94a3b8; margin-left: 8px;">(เอกสารพร้อมใช้สำหรับพัสดุและกองคลังเทศบาล)</span>
+    </div>
+    <div style="display: flex; gap: 10px;">
+      <a href="https://dla-asset-demo.onrender.com" target="_blank" style="background: #0284c7; color: white; text-decoration: none; padding: 8px 14px; font-size: 13px; border-radius: 6px; font-weight: 600;">
+        🌐 เปิด Live Demo 24 ชม.
+      </a>
+      <button class="btn-print" onclick="window.print()">
+        🖨️ พิมพ์เอกสาร TOR / บันทึก PDF
+      </button>
+    </div>
+  </div>
+
+  <!-- A4 Page 1 -->
+  <div class="page-sheet">
+    <div class="garuda-header">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Garuda_Emb_Thailand.svg/200px-Garuda_Emb_Thailand.svg.png" class="garuda-img" alt="ตราครุฑ">
+      <div class="doc-title">ร่างขอบเขตของงานและคุณลักษณะเฉพาะ (Terms of Reference : TOR)</div>
+      <div class="doc-sub">
+        โครงการจ้างเหมาติดตั้งและพัฒนาระบบบริหารจัดการครุภัณฑ์และพัสดุคลังย่อย<br>
+        ของ <span class="editable" contenteditable="true">เทศบาลตำบล......................................... อำเภอ....................... จังหวัด.......................</span>
+      </div>
+    </div>
+
+    <div class="tor-section">
+      <div class="section-title">๑. ความเป็นมาและวัตถุประสงค์</div>
+      <p>
+        ด้วย <span class="editable" contenteditable="true">เทศบาลตำบล.........................................</span> มีภารกิจในการบริหารจัดการทรัพย์สินของทางราชการให้ถูกต้อง ครบถ้วน และเป็นไปตามพระราชบัญญัติการจัดซื้อจัดจ้างและการบริหารพัสดุภาครัฐ พ.ศ. ๒๕๖๐, ระเบียบกระทรวงมหาดไทยว่าด้วยการพัสดุขององค์กรปกครองส่วนท้องถิ่น, และหนังสือสั่งการกรมบัญชีกลาง ว.๑๗๙ และ ว.๒๑๔ เพื่อเพิ่มประสิทธิภาพในการควบคุมทะเบียนครุภัณฑ์ ป้องกันการสูญหาย อำนวยความสะดวกในการจัดทำเอกสารแนบฎีกาเบิกจ่ายเงิน และรองรับการตรวจนับพัสดุประจำปีของสำนักงานการตรวจเงินแผ่นดิน (สตง.) จึงมีความประสงค์จัดจ้างเหมาติดตั้งระบบบริหารจัดการครุภัณฑ์และพัสดุคลังย่อย
+      </p>
+    </div>
+
+    <div class="tor-section">
+      <div class="section-title">๒. คุณสมบัติของผู้ยื่นข้อเสนอ</div>
+      <ol class="tor-list">
+        <li>เป็นบุคคลธรรมดาหรือนิติบุคคลผู้มีอาชีพรับจ้างงานที่จัดจ้างดังกล่าว</li>
+        <li>เป็นผู้ประกอบการที่ได้<strong>ขึ้นทะเบียนในระบบจัดซื้อจัดจ้างภาครัฐด้วยอิเล็กทรอนิกส์ (e-GP) ของกรมบัญชีกลาง</strong> ถูกต้องเรียบร้อยแล้ว</li>
+        <li>ไม่เป็นผู้ถูกระบุชื่อไว้ในบัญชีรายชื่อผู้ทิ้งงานของทางราชการ</li>
+        <li>มีบุคลากรผู้เชี่ยวชาญพร้อมให้คำปรึกษา แนะนำ และฝึกอบรมการใช้งานแก่เจ้าหน้าที่ของเทศบาล</li>
+      </ol>
+    </div>
+
+    <div class="tor-section">
+      <div class="section-title">๓. ขอบเขตของงานและคุณลักษณะเฉพาะของระบบ</div>
+      <p>ผู้รับจ้างจะต้องส่งมอบและติดตั้งระบบซอฟต์แวร์ที่มีคุณลักษณะเฉพาะครอบคลุมการทำงาน ดังต่อไปนี้:</p>
+      <ol class="tor-list">
+        <li><strong>ฐานข้อมูลครุภัณฑ์มาตรฐาน ๑๘ หมวดหมู่:</strong> รองรับการจัดเก็บข้อมูลครุภัณฑ์ตามมาตรฐานสำนักงบประมาณและกรมส่งเสริมการปกครองท้องถิ่น แยกตามสังกัดสำนัก/กอง (สำนักปลัด, กองคลัง, กองช่าง, กองสาธารณสุข ฯลฯ)</li>
+        <li><strong>ระบบจัดพิมพ์ทะเบียนคุมทรัพย์สินทางการ (แบบ สท.๑ และ สท.๓):</strong> 
+          สามารถออกทะเบียนคุมทรัพย์สิน แบบ สท.๑ ที่มีตราครุฑและตารางประวัติการซ่อมบำรุง และระบบตรวจจับปรับเป็นแบบ สท.๓ (ทะเบียนคุมที่ดินและสิ่งปลูกสร้าง) อัตโนมัติ เพื่อใช้แนบประกอบชุดฎีกาเบิกเงินของกองคลังและรายงาน สตง.</li>
+        <li><strong>ระบบสร้างและพิมพ์สติกเกอร์ QR Code ติดทรัพย์สิน:</strong> 
+          สามารถสั่งพิมพ์สติกเกอร์ QR Code แสดงชื่อหน่วยงาน, รหัสครุภัณฑ์, รายละเอียด และผู้ถือครอง ได้ทั้งแบบพิมพ์รายชิ้น และพิมพ์รวมเป็นชุดลงบนสติกเกอร์กระดาษ A4 เพื่อประหยัดงบประมาณ</li>
+        <li><strong>ระบบคำนวณค่าเสื่อมราคาและมูลค่าสุทธิ (Book Value) อัตโนมัติ:</strong> 
+          คำนวณค่าเสื่อมราคาแบบเส้นตรง (Straight-Line Method) กำหนดมูลค่าซาก ๑ บาท ตามหนังสือสั่งการ ว.๑๗๙ และ ว.๒๑๔ สามารถนำยอดสรุปไปกระทบยอดทางบัญชีกองคลังได้ทันที</li>
+        <li><strong>ระบบบันทึกการยืม-คืนพัสดุราชการ (ตามระเบียบฯ ข้อ ๒๑๔):</strong> 
+          บันทึกข้อมูลผู้ยืม วัตถุประสงค์ กำหนดวันส่งคืน ตรวจสอบสภาพ และมีระบบแจ้งเตือนกรณีเกินกำหนดส่งคืน ป้องกันพัสดุสูญหาย</li>
+        <li><strong>ระบบเบิกจ่ายวัสดุคลังย่อยและบัญชีคุมวัสดุ (แบบ พด.๑ และ พด.๒):</strong> 
+          รองรับการขอเบิกวัสดุสิ้นเปลืองออนไลน์ ตัดสต็อกแบบเข้าก่อน-ออกก่อน (FIFO) และออกรายงานบัญชีคุมวัสดุ พด.๒ ถูกต้องตามเกณฑ์</li>
+        <li><strong>ระบบตรวจนับพัสดุประจำปีผ่านสมาร์ทโฟน/แท็บเล็ต:</strong> 
+          คณะกรรมการสามารถใช้กล้องโทรศัพท์มือถือสแกน QR Code ตรวจสภาพพัสดุหน้างานจริง และประมวลผลสรุปรายงานผลตรวจนับประจำปีได้รวดเร็ว</li>
+        <li><strong>ความมั่นคงปลอดภัยของข้อมูล (On-Premise / Local LAN):</strong> 
+          ติดตั้งโปรแกรมและฐานข้อมูลบนเครื่องคอมพิวเตอร์แม่ข่ายในสำนักงานเทศบาล ทำงานได้แม้ไม่มีสัญญาณอินเทอร์เน็ต ข้อมูลเป็นกรรมสิทธิ์ของเทศบาลแต่เพียงผู้เดียว</li>
+      </ol>
+    </div>
+
+    <div class="tor-section">
+      <div class="section-title">๔. การฝึกอบรมและการถ่ายทอดเทคโนโลยี</div>
+      <p>
+        ผู้รับจ้างจะต้องดำเนินการนำเข้าข้อมูลเดิมจากไฟล์ Excel เก่าของเทศบาลเข้าสู่ระบบ พร้อมทั้งจัดฝึกอบรมถ่ายทอดการใช้งานระบบให้แก่เจ้าหน้าที่กองคลังและเจ้าหน้าที่ผู้เกี่ยวข้อง พร้อมส่งมอบคู่มือการใช้งานภาษาไทยจำนวนอย่างน้อย ๑ ชุด
+      </p>
+    </div>
+
+    <div class="tor-section">
+      <div class="section-title">๕. ระยะเวลาดำเนินการส่งมอบงาน</div>
+      <p>
+        ดำเนินการติดตั้ง นำเข้าข้อมูล และฝึกอบรมให้แล้วเสร็จภายใน <strong>๓๐ วันทำการ</strong> นับถัดจากวันลงนามในใบสั่งจ้าง
+      </p>
+    </div>
+
+    <div class="tor-section">
+      <div class="section-title">๖. วงเงินงบประมาณในการจัดจ้าง</div>
+      <p>
+        วงเงินงบประมาณจัดจ้างทั้งสิ้น <strong>๘๐,๐๐๐.๐๐ บาท (แปดหมื่นบาทถ้วน)</strong> รวมภาษีมูลค่าเพิ่ม ภาษีอื่นใด และค่าใช้จ่ายทั้งปวงแล้ว โดยดำเนินการจัดซื้อจัดจ้างด้วย <strong>วิธีเฉพาะเจาะจง</strong> ตามพระราชบัญญัติการจัดซื้อจัดจ้างและการบริหารพัสดุภาครัฐ พ.ศ. ๒๕๖๐ มาตรา ๕๖ (๒) (ข)
+      </p>
+    </div>
+
+    <div class="tor-section">
+      <div class="section-title">๗. เงื่อนไขการชำระเงิน</div>
+      <p>
+        เทศบาลจะจ่ายเงินค่าจ้างเต็มจำนวน ๑๐๐% ในงวดเดียว ภายหลังจากคณะกรรมการตรวจรับพัสดุได้ดำเนินการตรวจรับงานจ้างถูกต้องเรียบร้อยแล้ว โดยโอนเงินเข้าบัญชีธนาคารของผู้รับจ้างที่ได้ขึ้นทะเบียนไว้ในระบบ e-GP กรมบัญชีกลาง
+      </p>
+    </div>
+
+    <div class="tor-section">
+      <div class="section-title">๘. การรับประกันความชำรุดบกพร่องและบริการหลังการขาย</div>
+      <p>
+        ผู้รับจ้างจะต้องรับประกันการทำงานของระบบ และให้บริการบำรุงรักษา แก้ไขปัญหาทางเทคนิคตลอดระยะเวลา <strong>๑ ปีเต็ม (๑๒ เดือน)</strong> นับถัดจากวันตรวจรับมอบงาน
+      </p>
+    </div>
+
+    <!-- Signatures -->
+    <div class="sig-area">
+      <div>
+        <div>(ลงชื่อ).......................................................</div>
+        <div style="margin-top: 4px;" class="editable" contenteditable="true">(.......................................................)</div>
+        <div style="font-size: 11px; color: #64748b;">ประธานกรรมการกำหนดร่างขอบเขตงาน</div>
+      </div>
+      <div>
+        <div>(ลงชื่อ).......................................................</div>
+        <div style="margin-top: 4px;" class="editable" contenteditable="true">(.......................................................)</div>
+        <div style="font-size: 11px; color: #64748b;">กรรมการกำหนดร่างขอบเขตงาน</div>
+      </div>
+      <div>
+        <div>(ลงชื่อ).......................................................</div>
+        <div style="margin-top: 4px;" class="editable" contenteditable="true">(.......................................................)</div>
+        <div style="font-size: 11px; color: #64748b;">กรรมการและเลขานุการ</div>
+      </div>
+    </div>
+
+    <div style="margin-top: 24px; text-align: center; font-size: 11px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 8px;">
+      * สามารถทดลองเปิดใช้งานระบบตัวอย่างผ่านระบบออนไลน์ได้ที่: <a href="https://dla-asset-demo.onrender.com" target="_blank" style="color: #0284c7;">https://dla-asset-demo.onrender.com</a>
+    </div>
+  </div>
+
+</body>
+</html>
