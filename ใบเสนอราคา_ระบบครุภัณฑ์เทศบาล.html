@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ใบเสนอราคา - ระบบบริหารจัดการครุภัณฑ์และพัสดุคลังย่อย</title>
+  <!-- Google Fonts: Sarabun -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: 'Sarabun', 'TH Sarabun New', sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+      color: #1e293b;
+      background-color: #f1f5f9;
+      padding: 20px 0;
+    }
+    .no-print-bar {
+      max-width: 800px;
+      margin: 0 auto 15px auto;
+      background: #1e3a8a;
+      color: #ffffff;
+      padding: 12px 20px;
+      border-radius: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+    }
+    .no-print-bar button {
+      background: #f59e0b;
+      color: #0f172a;
+      border: none;
+      padding: 8px 18px;
+      font-size: 14px;
+      font-weight: bold;
+      border-radius: 8px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.2s;
+    }
+    .no-print-bar button:hover {
+      background: #fbbf24;
+    }
+    .a4-page {
+      width: 210mm;
+      min-height: 297mm;
+      margin: 0 auto;
+      background: #ffffff;
+      padding: 18mm 20mm;
+      box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
+      position: relative;
+    }
+    .editable:focus {
+      outline: 2px dashed #3b82f6;
+      background-color: #eff6ff;
+    }
+    .header-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+    .header-table td {
+      vertical-align: top;
+    }
+    .doc-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: #1e3a8a;
+      text-align: right;
+      letter-spacing: 1px;
+    }
+    .doc-subtitle {
+      font-size: 13px;
+      color: #64748b;
+      text-align: right;
+      font-weight: 500;
+    }
+    .vendor-name {
+      font-size: 18px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+    .vendor-sub {
+      font-size: 12px;
+      color: #475569;
+    }
+    .badge-egp {
+      display: inline-block;
+      background: #ecfdf5;
+      color: #065f46;
+      border: 1px solid #a7f3d0;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      margin-top: 4px;
+    }
+    .meta-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 12px 16px;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+    }
+    .meta-col {
+      width: 48%;
+    }
+    .meta-title {
+      font-weight: 700;
+      color: #1e3a8a;
+      font-size: 12px;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+      border-bottom: 1px solid #cbd5e1;
+      padding-bottom: 2px;
+    }
+    .meta-text {
+      font-size: 13px;
+      color: #334155;
+    }
+    .items-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+    .items-table th {
+      background: #1e3a8a;
+      color: #ffffff;
+      padding: 8px 10px;
+      font-weight: 600;
+      font-size: 13px;
+      border: 1px solid #1e3a8a;
+      text-align: center;
+    }
+    .items-table td {
+      padding: 10px;
+      border: 1px solid #cbd5e1;
+      vertical-align: top;
+      font-size: 13px;
+    }
+    .text-center { text-align: center; }
+    .text-right { text-align: right; }
+    .text-bold { font-weight: 700; }
+    .summary-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+    .summary-table td {
+      padding: 6px 12px;
+      border: 1px solid #cbd5e1;
+    }
+    .total-highlight {
+      background: #f8fafc;
+      font-size: 15px;
+      font-weight: 700;
+      color: #1e3a8a;
+    }
+    .thai-baht-text {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      padding: 8px 14px;
+      font-weight: 600;
+      color: #1e40af;
+      border-radius: 6px;
+      margin-bottom: 20px;
+      font-size: 13px;
+    }
+    .terms-box {
+      border: 1px dashed #cbd5e1;
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 12px;
+      color: #475569;
+      margin-bottom: 25px;
+      background: #ffffff;
+    }
+    .terms-box h4 {
+      color: #1e3a8a;
+      font-size: 13px;
+      margin-bottom: 6px;
+    }
+    .terms-box ol {
+      padding-left: 18px;
+    }
+    .terms-box li {
+      margin-bottom: 3px;
+    }
+    .signature-grid {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 30px;
+      padding-top: 10px;
+    }
+    .sig-block {
+      width: 45%;
+      text-align: center;
+      font-size: 13px;
+    }
+    .sig-line {
+      border-bottom: 1px dotted #94a3b8;
+      height: 50px;
+      margin-bottom: 8px;
+    }
+    @media print {
+      body {
+        background: transparent;
+        padding: 0;
+      }
+      .no-print-bar {
+        display: none !important;
+      }
+      .a4-page {
+        box-shadow: none;
+        padding: 10mm 15mm;
+        margin: 0;
+        width: 100%;
+        min-height: auto;
+      }
+      .editable {
+        outline: none !important;
+        background: transparent !important;
+      }
+      @page {
+        size: A4 portrait;
+        margin: 10mm 15mm;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Tool Bar (Hidden when printed) -->
+  <div class="no-print-bar">
+    <div>
+      <strong>📄 เอกสารใบเสนอราคา (Quotation)</strong>
+      <span style="font-size: 12px; opacity: 0.85; margin-left: 8px;">(คลิกแก้ไขข้อความได้โดยตรงในเอกสาร)</span>
+    </div>
+    <button onclick="window.print()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+      พิมพ์เอกสาร / บันทึกเป็น PDF
+    </button>
+  </div>
+
+  <!-- A4 Page Container -->
+  <div class="a4-page">
+    
+    <!-- Header -->
+    <table class="header-table">
+      <tr>
+        <td style="width: 55%;">
+          <div class="vendor-name editable" contenteditable="true">สุวิสา จันทร์ประสงค์</div>
+          <div class="vendor-sub editable" contenteditable="true">ผู้พัฒนาระบบเทคโนโลยีสารสนเทศและการจัดการภาครัฐ</div>
+          <div class="badge-egp">✓ ผู้ค้ากับภาครัฐที่ขึ้นทะเบียนในระบบ e-GP กรมบัญชีกลาง</div>
+          <div style="font-size: 12px; color: #64748b; margin-top: 4px;" class="editable" contenteditable="true">
+            เลขประจำตัวผู้เสียภาษี / เลขผู้ค้า e-GP: (ระบุเลขประจำตัว 13 หลัก)<br>
+            โทรศัพท์: 08x-xxx-xxxx | อีเมล: contact@localgov-asset.com
+          </div>
+        </td>
+        <td style="width: 45%;">
+          <div class="doc-title">ใบเสนอราคา</div>
+          <div class="doc-subtitle">QUOTATION</div>
+          <table style="width: 100%; margin-top: 10px; font-size: 13px;">
+            <tr>
+              <td class="text-right text-bold" style="padding: 2px;">เลขที่เอกสาร:</td>
+              <td class="text-right editable" contenteditable="true" style="color: #1e3a8a; font-weight: 700;">QT-2569/001</td>
+            </tr>
+            <tr>
+              <td class="text-right text-bold" style="padding: 2px;">วันที่เสนอราคา:</td>
+              <td class="text-right editable" contenteditable="true">5 พฤศจิกายน 2569</td>
+            </tr>
+            <tr>
+              <td class="text-right text-bold" style="padding: 2px;">กำหนดยืนราคา:</td>
+              <td class="text-right editable" contenteditable="true">60 วัน (ถึง 4 มกราคม 2570)</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+
+    <!-- Customer & Project Info Box -->
+    <div class="meta-box">
+      <div class="meta-col">
+        <div class="meta-title">ข้อมูลผู้รับการเสนอราคา (ลูกค้า)</div>
+        <div class="meta-text">
+          <strong>เรียน:</strong> <span class="editable" contenteditable="true">นายกเทศมนตรี / ปลัดเทศบาล</span><br>
+          <strong>หน่วยงาน:</strong> <span class="editable" contenteditable="true" style="font-weight: 700; color: #1e3a8a;">เทศบาลตำบลสุขเกษมพัฒนา</span><br>
+          <strong>ที่อยู่:</strong> <span class="editable" contenteditable="true">สำนักงานเทศบาลตำบลสุขเกษมพัฒนา อำเภอเมือง จังหวัดเชียงใหม่</span>
+        </div>
+      </div>
+      <div class="meta-col">
+        <div class="meta-title">รายละเอียดโครงการ</div>
+        <div class="meta-text">
+          <strong>โครงการ:</strong> จัดจ้างติดตั้งระบบบริหารจัดการครุภัณฑ์และพัสดุคลังย่อย<br>
+          <strong>มาตรฐาน:</strong> อิงระเบียบกระทรวงการคลังฯ พ.ศ. 2560 & หนังสือ ว.179/ว.214<br>
+          <strong>วิธีการจัดซื้อ:</strong> วิธีเฉพาะเจาะจง ตาม พ.ร.บ. จัดซื้อจัดจ้างฯ 2560 มาตรา 56 (2) (ข)
+        </div>
+      </div>
+    </div>
+
+    <!-- Items Table -->
+    <table class="items-table">
+      <thead>
+        <tr>
+          <th style="width: 8%;">ลำดับ</th>
+          <th style="width: 52%;">รายการและขอบเขตการทำงาน (Scope of Work)</th>
+          <th style="width: 12%;">จำนวน</th>
+          <th style="width: 14%;">ราคา/หน่วย</th>
+          <th style="width: 14%;">จำนวนเงิน (บาท)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="text-center">1</td>
+          <td>
+            <strong>สิทธิ์การใช้งานโปรแกรมระบบบริหารจัดการครุภัณฑ์และพัสดุคลังย่อย ภาครัฐ</strong><br>
+            <span style="font-size: 11.5px; color: #475569;">
+              • ครอบคลุมครุภัณฑ์ทั้ง 18 หมวดหมู่มาตรฐานตามสำนักงบประมาณและกรมบัญชีกลาง<br>
+              • ระบบพิมพ์ทะเบียนคุมทรัพย์สิน แบบ สท.1 และแบบ สท.3 (ที่ดิน/อาคาร) มีตราครุฑ<br>
+              • ระบบสร้างและพิมพ์สติกเกอร์ QR Code สำหรับติดทรัพย์สิน (รายชิ้น / แผ่น A4)<br>
+              • ระบบคำนวณค่าเสื่อมราคาและมูลค่าสุทธิ (Book Value) อัตโนมัติวิธีเส้นตรง (มูลค่าซาก 1 บาท)<br>
+              • ระบบบันทึกการยืม-คืนพัสดุราชการ ป้องกันทรัพย์สินสูญหาย (ระเบียบฯ ข้อ 214)<br>
+              • ระบบเบิกจ่ายวัสดุคลังย่อยออนไลน์ (พด.1) และบัญชีคุมวัสดุ (พด.2) ตัดสต็อกแบบ FIFO<br>
+              • ระบบสแกนตรวจนับพัสดุประจำปีผ่านมือถือ/แท็บเล็ต และออกรายงานส่ง สตง.<br>
+              • ระบบบันทึกรอยทางตรวจสอบ (Audit Trail) ป้องกันการทุจริตตามเกณฑ์ราชการ
+            </span>
+          </td>
+          <td class="text-center">1 ระบบ</td>
+          <td class="text-right">50,000.00</td>
+          <td class="text-right">50,000.00</td>
+        </tr>
+        <tr>
+          <td class="text-center">2</td>
+          <td>
+            <strong>บริการติดตั้งและปรับแต่งระบบบนเครือข่ายภายใน (Server / LAN Deployment)</strong><br>
+            <span style="font-size: 11.5px; color: #475569;">
+              • ติดตั้งระบบบนเครื่องแม่ข่ายสำนักงานเทศบาล ทำงานในระบบ LAN ได้ไม่จำกัดจุดใช้งาน<br>
+              • ปรับแต่งตราสัญลักษณ์เทศบาล ข้อมูลผู้บริหาร และโครงสร้างสำนัก/กองให้ตรงกับหน่วยงานจริง<br>
+              • ตั้งค่าระบบสำรองฐานข้อมูลอัตโนมัติประจำวัน (Daily Auto-Backup สำรองย้อนหลัง 30 วัน)
+            </span>
+          </td>
+          <td class="text-center">1 งาน</td>
+          <td class="text-right">10,000.00</td>
+          <td class="text-right">10,000.00</td>
+        </tr>
+        <tr>
+          <td class="text-center">3</td>
+          <td>
+            <strong>บริการแปลงและนำเข้าข้อมูลเดิมจากไฟล์ Excel เข้าระบบ (Data Migration)</strong><br>
+            <span style="font-size: 11.5px; color: #475569;">
+              • ตรวจสอบ ปรับปรุง และแปลงไฟล์ Excel ทะเบียนครุภัณฑ์และวัสดุเดิมของเทศบาลเข้าระบบ<br>
+              • คำนวณค่าเสื่อมราคาสะสมย้อนหลังให้อัตโนมัติทุกรายการให้พร้อมใช้งานต่อเนื่องทันที
+            </span>
+          </td>
+          <td class="text-center">1 งาน</td>
+          <td class="text-right">10,000.00</td>
+          <td class="text-right">10,000.00</td>
+        </tr>
+        <tr>
+          <td class="text-center">4</td>
+          <td>
+            <strong>การจัดฝึกอบรมเชิงปฏิบัติการแก่เจ้าหน้าที่ผู้ใช้งาน พร้อมรับประกันดูแลระบบ 1 ปี</strong><br>
+            <span style="font-size: 11.5px; color: #475569;">
+              • อบรมเจ้าหน้าที่พัสดุกลาง, กองคลัง, กองช่าง และเจ้าหน้าที่ประจำสำนัก/กอง (1–2 วัน)<br>
+              • มอบคู่มือการใช้งานระบบฉบับสมบูรณ์ (PDF & เอกสารคู่มือ)<br>
+              • บริการดูแลและสนับสนุนทางเทคนิคฟรีตลอด 1 ปีเต็ม (12 เดือน)
+            </span>
+          </td>
+          <td class="text-center">1 ครั้ง</td>
+          <td class="text-right">10,000.00</td>
+          <td class="text-right">10,000.00</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Summary Box -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;">
+      <div style="width: 55%;">
+        <div class="thai-baht-text">
+          จำนวนเงินตัวอักษร: <span class="editable" contenteditable="true">(แปดหมื่นบาทถ้วน)</span>
+        </div>
+      </div>
+      <div style="width: 42%;">
+        <table class="summary-table">
+          <tr>
+            <td style="width: 55%; font-weight: 600;">รวมเป็นเงินทั้งสิ้น</td>
+            <td style="width: 45%; text-align: right; font-weight: 700;" class="editable" contenteditable="true">80,000.00</td>
+          </tr>
+          <tr>
+            <td style="font-size: 11.5px; color: #64748b;">ภาษีมูลค่าเพิ่ม 7%</td>
+            <td style="text-align: right; font-size: 11.5px; color: #64748b;">(ได้รับการยกเว้น)</td>
+          </tr>
+          <tr class="total-highlight">
+            <td>จำนวนเงินสุทธิ</td>
+            <td style="text-align: right; font-size: 17px; color: #1e3a8a;" class="editable" contenteditable="true">80,000.00</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- Terms & Conditions -->
+    <div class="terms-box">
+      <h4>เงื่อนไขการส่งมอบงานและการชำระเงิน (ตามระเบียบราชการ):</h4>
+      <ol>
+        <li><strong>ระยะเวลาส่งมอบงาน:</strong> ดำเนินการติดตั้ง อิมพอร์ตข้อมูล และจัดฝึกอบรมให้แล้วเสร็จภายใน <strong>30 วันทำการ</strong> นับถัดจากวันลงนามในใบสั่งจ้าง</li>
+        <li><strong>การชำระเงิน:</strong> ชำระเงินเต็มจำนวน 100% ภายหลังจากคณะกรรมการตรวจรับพัสดุของเทศบาลได้ดำเนินการตรวจรับงาน (แบบ ตร.) ถูกต้องเรียบร้อยแล้ว โดยโอนเงินเข้าบัญชีธนาคาร <strong>ทหารไทยธนชาต (ttb) สาขาลำพูน เลขที่ 747-2-11120-7 ชื่อบัญชี สุวิสา จันทร์ประสงค์</strong> (ตรงตามที่ขึ้นทะเบียนไว้ในระบบ e-GP กรมบัญชีกลาง)</li>
+        <li><strong>การรับประกันและบริการหลังการขาย:</strong> รับประกันการทำงานของระบบ และบริการแก้ไขปัญหาทางเทคนิคฟรีตลอดระยะเวลา <strong>1 ปีเต็ม (12 เดือน)</strong></li>
+        <li><strong>กรรมสิทธิ์ข้อมูล:</strong> ฐานข้อมูลครุภัณฑ์และเอกสารราชการทั้งหมดเป็นกรรมสิทธิ์ของเทศบาลแต่เพียงผู้เดียว จัดเก็บอย่างปลอดภัยในเครื่องของเทศบาล</li>
+      </ol>
+    </div>
+
+    <!-- Signatures -->
+    <div class="signature-grid">
+      <div class="sig-block">
+        <div>ขอแสดงความนับถือ</div>
+        <div class="sig-line"></div>
+        <div class="text-bold editable" contenteditable="true">( สุวิสา จันทร์ประสงค์ )</div>
+        <div style="font-size: 12px; color: #64748b;">ผู้มีอำนาจลงนาม / ผู้เสนอราคา</div>
+        <div style="font-size: 11px; color: #94a3b8;">ผู้ค้ากับภาครัฐในระบบ e-GP กรมบัญชีกลาง</div>
+      </div>
+
+      <div class="sig-block">
+        <div>อนุมัติจัดจ้างตามข้อเสนอ</div>
+        <div class="sig-line"></div>
+        <div class="text-bold editable" contenteditable="true">( ............................................................ )</div>
+        <div style="font-size: 12px; color: #64748b;">ตำแหน่ง: นายกเทศมนตรี / ผู้มีอำนาจสั่งซื้อสั่งจ้าง</div>
+        <div style="font-size: 11px; color: #94a3b8;">เทศบาลตำบลสุขเกษมพัฒนา</div>
+      </div>
+    </div>
+
+  </div>
+
+</body>
+</html>

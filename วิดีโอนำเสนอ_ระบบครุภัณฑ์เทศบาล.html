@@ -1,0 +1,1205 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>วิดีโอสาธิตและนำเสนอระบบบริหารจัดการครุภัณฑ์เทศบาล</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=Prompt:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+    }
+    body {
+      background: #090d16;
+      color: #f1f5f9;
+      font-family: 'Sarabun', -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+    h1, h2, h3, h4, .font-prompt {
+      font-family: 'Prompt', 'Sarabun', sans-serif;
+    }
+
+    /* Top Nav Bar */
+    .top-bar {
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .brand-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, #059669, #0284c7);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+    }
+    .brand-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #ffffff;
+      line-height: 1.2;
+    }
+    .brand-subtitle {
+      font-size: 12px;
+      color: #94a3b8;
+    }
+    .badge-price {
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      color: #34d399;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-top {
+      background: #1e293b;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #cbd5e1;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    .btn-top:hover {
+      background: #334155;
+      color: #ffffff;
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+    .btn-top.active {
+      background: #0284c7;
+      color: white;
+      border-color: #38bdf8;
+    }
+
+    /* Main Layout */
+    .main-container {
+      flex: 1;
+      max-width: 1400px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 24px;
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 24px;
+      align-items: start;
+    }
+    @media (max-width: 1100px) {
+      .main-container {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Video Player Screen */
+    .player-wrapper {
+      background: #0f172a;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+      display: flex;
+      flex-direction: column;
+    }
+    .screen-stage {
+      position: relative;
+      width: 100%;
+      padding-top: 56.25%; /* 16:9 Aspect Ratio */
+      background: #020617;
+      overflow: hidden;
+    }
+    .screen-content {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 32px 40px;
+      opacity: 0;
+      transform: scale(0.98);
+      transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+      pointer-events: none;
+    }
+    .screen-content.active {
+      opacity: 1;
+      transform: scale(1);
+      pointer-events: auto;
+    }
+
+    /* Subtitles Box */
+    .subtitles-bar {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 8px 24px;
+      border-radius: 30px;
+      font-size: 15px;
+      font-weight: 500;
+      color: #f8fafc;
+      text-align: center;
+      max-width: 85%;
+      z-index: 20;
+      pointer-events: none;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+      animation: subtitleGlow 3s infinite alternate;
+    }
+    @keyframes subtitleGlow {
+      from { border-color: rgba(255, 255, 255, 0.15); }
+      to { border-color: rgba(14, 165, 233, 0.4); }
+    }
+
+    /* Video Player Controls */
+    .player-controls {
+      background: #0f172a;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 16px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .scrubber-container {
+      width: 100%;
+      height: 6px;
+      background: #334155;
+      border-radius: 3px;
+      cursor: pointer;
+      position: relative;
+    }
+    .scrubber-progress {
+      height: 100%;
+      background: linear-gradient(90deg, #10b981, #0ea5e9);
+      border-radius: 3px;
+      width: 0%;
+      position: relative;
+      transition: width 0.1s linear;
+    }
+    .scrubber-handle {
+      position: absolute;
+      right: -6px;
+      top: -4px;
+      width: 14px;
+      height: 14px;
+      background: #ffffff;
+      border-radius: 50%;
+      box-shadow: 0 0 10px rgba(14, 165, 233, 0.8);
+    }
+    .control-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .control-left, .control-right {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .btn-play {
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(135deg, #059669, #0284c7);
+      border: none;
+      border-radius: 50%;
+      color: white;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(5, 150, 105, 0.4);
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .btn-play:hover {
+      transform: scale(1.06);
+      box-shadow: 0 6px 20px rgba(14, 165, 233, 0.5);
+    }
+    .btn-nav-round {
+      width: 36px;
+      height: 36px;
+      background: #1e293b;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 50%;
+      color: #94a3b8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-nav-round:hover {
+      background: #334155;
+      color: white;
+    }
+    .time-display {
+      font-size: 13px;
+      color: #94a3b8;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Scene Visuals & Card Layout */
+    .scene-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+    .scene-tag {
+      background: rgba(14, 165, 233, 0.15);
+      border: 1px solid rgba(14, 165, 233, 0.3);
+      color: #38bdf8;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      display: inline-block;
+      margin-bottom: 8px;
+    }
+    .scene-title {
+      font-size: 26px;
+      font-weight: 700;
+      color: #ffffff;
+      line-height: 1.25;
+      margin-bottom: 6px;
+    }
+    .scene-desc {
+      font-size: 14px;
+      color: #94a3b8;
+      max-width: 650px;
+    }
+    .scene-body {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 16px 0;
+    }
+
+    /* Feature Grid Visual */
+    .feat-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      width: 100%;
+    }
+    .feat-card {
+      background: rgba(30, 41, 59, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 16px;
+      transition: all 0.2s;
+    }
+    .feat-card:hover {
+      border-color: rgba(14, 165, 233, 0.4);
+      background: rgba(30, 41, 59, 0.9);
+    }
+    .feat-icon {
+      font-size: 26px;
+      margin-bottom: 10px;
+    }
+    .feat-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #ffffff;
+      margin-bottom: 4px;
+    }
+    .feat-desc {
+      font-size: 12px;
+      color: #94a3b8;
+      line-height: 1.4;
+    }
+
+    /* Comparison Table Visual */
+    .comp-table {
+      width: 100%;
+      background: #1e293b;
+      border-radius: 12px;
+      border-collapse: collapse;
+      overflow: hidden;
+      font-size: 13px;
+    }
+    .comp-table th, .comp-table td {
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .comp-table th {
+      background: #0f172a;
+      color: #94a3b8;
+      font-weight: 600;
+    }
+    .comp-table tr:last-child td {
+      border-bottom: none;
+    }
+    .pill-elaas {
+      background: rgba(245, 158, 11, 0.15);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+    }
+    .pill-app {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    /* Right Sidebar: Teleprompter & Chapters */
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .panel-box {
+      background: #0f172a;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 14px;
+      padding: 20px;
+    }
+    .panel-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    
+    /* Teleprompter Script Card */
+    .teleprompter-content {
+      background: #1e293b;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      padding: 16px;
+      font-size: 14.5px;
+      line-height: 1.7;
+      color: #e2e8f0;
+      max-height: 280px;
+      overflow-y: auto;
+      border-left: 4px solid #0ea5e9;
+    }
+    .teleprompter-content strong {
+      color: #38bdf8;
+    }
+
+    /* Chapter list */
+    .chapter-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-height: 380px;
+      overflow-y: auto;
+    }
+    .chapter-item {
+      padding: 10px 14px;
+      background: #1e293b;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .chapter-item:hover {
+      background: #334155;
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+    .chapter-item.active {
+      background: rgba(14, 165, 233, 0.15);
+      border-color: rgba(14, 165, 233, 0.4);
+    }
+    .chapter-num {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #334155;
+      color: #94a3b8;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+    }
+    .chapter-item.active .chapter-num {
+      background: #0ea5e9;
+      color: white;
+    }
+    .chapter-text {
+      flex: 1;
+    }
+    .chapter-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: #e2e8f0;
+    }
+    .chapter-duration {
+      font-size: 11px;
+      color: #64748b;
+    }
+
+    /* Banner for Recording */
+    .record-tip {
+      background: linear-gradient(135deg, rgba(14, 165, 233, 0.1), rgba(16, 185, 129, 0.1));
+      border: 1px solid rgba(14, 165, 233, 0.25);
+      border-radius: 12px;
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+    .record-tip-icon {
+      font-size: 24px;
+    }
+    .record-tip-title {
+      font-size: 13.5px;
+      font-weight: 600;
+      color: #ffffff;
+      margin-bottom: 2px;
+    }
+    .record-tip-sub {
+      font-size: 12px;
+      color: #94a3b8;
+    }
+    kbd {
+      background: #1e293b;
+      border: 1px solid #475569;
+      border-radius: 4px;
+      padding: 2px 6px;
+      font-size: 11px;
+      color: #f8fafc;
+      font-family: monospace;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <div class="top-bar">
+    <div class="brand-group">
+      <div class="brand-icon">🏛️</div>
+      <div>
+        <div class="brand-title">ระบบบริหารจัดการครุภัณฑ์และพัสดุคลังย่อย องค์กรปกครองส่วนท้องถิ่น</div>
+        <div class="brand-subtitle">วิดีโอสาธิตและบทนำเสนอ (Interactive Video Presentation) โดย สุวิสา จันทร์ประสงค์</div>
+      </div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <div class="badge-price">
+        <span>💰 วงเงินจัดจ้าง 80,000 บาท</span>
+        <span style="font-size: 11px; opacity: 0.8;">(วิธีเฉพาะเจาะจง)</span>
+      </div>
+      <button class="btn-top" id="btnTtsToggle" onclick="toggleTts()">
+        <span id="ttsIcon">🔊</span> <span id="ttsText">เสียงบรรยายไทย: เปิด</span>
+      </button>
+      <button class="btn-top" onclick="toggleFullscreen()">
+        ⛶ เต็มจอ
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Container -->
+  <div class="main-container">
+    
+    <!-- Left Column: Video Screen & Player -->
+    <div style="display: flex; flex-direction: column;">
+      
+      <!-- Recording Shortcut Banner -->
+      <div class="record-tip">
+        <div class="record-tip-icon">🎥</div>
+        <div style="flex: 1;">
+          <div class="record-tip-title">วิธีอัดเป็นไฟล์วิดีโอ (.mov / .mp4) ไปส่งให้ผู้บริหาร:</div>
+          <div class="record-tip-sub">บนเครื่อง Mac กดปุ่ม <kbd>⌘ Command</kbd> + <kbd>⇧ Shift</kbd> + <kbd>5</kbd> เลือกบันทึกกรอบวิดีโอนี้ แล้วกดปุ่ม <strong>เล่นวิดีโอ ▶</strong> ได้ทันที</div>
+        </div>
+        <a href="ใบเสนอราคา_ระบบครุภัณฑ์เทศบาล.html" target="_blank" class="btn-top" style="text-decoration: none;">
+          📄 เปิดใบเสนอราคา 80,000 บ.
+        </a>
+      </div>
+
+      <!-- Video Player Component -->
+      <div class="player-wrapper" id="playerWrapper">
+        <div class="screen-stage" id="screenStage">
+          
+          <!-- Scene 1: Introduction -->
+          <div class="screen-content active" id="scene-0">
+            <div class="scene-header">
+              <div>
+                <span class="scene-tag">ฉากที่ 1/8 • บทนำ</span>
+                <div class="scene-title">ทางออกใหม่ของงานพัสดุเทศบาลและ อบต.</div>
+                <div class="scene-desc">หมดปัญหา e-LAAS ตอบโจทย์แค่งานบัญชี แต่หน้างานยังปวดหัวเรื่องทะเบียนคุมและตรวจนับประจำปี</div>
+              </div>
+              <div style="font-size: 48px;">🏛️</div>
+            </div>
+            <div class="scene-body">
+              <table class="comp-table">
+                <thead>
+                  <tr>
+                    <th style="width: 32%;">ประเด็นการทำงาน</th>
+                    <th style="width: 34%;">ระบบ e-LAAS กรมส่งเสริมฯ</th>
+                    <th style="width: 34%;">ระบบครุภัณฑ์เทศบาล (ของเรา)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>วัตถุประสงค์หลัก</strong></td>
+                    <td><span class="pill-elaas">เน้นรายงานบัญชีส่งกรม</span></td>
+                    <td><span class="pill-app">เน้นปฏิบัติการหน้างาน 100%</span></td>
+                  </tr>
+                  <tr>
+                    <td><strong>ทะเบียนคุมและพิมพ์เอกสาร</strong></td>
+                    <td>รายงานตารางรวมทั่วไป</td>
+                    <td><strong>พิมพ์ สท.1 / สท.3 ตราครุฑ</strong> ทันที</td>
+                  </tr>
+                  <tr>
+                    <td><strong>การติดป้ายทรัพย์สิน</strong></td>
+                    <td>ไม่มี QR Code / เขียนมือ</td>
+                    <td><strong>พิมพ์สติกเกอร์ QR Code</strong> ติดได้เลย</td>
+                  </tr>
+                  <tr>
+                    <td><strong>ตรวจนับประจำปี (สตง.)</strong></td>
+                    <td>ถือกระดาษเดินติ๊กช้ามาก</td>
+                    <td><strong>มือถือสแกน QR Code ตรวจนับทันที</strong></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div style="font-size: 13px; color: #64748b; text-align: center;">
+              ✓ เชื่อมโยงระเบียบกระทรวงมหาดไทยว่าด้วยการพัสดุ พ.ศ. 2560 และหนังสือสั่งการ ว.179 / ว.214
+            </div>
+          </div>
+
+          <!-- Scene 2: 18 Categories & ST.1/ST.3 -->
+          <div class="screen-content" id="scene-1">
+            <div class="scene-header">
+              <div>
+                <span class="scene-tag">ฉากที่ 2/8 • มาตรฐานราชการ</span>
+                <div class="scene-title">18 หมวดครุภัณฑ์ & ทะเบียนคุม สท.1 / สท.3 ตราครุฑ</div>
+                <div class="scene-desc">ตรงตามมาตรฐานสำนักงบประมาณและกรมบัญชีกลาง พิมพ์เอกสารได้ครบทุกรูปแบบ</div>
+              </div>
+              <div style="font-size: 48px;">📋</div>
+            </div>
+            <div class="scene-body">
+              <div class="feat-grid">
+                <div class="feat-card">
+                  <div class="feat-icon">📑</div>
+                  <div class="feat-title">แบบ สท.1 (ครุภัณฑ์ทั่วไป)</div>
+                  <div class="feat-desc">ทะเบียนคุมทรัพย์สินมาตรฐาน 18 หมวด มีตราครุฑทางการ พร้อมตารางบันทึกการซ่อมและประวัติ</div>
+                </div>
+                <div class="feat-card">
+                  <div class="feat-icon">🏢</div>
+                  <div class="feat-title">แบบ สท.3 (ที่ดินและสิ่งก่อสร้าง)</div>
+                  <div class="feat-desc">สำหรับหมวดที่ดิน/อาคาร ระบบจะตรวจจับและสลับเป็นแบบ สท.3 ทะเบียนคุมที่ดินและสิ่งปลูกสร้างอัตโนมัติ</div>
+                </div>
+                <div class="feat-card">
+                  <div class="feat-icon">🔍</div>
+                  <div class="feat-title">ค้นหาและกรองละเอียด</div>
+                  <div class="feat-desc">แยกดูตามสำนัก/กอง (สำนักปลัด, กองคลัง, กองช่าง, กองสาธารณสุข) ได้ในคลิกเดียว</div>
+                </div>
+              </div>
+            </div>
+            <div style="font-size: 13px; color: #34d399; text-align: center;">
+              ★ เอกสารถูกต้องตามเกณฑ์ สตง. เจ้าหน้าที่พัสดุไม่ต้องเสียเวลาพิมพ์ Excel ซ้ำซ้อน
+            </div>
+          </div>
+
+          <!-- Scene 3: QR Code Generator -->
+          <div class="screen-content" id="scene-2">
+            <div class="scene-header">
+              <div>
+                <span class="scene-tag">ฉากที่ 3/8 • นวัตกรรมติดทรัพย์สิน</span>
+                <div class="scene-title">พิมพ์สติกเกอร์ QR Code ติดทรัพย์สินทันที</div>
+                <div class="scene-desc">บอกลาการใช้สีพ่นหรือปากกาเขียนเลือนหาย ด้วยระบบพิมพ์สติกเกอร์บาร์โค้ดมาตรฐาน</div>
+              </div>
+              <div style="font-size: 48px;">📱</div>
+            </div>
+            <div class="scene-body">
+              <div style="display: flex; gap: 24px; width: 100%; align-items: center; justify-content: center;">
+                <div style="background: white; color: #1e293b; padding: 20px; border-radius: 12px; width: 260px; box-shadow: 0 10px 25px rgba(0,0,0,0.4); text-align: center;">
+                  <div style="font-size: 12px; font-weight: 700; color: #0284c7; border-bottom: 2px solid #0284c7; padding-bottom: 4px; margin-bottom: 10px;">
+                    เทศบาลตำบลตัวอย่าง
+                  </div>
+                  <div style="width: 110px; height: 110px; margin: 0 auto; background: #f8fafc; border: 2px solid #0f172a; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 42px;">
+                    🏁
+                  </div>
+                  <div style="font-size: 12px; font-weight: 700; margin-top: 10px; color: #0f172a;">
+                    รหัส: 7110-001-0001/67
+                  </div>
+                  <div style="font-size: 11px; color: #64748b;">
+                    เครื่องคอมพิวเตอร์ All-in-One
+                  </div>
+                  <div style="font-size: 10px; color: #94a3b8; margin-top: 4px;">
+                    กองคลัง • ผู้ถือครอง: นายสมชาย
+                  </div>
+                </div>
+                <div style="flex: 1; max-width: 420px;">
+                  <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <div class="feat-card" style="padding: 12px;">
+                      <div class="feat-title">🖨️ รองรับเครื่องพิมพ์ทุกประเภท</div>
+                      <div class="feat-desc">ใช้เครื่องพิมพ์กระดาษ A4 หรือเครื่องพิมพ์สติกเกอร์ม้วนลาเบลความร้อน (Thermal) ได้เลย</div>
+                    </div>
+                    <div class="feat-card" style="padding: 12px;">
+                      <div class="feat-title">📄 พิมพ์รวมเป็นแผ่น A4 อัตโนมัติ</div>
+                      <div class="feat-desc">เลือกครุภัณฑ์ทั้งกอง 50 รายการ แล้วกดพิมพ์ทีเดียว ออกเป็นแผ่นสติกเกอร์พร้อมลอกติด</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div style="font-size: 13px; color: #38bdf8; text-align: center;">
+              ✓ สแกนด้วยกล้องมือถือธรรมดา เปิดดูประวัติ บันทึกซ่อม และตรวจสภาพได้ทันที
+            </div>
+          </div>
+
+          <!-- Scene 4: Straight-line Depreciation -->
+          <div class="screen-content" id="scene-3">
+            <div class="scene-header">
+              <div>
+                <span class="scene-tag">ฉากที่ 4/8 • คำนวณอัตโนมัติ</span>
+                <div class="scene-title">คำนวณค่าเสื่อมราคาและมูลค่าสุทธิ (Book Value)</div>
+                <div class="scene-desc">วิธีเส้นตรง (Straight-Line) กำหนดมูลค่าซาก 1 บาท ตามหนังสือสั่งการ ว.179 / ว.214</div>
+              </div>
+              <div style="font-size: 48px;">📈</div>
+            </div>
+            <div class="scene-body">
+              <div class="feat-grid">
+                <div class="feat-card">
+                  <div class="feat-icon">🧮</div>
+                  <div class="feat-title">คำนวณอัตโนมัติทุกสิ้นปีงบ</div>
+                  <div class="feat-desc">ไม่ต้องกดเครื่องคิดเลขทีละรายการ ระบบคิดค่าเสื่อมสะสม และ Book Value ให้ทุกตัวในพริบตา</div>
+                </div>
+                <div class="feat-card">
+                  <div class="feat-icon">🪙</div>
+                  <div class="feat-title">มูลค่าซาก 1 บาท ถูกระเบียบ</div>
+                  <div class="feat-desc">เมื่อครุภัณฑ์ใช้งานครบอายุการใช้งาน มูลค่าจะคงเหลือ 1 บาทในทะเบียนคุมทรัพย์สินถูกต้องตามเกณฑ์</div>
+                </div>
+                <div class="feat-card">
+                  <div class="feat-icon">📊</div>
+                  <div class="feat-title">ส่งรายงานตรงกับ กองคลัง/e-LAAS</div>
+                  <div class="feat-desc">ตัวเลขทางบัญชีตรงกับแบบ สท.1 สามารถนำยอดรวมไปกรอกเทียบเคียงใน e-LAAS ได้ทันที</div>
+                </div>
+              </div>
+            </div>
+            <div style="font-size: 13px; color: #fbbf24; text-align: center;">
+              ✓ ช่วยให้กองคลังปิดงบประจำปีเร็วขึ้น ลดภาระงานหนักช่วงเดือนกันยายน
+            </div>
+          </div>
+
+          <!-- Scene 5: Borrow-Return System -->
+          <div class="screen-content" id="scene-4">
+            <div class="scene-header">
+              <div>
+                <span class="scene-tag">ฉากที่ 5/8 • ป้องกันของหาย</span>
+                <div class="scene-title">ระบบยืม-คืนพัสดุและตรวจสภาพครุภัณฑ์</div>
+                <div class="scene-desc">ตามระเบียบกระทรวงมหาดไทยว่าด้วยการพัสดุ พ.ศ. 2560 ข้อ 214 รู้ตัวผู้ครอบครองตลอดเวลา</div>
+              </div>
+              <div style="font-size: 48px;">🔄</div>
+            </div>
+            <div class="scene-body">
+              <div class="feat-grid">
+                <div class="feat-card">
+                  <div class="feat-icon">📤</div>
+                  <div class="feat-title">บันทึกการยืมพัสดุราชการ</div>
+                  <div class="feat-desc">บันทึกชื่อผู้ยืม สังกัดกอง วัตถุประสงค์ และวันที่กำหนดคืน พร้อมพิมพ์ใบยืมพัสดุ</div>
+                </div>
+                <div class="feat-card">
+                  <div class="feat-icon">📥</div>
+                  <div class="feat-title">การตรวจรับคืนและเช็คสภาพ</div>
+                  <div class="feat-desc">ตรวจสภาพปกติ/ชำรุด หากชำรุดสามารถส่งต่อไปเปิดใบแจ้งซ่อมในระบบได้ทันที</div>
+                </div>
+                <div class="feat-card">
+                  <div class="feat-icon">⚠️</div>
+                  <div class="feat-title">ระบบแจ้งเตือนเกินกำหนดคืน</div>
+                  <div class="feat-desc">ขึ้นเตือนสีแดงทันทีเมื่อมีผู้ยืมอุปกรณ์ (เช่น กล้อง, โปรเจคเตอร์, เครื่องตัดหญ้า) เกินกำหนด</div>
+                </div>
+              </div>
+            </div>
+            <div style="font-size: 13px; color: #f87171; text-align: center;">
+              ★ ป้องกันปัญหา "ของหายหาคนรับผิดชอบไม่ได้" ซึ่งเป็นเรื่องที่เทศบาลโดน สตง. ท้วงติงบ่อยที่สุด
+            </div>
+          </div>
+
+          <!-- Scene 6: Sub-warehouse & FIFO Requisitions -->
+          <div class="screen-content" id="scene-5">
+            <div class="scene-header">
+              <div>
+                <span class="scene-tag">ฉากที่ 6/8 • คลังวัสดุสิ้นเปลือง</span>
+                <div class="scene-title">ระบบเบิกจ่ายวัสดุคลังย่อยออนไลน์ & บัญชีคุม พด.2</div>
+                <div class="scene-desc">จัดการวัสดุสำนักงาน กระดาษ หมึกพิมพ์ น้ำมันเชื้อเพลิง ตัดสต็อกแบบ เข้าก่อนออกก่อน (FIFO)</div>
+              </div>
+              <div style="font-size: 48px;">📦</div>
+            </div>
+            <div class="scene-body">
+              <div class="feat-grid">
+                <div class="feat-card">
+                  <div class="feat-icon">📝</div>
+                  <div class="feat-title">ใบเบิกวัสดุ (แบบ พด.1)</div>
+                  <div class="feat-desc">เจ้าหน้าที่แต่ละกองกดขอเบิกออนไลน์ผ่านระบบ ไม่ต้องเดินส่งใบเบิกกระดาษข้ามตึก</div>
+                </div>
+                <div class="feat-card">
+                  <div class="feat-icon">📑</div>
+                  <div class="feat-title">บัญชีคุมวัสดุ (แบบ พด.2)</div>
+                  <div class="feat-desc">พิมพ์บัญชีคุมวัสดุแสดงยอดรับ-จ่าย-คงเหลือ ถูกต้องตามระเบียบพัสดุราชการ</div>
+                </div>
+                <div class="feat-card">
+                  <div class="feat-icon">⚖️</div>
+                  <div class="feat-title">ตัดสต็อกแบบ FIFO</div>
+                  <div class="feat-desc">ตัดล็อตของที่ซื้อเข้ามาก่อนตามต้นทุนจริง ป้องกันของหมดอายุและคำนวณมูลค่าคงเหลือแม่นยำ</div>
+                </div>
+              </div>
+            </div>
+            <div style="font-size: 13px; color: #a78bfa; text-align: center;">
+              ✓ ควบคุมค่าใช้จ่ายวัสดุสิ้นเปลืองของเทศบาล ไม่ให้เกิดการเบิกซ้ำซ้อนหรือสูญหาย
+            </div>
+          </div>
+
+          <!-- Scene 7: Mobile Stocktake -->
+          <div class="screen-content" id="scene-6">
+            <div class="scene-header">
+              <div>
+                <span class="scene-tag">ฉากที่ 7/8 • ตรวจนับสิ้นปีงบ</span>
+                <div class="scene-title">ตรวจนับพัสดุประจำปีผ่านสมาร์ทโฟน รวดเร็วกว่าเดิม 10 เท่า</div>
+                <div class="scene-desc">คณะกรรมการตรวจนับถือแค่มือถือเครื่องเดียว เดินสแกน QR Code รู้ผลทันที</div>
+              </div>
+              <div style="font-size: 48px;">⚡</div>
+            </div>
+            <div class="scene-body">
+              <div class="feat-grid">
+                <div class="feat-card">
+                  <div class="feat-icon">📲</div>
+                  <div class="feat-title">ไม่ต้องโหลดแอปเพิ่ม</div>
+                  <div class="feat-desc">เปิดผ่านเบราว์เซอร์บนมือถือหรือแท็บเล็ตได้ทุกเครื่อง ไม่ว่าจะเป็น iPhone, iPad หรือ Android</div>
+                </div>
+                <div class="feat-card">
+                  <div class="feat-icon">🎯</div>
+                  <div class="feat-title">สแกนปุ๊บ บันทึกปั๊บ</div>
+                  <div class="feat-desc">สแกน QR Code แล้วเลือก "สภาพปกติ / ชำรุด / ไม่พบตัว" อัปเดตเข้าระบบส่วนกลางแบบ Real-time</div>
+                </div>
+                <div class="feat-card">
+                  <div class="feat-icon">📑</div>
+                  <div class="feat-title">ออกรายงานส่งผู้บริหารทันที</div>
+                  <div class="feat-desc">สรุปผลตรวจนับประจำปีพร้อมลงนามส่งนายกเทศมนตรีและรายงาน สตง. ได้ทันกำหนด 30 วัน</div>
+                </div>
+              </div>
+            </div>
+            <div style="font-size: 13px; color: #34d399; text-align: center;">
+              ★ จากเดิมที่ต้องใช้เวลาเดินตรวจนับ 2 สัปดาห์ เหลือเพียง 1-2 วันเท่านั้น!
+            </div>
+          </div>
+
+          <!-- Scene 8: 80,000 THB Specific Procurement -->
+          <div class="screen-content" id="scene-7">
+            <div class="scene-header">
+              <div>
+                <span class="scene-tag">ฉากที่ 8/8 • ข้อเสนอและงบประมาณ</span>
+                <div class="scene-title">งบประมาณเพียง 80,000 บาท (วิธีเฉพาะเจาะจง)</div>
+                <div class="scene-desc">ติดตั้งในเครือข่ายของเทศบาล 100% ปลอดภัย ไร้กังวล พร้อมบริการดูแลตลอด 1 ปี</div>
+              </div>
+              <div style="font-size: 48px;">🤝</div>
+            </div>
+            <div class="scene-body">
+              <div class="feat-grid">
+                <div class="feat-card" style="border-color: rgba(16, 185, 129, 0.4); background: rgba(16, 185, 129, 0.08);">
+                  <div class="feat-icon">💰</div>
+                  <div class="feat-title" style="color: #34d399;">งบไม่เกิน 500,000 บาท</div>
+                  <div class="feat-desc">จัดซื้อได้ทันทีด้วย **วิธีเฉพาะเจาะจง** ไม่ต้องเปิดประมูล e-Bidding นายกเทศมนตรีอนุมัติได้เลย</div>
+                </div>
+                <div class="feat-card">
+                  <div class="feat-icon">🏢</div>
+                  <div class="feat-title">ข้อมูลเป็นของเทศบาล 100%</div>
+                  <div class="feat-desc">ติดตั้งบนเซิร์ฟเวอร์หรือเครื่องแม่ข่ายในสำนักงาน (LAN) ข้อมูลไม่รั่วไหล ทำงานได้แม้เน็ตตัด</div>
+                </div>
+                <div class="feat-card">
+                  <div class="feat-icon">🛡️</div>
+                  <div class="feat-title">รวมอบรม & ดูแล 1 ปีเต็ม</div>
+                  <div class="feat-desc">ช่วยอิมพอร์ตข้อมูลจาก Excel เก่า + ฝึกอบรมเจ้าหน้าที่จนใช้งานคล่อง + บริการ Support</div>
+                </div>
+              </div>
+            </div>
+            <div style="font-size: 14px; color: #38bdf8; text-align: center; font-weight: 600;">
+              ผู้เสนอราคา: สุวิสา จันทร์ประสงค์ (ผู้ค้ากับภาครัฐที่ขึ้นทะเบียนในระบบ e-GP กรมบัญชีกลางแล้ว)
+            </div>
+          </div>
+
+          <!-- Subtitle Box -->
+          <div class="subtitles-bar" id="subtitlesBox">
+            ยินดีต้อนรับสู่ระบบบริหารจัดการครุภัณฑ์และพัสดุคลังย่อย องค์กรปกครองส่วนท้องถิ่น
+          </div>
+        </div>
+
+        <!-- Video Controls Bar -->
+        <div class="player-controls">
+          <div class="scrubber-container" id="scrubberContainer" onclick="handleScrub(event)">
+            <div class="scrubber-progress" id="scrubberProgress">
+              <div class="scrubber-handle"></div>
+            </div>
+          </div>
+          
+          <div class="control-row">
+            <div class="control-left">
+              <button class="btn-play" id="btnPlay" onclick="togglePlay()">▶</button>
+              <button class="btn-nav-round" onclick="prevScene()" title="ฉากก่อนหน้า">⏮</button>
+              <button class="btn-nav-round" onclick="nextScene()" title="ฉากถัดไป">⏭</button>
+              <div class="time-display">
+                <span id="currentTime">00:00</span> / <span id="totalTime">04:00</span>
+              </div>
+            </div>
+
+            <div class="control-right">
+              <span style="font-size: 12px; color: #94a3b8;" id="sceneIndicator">ฉาก 1 จาก 8</span>
+              <button class="btn-top" onclick="restartVideo()">↺ เล่นใหม่</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Right Column: Teleprompter Script & Chapters -->
+    <div class="sidebar">
+      
+      <!-- Teleprompter / Pitch Script -->
+      <div class="panel-box">
+        <div class="panel-title">
+          <span>🎙️</span>
+          <span>บทพูดสำหรับผู้นำเสนอ (Teleprompter)</span>
+        </div>
+        <div class="teleprompter-content" id="teleprompterBox">
+          กำลังโหลดบทพูด...
+        </div>
+        <div style="margin-top: 10px; display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-size: 11px; color: #64748b;">(อ่านตามสคริปต์นี้เมื่อคุยกับนายก/ผอ.กองคลัง)</span>
+          <button class="btn-top" style="padding: 4px 10px; font-size: 11px;" onclick="copyScript()">📋 คัดลอกบทพูด</button>
+        </div>
+      </div>
+
+      <!-- Chapter Navigation -->
+      <div class="panel-box">
+        <div class="panel-title">
+          <span>📑</span>
+          <span>หัวข้อการนำเสนอ (Chapters)</span>
+        </div>
+        <div class="chapter-list" id="chapterList">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>
+    // Presentation Scenes Definition
+    const scenes = [
+      {
+        title: "ทางออกใหม่ของงานพัสดุเทศบาลและ อบต.",
+        duration: 30, // seconds
+        subtitles: "สวัสดีครับ/ค่ะ ขอแนะนำระบบบริหารจัดการครุภัณฑ์และพัสดุคลังย่อย ออกแบบมาเพื่อแก้ปัญหาหน้างานของ อปท. โดยเฉพาะ",
+        script: "<strong>ท่านนายกฯ และท่าน ผอ.กองคลัง ครับ/ค่ะ:</strong> ทุกวันนี้ อปท. เราใช้ระบบ e-LAAS อยู่แล้ว แต่งานหน้างานจริงของเจ้าหน้าที่พัสดุยังต้องทำใน Excel ซ้ำซ้อน ทั้งการพิมพ์แบบ สท.1, การติดป้ายครุภัณฑ์, และการตรวจนับสิ้นปี ระบบของเราถูกพัฒนาขึ้นมาเพื่อปิดช่องว่างนี้ ให้งานหน้างานสะดวกรวดเร็ว ถูกต้องตามระเบียบกระทรวงมหาดไทย 100% ครับ"
+      },
+      {
+        title: "18 หมวดครุภัณฑ์ & ทะเบียนคุม สท.1 / สท.3 ตราครุฑ",
+        duration: 30,
+        subtitles: "ครอบคลุมครุภัณฑ์ทั้ง 18 หมวดหมู่ตามเกณฑ์สำนักงบประมาณ พิมพ์แบบ สท.1 และ สท.3 ตราครุฑได้ทันที",
+        script: "<strong>ระบบของเรามีฐานข้อมูลครุภัณฑ์ครบ 18 หมวด</strong> ตามมาตรฐานสำนักงบประมาณ สามารถพิมพ์ทะเบียนคุมทรัพย์สิน <strong>แบบ สท.1</strong> ที่มีตราครุฑและตารางซ่อมบำรุงถูกต้อง และพิเศษคือถ้าเป็นหมวดที่ดินและอาคาร ระบบจะสลับเป็น <strong>แบบ สท.3</strong> ให้โดยอัตโนมัติ เจ้าหน้าที่ไม่ต้องมานั่งจัดหน้า Word หรือ Excel เองเลยครับ"
+      },
+      {
+        title: "พิมพ์สติกเกอร์ QR Code ติดทรัพย์สินทันที",
+        duration: 30,
+        subtitles: "หมดปัญหาตัวหนังสือเลือนหาย ด้วยการพิมพ์สติกเกอร์ QR Code รองรับทั้งกระดาษ A4 และเครื่องพิมพ์ลาเบล",
+        script: "<strong>เรื่องการติดป้ายทรัพย์สิน:</strong> แต่ก่อนเราใช้ปากกาเคมีเขียนหรือใช้สีพ่น ซึ่งลบเลือนง่ายมาก ระบบนี้สามารถสั่งพิมพ์สติกเกอร์ QR Code ได้ทันที มีชื่อเทศบาล รหัสครุภัณฑ์ และชื่อผู้ถือครองชัดเจน รองรับการพิมพ์รวมเป็นแผ่น A4 หรือเครื่องพิมพ์สติกเกอร์ม้วน ช่วยประหยัดงบประมาณและทำให้สำนักงานดูเป็นมืออาชีพครับ"
+      },
+      {
+        title: "คำนวณค่าเสื่อมราคาและมูลค่าสุทธิ (Book Value)",
+        duration: 30,
+        subtitles: "คำนวณค่าเสื่อมราคาอัตโนมัติวิธีเส้นตรง ซาก 1 บาท ตามหนังสือสั่งการ ว.179 / ว.214",
+        script: "<strong>สำหรับกองคลัง:</strong> ระบบคำนวณค่าเสื่อมราคาสะสม และมูลค่าสุทธิ (Book Value) อัตโนมัติด้วยวิธีเส้นตรง กำหนดมูลค่าซาก 1 บาทตามระเบียบกระทรวงการคลัง ว.179 และ ว.214 กองคลังไม่ต้องมานั่งกดเครื่องคิดเลขทีละชิ้น และสามารถนำตัวเลขยอดรวมไปใช้ใน e-LAAS ได้ทันที ช่วยให้ปิดงบการเงินได้เร็วขึ้นมากครับ"
+      },
+      {
+        title: "ระบบยืม-คืนพัสดุและตรวจสภาพครุภัณฑ์",
+        duration: 30,
+        subtitles: "บันทึกการยืม-คืนพัสดุราชการ ตามระเบียบฯ ข้อ 214 ป้องกันของสูญหาย ทราบตำแหน่งอุปกรณ์ตลอดเวลา",
+        script: "<strong>แก้ปัญหาของหาย:</strong> ตามระเบียบพัสดุข้อ 214 ระบบมีฟังก์ชันยืม-คืนพัสดุราชการ สามารถออกใบยืม ระบุผู้ยืม วัตถุประสงค์ และวันที่กำหนดคืน หากเกินกำหนดจะมีระบบแจ้งเตือนสีแดงทันที และเมื่อนำมาคืนสามารถบันทึกตรวจสภาพ หากชำรุดก็ส่งต่อไปยังระบบบันทึกซ่อมได้ ป้องกันปัญหา สตง. ท้วงติงเรื่องครุภัณฑ์สูญหายได้ 100% ครับ"
+      },
+      {
+        title: "ระบบเบิกจ่ายวัสดุคลังย่อยออนไลน์ & บัญชีคุม พด.2",
+        duration: 30,
+        subtitles: "จัดการวัสดุสิ้นเปลือง กระดาษ หมึกพิมพ์ ตัดสต็อกแบบ FIFO ออกใบเบิก พด.1 และบัญชีคุม พด.2",
+        script: "<strong>นอกจากครุภัณฑ์แล้ว ยังมีระบบคลังวัสดุย่อย:</strong> เช่น กระดาษ หมึกพิมพ์ หรือวัสดุสำนักงาน เจ้าหน้าที่แต่ละกองสามารถกดขอเบิกออนไลน์ (แบบ พด.1) ได้ ไม่ต้องเดินส่งเอกสาร และระบบจะตัดสต็อกแบบ เข้าก่อนออกก่อน (FIFO) พร้อมพิมพ์บัญชีคุมวัสดุ (แบบ พด.2) ช่วยควบคุมงบประมาณค่าใช้จ่ายไม่ให้รั่วไหลครับ"
+      },
+      {
+        title: "ตรวจนับพัสดุประจำปีผ่านสมาร์ทโฟน",
+        duration: 30,
+        subtitles: "ตรวจนับพัสดุประจำปีได้เร็วขึ้น 10 เท่า คณะกรรมการถือมือถือเดินสแกน QR Code รู้ผลทันที",
+        script: "<strong>ไฮไลท์เด็ดที่สุดคือ การตรวจนับพัสดุประจำปี:</strong> จากเดิมคณะกรรมการต้องถือแฟ้มกระดาษเดินตามหาของทีละห้อง ใช้เวลาเป็นสัปดาห์ แต่ด้วยระบบนี้ ถือแค่มือถือหรือแท็บเล็ต เดินสแกน QR Code แล้วกดตรวจสภาพ ระบบจะอัปเดตสถานะ Real-time และพิมพ์รายงานผลตรวจนับส่งนายกฯ ได้ภายใน 1 วันเท่านั้นครับ"
+      },
+      {
+        title: "งบประมาณเพียง 80,000 บาท (วิธีเฉพาะเจาะจง)",
+        duration: 30,
+        subtitles: "งบประมาณเพียง 80,000 บาท จัดซื้อด้วยวิธีเฉพาะเจาะจง ติดตั้งในวง LAN ปลอดภัย พร้อมอบรมและดูแล 1 ปี",
+        script: "<strong>ข้อเสนอสุดพิเศษสำหรับเทศบาล:</strong> ทั้งหมดนี้ใช้งบประมาณเพียง <strong>80,000 บาทถ้วน</strong> ซึ่งอยู่ในวงเงินไม่เกิน 500,000 บาท เทศบาลสามารถจัดซื้อด้วย <strong>วิธีเฉพาะเจาะจง</strong> ได้ทันที โดยดิฉัน 'สุวิสา จันทร์ประสงค์' ได้ขึ้นทะเบียนเป็นผู้ค้าภาครัฐในระบบ e-GP กรมบัญชีกลางเรียบร้อยแล้ว ในราคานี้รวมค่าติดตั้งบนเครื่องเทศบาล, การย้ายข้อมูล Excel เดิม, การจัดฝึกอบรมเจ้าหน้าที่ และบริการดูแลระบบตลอด 1 ปีเต็มครับ"
+      }
+    ];
+
+    let currentSceneIndex = 0;
+    let isPlaying = false;
+    let sceneTimer = null;
+    let sceneSecondsLeft = 0;
+    let totalElapsedTime = 0;
+    let ttsEnabled = true;
+
+    const totalSeconds = scenes.reduce((sum, s) => sum + s.duration, 0);
+
+    // Render Chapters
+    function renderChapters() {
+      const list = document.getElementById('chapterList');
+      list.innerHTML = '';
+      scenes.forEach((sc, idx) => {
+        const item = document.createElement('div');
+        item.className = `chapter-item ${idx === currentSceneIndex ? 'active' : ''}`;
+        item.onclick = () => goToScene(idx);
+        item.innerHTML = `
+          <div class="chapter-num">${idx + 1}</div>
+          <div class="chapter-text">
+            <div class="chapter-name">${sc.title}</div>
+            <div class="chapter-duration">ความยาว: 00:${sc.duration < 10 ? '0' : ''}${sc.duration} นาที</div>
+          </div>
+        `;
+        list.appendChild(item);
+      });
+    }
+
+    // Format seconds to mm:ss
+    function formatTime(sec) {
+      const m = Math.floor(sec / 60);
+      const s = Math.floor(sec % 60);
+      return `${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
+    }
+
+    // Update Teleprompter & UI for Scene
+    function updateSceneUI(idx) {
+      document.querySelectorAll('.screen-content').forEach((el, i) => {
+        el.classList.toggle('active', i === idx);
+      });
+      document.getElementById('subtitlesBox').innerText = scenes[idx].subtitles;
+      document.getElementById('teleprompterBox').innerHTML = scenes[idx].script;
+      document.getElementById('sceneIndicator').innerText = `ฉาก ${idx + 1} จาก ${scenes.length}`;
+      renderChapters();
+
+      // Trigger TTS if enabled
+      if (ttsEnabled && isPlaying) {
+        speakThai(scenes[idx].subtitles);
+      }
+    }
+
+    // Thai Speech Synthesis
+    function speakThai(text) {
+      if (!window.speechSynthesis) return;
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'th-TH';
+      utterance.rate = 1.0;
+      utterance.pitch = 1.0;
+      
+      const voices = window.speechSynthesis.getVoices();
+      const thaiVoice = voices.find(v => v.lang === 'th-TH' || v.lang.startsWith('th'));
+      if (thaiVoice) utterance.voice = thaiVoice;
+
+      window.speechSynthesis.speak(utterance);
+    }
+
+    // Go to specific scene
+    function goToScene(idx) {
+      currentSceneIndex = idx;
+      sceneSecondsLeft = scenes[idx].duration;
+      
+      // Calculate elapsed time up to this scene
+      totalElapsedTime = scenes.slice(0, idx).reduce((sum, s) => sum + s.duration, 0);
+      updateProgress();
+      updateSceneUI(idx);
+    }
+
+    function nextScene() {
+      if (currentSceneIndex < scenes.length - 1) {
+        goToScene(currentSceneIndex + 1);
+      } else {
+        pauseVideo();
+      }
+    }
+
+    function prevScene() {
+      if (currentSceneIndex > 0) {
+        goToScene(currentSceneIndex - 1);
+      }
+    }
+
+    function updateProgress() {
+      const pct = (totalElapsedTime / totalSeconds) * 100;
+      document.getElementById('scrubberProgress').style.width = `${pct}%`;
+      document.getElementById('currentTime').innerText = formatTime(totalElapsedTime);
+      document.getElementById('totalTime').innerText = formatTime(totalSeconds);
+    }
+
+    function handleScrub(e) {
+      const rect = document.getElementById('scrubberContainer').getBoundingClientRect();
+      const clickX = e.clientX - rect.left;
+      const pct = Math.max(0, Math.min(1, clickX / rect.width));
+      const targetSec = pct * totalSeconds;
+
+      let accumulated = 0;
+      for (let i = 0; i < scenes.length; i++) {
+        if (accumulated + scenes[i].duration >= targetSec) {
+          currentSceneIndex = i;
+          totalElapsedTime = targetSec;
+          sceneSecondsLeft = (accumulated + scenes[i].duration) - targetSec;
+          updateSceneUI(i);
+          updateProgress();
+          break;
+        }
+        accumulated += scenes[i].duration;
+      }
+    }
+
+    // Video Play/Pause Loop
+    function togglePlay() {
+      if (isPlaying) {
+        pauseVideo();
+      } else {
+        playVideo();
+      }
+    }
+
+    function playVideo() {
+      isPlaying = true;
+      document.getElementById('btnPlay').innerText = '⏸';
+      if (window.speechSynthesis && window.speechSynthesis.paused) {
+        window.speechSynthesis.resume();
+      } else {
+        speakThai(scenes[currentSceneIndex].subtitles);
+      }
+
+      if (sceneSecondsLeft <= 0) {
+        sceneSecondsLeft = scenes[currentSceneIndex].duration;
+      }
+
+      clearInterval(sceneTimer);
+      sceneTimer = setInterval(() => {
+        totalElapsedTime += 1;
+        sceneSecondsLeft -= 1;
+        updateProgress();
+
+        if (sceneSecondsLeft <= 0) {
+          if (currentSceneIndex < scenes.length - 1) {
+            goToScene(currentSceneIndex + 1);
+          } else {
+            pauseVideo();
+            totalElapsedTime = totalSeconds;
+            updateProgress();
+          }
+        }
+      }, 1000);
+    }
+
+    function pauseVideo() {
+      isPlaying = false;
+      document.getElementById('btnPlay').innerText = '▶';
+      clearInterval(sceneTimer);
+      if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+    }
+
+    function restartVideo() {
+      pauseVideo();
+      goToScene(0);
+      playVideo();
+    }
+
+    function toggleTts() {
+      ttsEnabled = !ttsEnabled;
+      const icon = document.getElementById('ttsIcon');
+      const text = document.getElementById('ttsText');
+      if (ttsEnabled) {
+        icon.innerText = '🔊';
+        text.innerText = 'เสียงบรรยายไทย: เปิด';
+        if (isPlaying) speakThai(scenes[currentSceneIndex].subtitles);
+      } else {
+        icon.innerText = '🔇';
+        text.innerText = 'เสียงบรรยายไทย: ปิด';
+        if (window.speechSynthesis) window.speechSynthesis.cancel();
+      }
+    }
+
+    function toggleFullscreen() {
+      const elem = document.getElementById('playerWrapper');
+      if (!document.fullscreenElement) {
+        elem.requestFullscreen().catch(err => alert(err.message));
+      } else {
+        document.exitFullscreen();
+      }
+    }
+
+    function copyScript() {
+      const scriptText = scenes[currentSceneIndex].script.replace(/<[^>]*>?/gm, '');
+      navigator.clipboard.writeText(scriptText).then(() => {
+        alert('คัดลอกบทพูดของฉากนี้แล้ว!');
+      });
+    }
+
+    // Keyboard shortcuts
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'Space') {
+        e.preventDefault();
+        togglePlay();
+      } else if (e.code === 'ArrowRight') {
+        nextScene();
+      } else if (e.code === 'ArrowLeft') {
+        prevScene();
+      }
+    });
+
+    // Initialize
+    goToScene(0);
+  </script>
+</body>
+</html>

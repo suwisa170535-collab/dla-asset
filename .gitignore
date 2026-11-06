@@ -1,0 +1,8 @@
+node_modules/
+dist/
+bin/
+*.app
+ระบบครุภัณฑ์เทศบาล.app
+.DS_Store
+*.log
+server/backups/
