@@ -38,48 +38,48 @@ export default function DashboardView({ summary, setActiveTab, auditLogs, invent
   return (
     <div className="space-y-6">
       {/* Top Banner / Welcome */}
-      <div className="bg-gradient-to-r from-gov-800 via-gov-700 to-gov-900 rounded-2xl p-6 text-white shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-gradient-to-r from-gov-800 via-gov-700 to-gov-900 rounded-2xl p-4 sm:p-6 text-white shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="inline-flex items-center space-x-2 bg-gold-500/20 px-3 py-1 rounded-full text-gold-300 text-xs font-semibold mb-2 border border-gold-400/30">
             <span>🏛️ ระบบบริหารงานพัสดุและสินทรัพย์ภาครัฐ</span>
           </div>
-          <h1 className="text-2xl font-bold">ภาพรวมระบบครุภัณฑ์และคลังพัสดุเทศบาล</h1>
-          <p className="text-gov-200 text-sm mt-1">
+          <h1 className="text-xl sm:text-2xl font-bold">ภาพรวมระบบครุภัณฑ์และคลังพัสดุเทศบาล</h1>
+          <p className="text-gov-200 text-xs sm:text-sm mt-1">
             ข้อมูลอัปเดตแบบเรียลไทม์ คำนวณค่าเสื่อมราคาตามเกณฑ์กรมบัญชีกลาง และควบคุมสต็อกแบบ FIFO
           </p>
         </div>
-        <div className="flex flex-wrap gap-2.5">
+        <div className="flex flex-wrap gap-2 sm:gap-2.5">
           <button
             onClick={() => setActiveTab('assets')}
-            className="flex items-center space-x-1.5 px-4 py-2 bg-gold-500 hover:bg-gold-600 text-gov-950 font-bold rounded-xl text-sm transition shadow-sm"
+            className="flex items-center space-x-1.5 px-3 py-1.5 sm:px-4 sm:py-2 bg-gold-500 hover:bg-gold-600 text-gov-950 font-bold rounded-xl text-xs sm:text-sm transition shadow-sm"
           >
             <PlusCircle className="w-4 h-4" />
             <span>ลงทะเบียนครุภัณฑ์</span>
           </button>
           <button
             onClick={() => setActiveTab('borrow-return')}
-            className="flex items-center space-x-1.5 px-4 py-2 bg-white/10 hover:bg-white/20 text-white font-medium rounded-xl text-sm transition border border-white/20"
+            className="flex items-center space-x-1.5 px-3 py-1.5 sm:px-4 sm:py-2 bg-white/10 hover:bg-white/20 text-white font-medium rounded-xl text-xs sm:text-sm transition border border-white/20"
           >
             <Handshake className="w-4 h-4" />
             <span>ยืม-คืน ครุภัณฑ์</span>
           </button>
           <button
             onClick={() => setActiveTab('transfers')}
-            className="flex items-center space-x-1.5 px-4 py-2 bg-white/10 hover:bg-white/20 text-white font-medium rounded-xl text-sm transition border border-white/20"
+            className="flex items-center space-x-1.5 px-3 py-1.5 sm:px-4 sm:py-2 bg-white/10 hover:bg-white/20 text-white font-medium rounded-xl text-xs sm:text-sm transition border border-white/20"
           >
             <ArrowLeftRight className="w-4 h-4" />
             <span>โอนย้ายกอง</span>
           </button>
           <button
             onClick={() => setActiveTab('reports')}
-            className="flex items-center space-x-1.5 px-4 py-2 bg-white/10 hover:bg-white/20 text-white font-medium rounded-xl text-sm transition border border-white/20"
+            className="flex items-center space-x-1.5 px-3 py-1.5 sm:px-4 sm:py-2 bg-white/10 hover:bg-white/20 text-white font-medium rounded-xl text-xs sm:text-sm transition border border-white/20"
           >
             <FileCheck2 className="w-4 h-4" />
             <span>แบบ สขร.1</span>
           </button>
           <button
             onClick={() => setActiveTab('settings')}
-            className="flex items-center space-x-1.5 px-4 py-2 bg-emerald-600/80 hover:bg-emerald-600 text-white font-medium rounded-xl text-sm transition border border-emerald-400/30"
+            className="flex items-center space-x-1.5 px-3 py-1.5 sm:px-4 sm:py-2 bg-emerald-600/80 hover:bg-emerald-600 text-white font-medium rounded-xl text-xs sm:text-sm transition border border-emerald-400/30"
           >
             <Database className="w-4 h-4" />
             <span>สำรองข้อมูลระบบ</span>

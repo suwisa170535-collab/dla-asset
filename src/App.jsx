@@ -48,6 +48,7 @@ export default function App() {
 
   const [currentRole, setCurrentRole] = useState('central_supply');
   const [currentUser, setCurrentUser] = useState(defaultDemoUser);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Load Initial Settings & Metadata
   const loadInitialData = async () => {
@@ -74,6 +75,7 @@ export default function App() {
 
   useEffect(() => {
     loadInitialData();
+    setIsMobileMenuOpen(false);
     if (mainRef.current) {
       mainRef.current.scrollTo({ top: 0, behavior: 'instant' });
     }
@@ -88,6 +90,8 @@ export default function App() {
         setCurrentRole={setCurrentRole}
         currentUser={currentUser}
         setCurrentUser={setCurrentUser}
+        isMobileMenuOpen={isMobileMenuOpen}
+        onToggleMobileMenu={() => setIsMobileMenuOpen(prev => !prev)}
       />
 
       <div className="flex-1 flex max-w-7xl w-full mx-auto min-w-0">
@@ -97,9 +101,11 @@ export default function App() {
           summaryData={summary}
           currentRole={currentRole}
           currentUser={currentUser}
+          isOpenMobile={isMobileMenuOpen}
+          onCloseMobile={() => setIsMobileMenuOpen(false)}
         />
 
-        <main ref={mainRef} className="flex-1 min-w-0 p-6 md:p-8 overflow-y-auto">
+        <main ref={mainRef} className="flex-1 min-w-0 p-3 sm:p-5 md:p-8 overflow-y-auto">
           {activeTab === 'dashboard' && (
             <DashboardView
               summary={summary}
