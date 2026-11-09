@@ -11,7 +11,8 @@ import {
   X,
   History,
   Tag,
-  Printer
+  Printer,
+  MapPin
 } from 'lucide-react';
 import { formatBaht, formatThaiDate } from '../utils/formatters.js';
 import { openPrintWindow, generatePD2HTML } from '../utils/printTemplates.js';
@@ -339,74 +340,80 @@ export default function InventoryView({ settings = {}, currentUser }) {
       {/* Inventory Table */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
+          <table className="w-full text-left text-sm min-w-[1120px]">
             <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 text-xs uppercase font-semibold">
               <tr>
-                <th className="py-3 px-4">รหัสวัสดุ</th>
-                <th className="py-3 px-4">ชื่อวัสดุสิ้นเปลือง</th>
-                <th className="py-3 px-4">หมวดหมู่ & ที่เก็บ</th>
-                <th className="py-3 px-4 text-center">คงเหลือ (หน่วย)</th>
-                <th className="py-3 px-4 text-center">เกณฑ์ต่ำสุด (Reorder)</th>
-                <th className="py-3 px-4 text-right">ราคาต่อหน่วย</th>
-                <th className="py-3 px-4 text-center">สถานะสต็อก</th>
-                <th className="py-3 px-4 text-center">การปฏิบัติการ</th>
+                <th className="py-3 px-3.5 w-28 whitespace-nowrap">รหัสวัสดุ</th>
+                <th className="py-3 px-3.5 min-w-[280px]">ชื่อวัสดุสิ้นเปลือง</th>
+                <th className="py-3 px-3.5 w-44 whitespace-nowrap">หมวดหมู่วัสดุ</th>
+                <th className="py-3 px-3.5 min-w-[180px]">สถานที่จัดเก็บ</th>
+                <th className="py-3 px-3.5 text-center w-28 whitespace-nowrap">คงเหลือ</th>
+                <th className="py-3 px-3.5 text-center w-28 whitespace-nowrap">เกณฑ์สั่งซื้อ</th>
+                <th className="py-3 px-3.5 text-right w-28 whitespace-nowrap">ราคาต่อหน่วย</th>
+                <th className="py-3 px-3.5 text-center w-32 whitespace-nowrap">สถานะสต็อก</th>
+                <th className="py-3 px-3.5 text-center w-52 whitespace-nowrap">การปฏิบัติการ</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {loading ? (
                 <tr>
-                  <td colSpan="8" className="text-center py-10 text-slate-400">
+                  <td colSpan="9" className="text-center py-10 text-slate-400">
                     กำลังโหลดข้อมูลพัสดุคลังย่อย...
                   </td>
                 </tr>
               ) : items.length === 0 ? (
                 <tr>
-                  <td colSpan="8" className="text-center py-10 text-slate-400">
+                  <td colSpan="9" className="text-center py-10 text-slate-400">
                     ไม่พบรายการพัสดุ
                   </td>
                 </tr>
               ) : (
                 items.map((item) => (
-                  <tr key={item.id} className="hover:bg-slate-50/80 transition">
-                    <td className="py-3.5 px-4 font-mono font-bold text-slate-800 whitespace-nowrap">
+                  <tr key={item.id} className="hover:bg-slate-50/80 transition align-top">
+                    <td className="py-3.5 px-3.5 font-mono font-bold text-slate-800 whitespace-nowrap pt-3.5">
                       {item.item_code}
                     </td>
-                    <td className="py-3.5 px-4">
-                      <div className="font-bold text-slate-900">{item.name}</div>
-                      <div className="text-xs text-slate-400">หน่วยนับ: {item.unit}</div>
+                    <td className="py-3.5 px-3.5 min-w-[280px]">
+                      <div className="font-bold text-slate-900 leading-snug">{item.name}</div>
+                      <div className="text-xs text-slate-400 mt-1">หน่วยนับ: <span className="font-medium text-slate-600">{item.unit}</span></div>
                     </td>
-                    <td className="py-3.5 px-4 text-xs">
-                      <span className="inline-block px-2 py-0.5 rounded-md font-medium text-[11px] bg-slate-100 text-slate-700 border border-slate-200/60 mb-1">
+                    <td className="py-3.5 px-3.5 whitespace-nowrap pt-3.5">
+                      <span className="inline-block px-2.5 py-1 rounded-lg font-medium text-xs bg-slate-100 text-slate-700 border border-slate-200/80">
                         {item.category}
                       </span>
-                      <div className="text-slate-400">{item.storage_location || 'คลังพัสดุกลาง'}</div>
                     </td>
-                    <td className="py-3.5 px-4 text-center whitespace-nowrap">
+                    <td className="py-3.5 px-3.5 text-xs text-slate-600 pt-3.5">
+                      <div className="flex items-center space-x-1.5 font-medium">
+                        <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                        <span>{item.storage_location || 'คลังพัสดุกลาง'}</span>
+                      </div>
+                    </td>
+                    <td className="py-3.5 px-3.5 text-center whitespace-nowrap pt-3.5">
                       <span className={`text-base font-bold ${item.is_low_stock ? 'text-rose-600' : 'text-slate-900'}`}>
                         {item.current_stock}
                       </span>{' '}
                       <span className="text-xs text-slate-500">{item.unit}</span>
                     </td>
-                    <td className="py-3.5 px-4 text-center text-xs text-slate-500 whitespace-nowrap">
+                    <td className="py-3.5 px-3.5 text-center text-xs text-slate-500 whitespace-nowrap pt-4">
                       {item.min_stock} {item.unit}
                     </td>
-                    <td className="py-3.5 px-4 text-right font-medium text-slate-800 whitespace-nowrap">
+                    <td className="py-3.5 px-3.5 text-right font-medium text-slate-800 whitespace-nowrap pt-4">
                       {formatBaht(item.unit_price)}
                     </td>
-                    <td className="py-3.5 px-4 text-center whitespace-nowrap">
+                    <td className="py-3.5 px-3.5 text-center whitespace-nowrap pt-3">
                       {item.is_low_stock ? (
-                        <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-100 text-rose-700 border border-rose-300">
+                        <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-700 border border-rose-300">
                           <AlertTriangle className="w-3 h-3" />
                           <span>จุดสั่งซื้อ (ต่ำ)</span>
                         </span>
                       ) : (
-                        <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
                           <CheckCircle2 className="w-3 h-3 text-emerald-600" />
                           <span>สต็อกปกติ</span>
                         </span>
                       )}
                     </td>
-                    <td className="py-3.5 px-4 text-center whitespace-nowrap">
+                    <td className="py-3.5 px-3.5 text-center whitespace-nowrap pt-3">
                       <div className="flex items-center justify-center space-x-2">
                         <button
                           onClick={() => openReceiveModal(item)}
