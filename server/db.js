@@ -751,5 +751,321 @@ export function initDatabase() {
   } catch (err) {
     console.error('Error auto-seeding specialized engineering assets:', err.message);
   }
+
+  // Ensure specialized assets for other departments (Fire/Rescue, Health, Education, Welfare)
+  try {
+    const checkOtherAssets = db.prepare("SELECT count(*) as count FROM assets WHERE department_id IN (1, 4, 5, 6)").get();
+    if (checkOtherAssets && checkOtherAssets.count < 15) {
+      const allNewAssets = [
+        {
+          asset_code: 'ค.02/2566/002',
+          name: 'รถยนต์บรรทุกน้ำดับเพลิง ขนาดความจุ 6,000 ลิตร 6 ล้อ พร้อมปืนฉีดน้ำแรงดันสูง',
+          category_id: 2,
+          brand: 'Hino',
+          model: '500 Victor 240 แรงม้า',
+          serial_number: 'HN500-881920',
+          department_id: 1,
+          sub_department_id: 3,
+          custodian_name: 'ส.อ.สมชาย ใจกล้า',
+          location_room: 'สถานีดับเพลิงเทศบาล',
+          acquired_date: '2023-08-10',
+          fiscal_year: 2566,
+          budget_source: 'งบประมาณเทศบัญญัติ',
+          vendor: 'บจก. เคมีคอล แอนด์ ไฟร์ไฟท์ติ้ง ทรัค',
+          cost_price: 3450000.0,
+          useful_life_years: 10,
+          salvage_value: 1.0,
+          status: 'active',
+          notes: 'ใช้สำหรับระงับอัคคีภัย ส่งน้ำอุปโภคบริโภคช่วงภัยแล้ง และล้างทำความสะอาดถนน'
+        },
+        {
+          asset_code: 'ค.17/2567/002',
+          name: 'ชุดอุปกรณ์ตัดถ่างกู้ภัยไฮดรอลิก ช่วยเหลือผู้ประสบภัยทางถนน (พร้อมหัวตัดและหัวถ่าง)',
+          category_id: 17,
+          brand: 'Holmatro',
+          model: 'Pentheon Series คัตเตอร์-สเปรดเดอร์ ไร้สาย',
+          serial_number: 'HM-PENT-7714',
+          department_id: 1,
+          sub_department_id: 3,
+          custodian_name: 'ส.อ.สมชาย ใจกล้า',
+          location_room: 'ห้องเก็บอุปกรณ์กู้ภัย สถานีดับเพลิง',
+          acquired_date: '2024-04-12',
+          fiscal_year: 2567,
+          budget_source: 'งบประมาณเทศบัญญัติ',
+          vendor: 'บจก. เรสคิว อีควิปเมนท์ ไทยแลนด์',
+          cost_price: 680000.0,
+          useful_life_years: 8,
+          salvage_value: 1.0,
+          status: 'active',
+          notes: 'ใช้ตัดถ่างซากยานพาหนะช่วยเหลือผู้บาดเจ็บติดภายในกรณีเกิดอุบัติเหตุบนท้องถนน'
+        },
+        {
+          asset_code: 'ค.16/2568/001',
+          name: 'เครื่องวิทยุสื่อสารราชการระบบดิจิทัล/อนาล็อก ชนิดมือถือ 5W (ชุด 10 เครื่อง)',
+          category_id: 16,
+          brand: 'Motorola',
+          model: 'Mototrbo XiR P6620i TIA4950',
+          serial_number: 'MOT-XIR-5521-SET',
+          department_id: 1,
+          sub_department_id: 3,
+          custodian_name: 'ส.อ.สมชาย ใจกล้า',
+          location_room: 'ศูนย์วิทยุสื่อสาร ชั้น 2 สำนักปลัด',
+          acquired_date: '2025-01-25',
+          fiscal_year: 2568,
+          budget_source: 'งบประมาณเทศบัญญัติ',
+          vendor: 'บจก. ยูไนเต็ด คอมมิวนิเคชั่น ซิสเต็มส์',
+          cost_price: 145000.0,
+          useful_life_years: 5,
+          salvage_value: 1.0,
+          status: 'active',
+          notes: 'ใช้สำหรับข่ายสื่อสารประสานงานระงับภัยพิบัติและสั่งการช่วยเหลือประชาชน 24 ชม.'
+        },
+        {
+          asset_code: 'ค.17/2568/001',
+          name: 'เครื่องสูบน้ำดับเพลิงชนิดหาบหาม เครื่องยนต์เบนซิน 2 จังหวะ พร้อมสายส่งและหัวฉีด',
+          category_id: 17,
+          brand: 'Tohatsu',
+          model: 'VC82ASE Auto Choke 60 แรงม้า',
+          serial_number: 'TH-VC82-9904',
+          department_id: 1,
+          sub_department_id: 3,
+          custodian_name: 'ส.อ.สมชาย ใจกล้า',
+          location_room: 'สถานีดับเพลิงเทศบาล',
+          acquired_date: '2025-02-14',
+          fiscal_year: 2568,
+          budget_source: 'งบประมาณเทศบัญญัติ',
+          vendor: 'บจก. ธนบุรี ไฟร์ไฟท์ติ้ง ซัพพลาย',
+          cost_price: 385000.0,
+          useful_life_years: 8,
+          salvage_value: 1.0,
+          status: 'active',
+          notes: 'ใช้ดับเพลิงในตรอกซอกซอยแคบที่รถดับเพลิงเข้าไม่ถึง และสูบน้ำจากแหล่งน้ำธรรมชาติ'
+        },
+        {
+          asset_code: 'ค.08/2568/001',
+          name: 'เครื่องพ่นหมอกควันกำจัดยุงลายและแมลงนำโรค ชนิดสะพายไหล่',
+          category_id: 8,
+          brand: 'Swingfog',
+          model: 'SN50 เยอรมนีแท้',
+          serial_number: 'SW-SN50-3341',
+          department_id: 4,
+          sub_department_id: 13,
+          custodian_name: 'นางสมพร รักษ์อนามัย',
+          location_room: 'คลังเวชภัณฑ์และควบคุมโรค กองสาธารณสุข',
+          acquired_date: '2025-01-10',
+          fiscal_year: 2568,
+          budget_source: 'งบประมาณเทศบัญญัติ',
+          vendor: 'บจก. เอ็นไวรอนเมนท์ แคร์ ซัพพลาย',
+          cost_price: 82000.0,
+          useful_life_years: 5,
+          salvage_value: 1.0,
+          status: 'active',
+          notes: 'ใช้ฉีดพ่นละอองหมอกควันกำจัดยุงลายป้องกันโรคไข้เลือดออกในชุมชนและโรงเรียน'
+        },
+        {
+          asset_code: 'ค.08/2567/001',
+          name: 'เครื่องกระตุกหัวใจไฟฟ้าอัตโนมัติ (AED) พร้อมตู้เก็บสัญญาณเตือนภัย',
+          category_id: 8,
+          brand: 'Philips',
+          model: 'HeartStart FRx พร้อมแผ่นนำไฟฟ้า',
+          serial_number: 'PH-AED-99210',
+          department_id: 4,
+          sub_department_id: 11,
+          custodian_name: 'นางสมพร รักษ์อนามัย',
+          location_room: 'จุดบริการประชาชน ชั้น 1 สำนักงานเทศบาล',
+          acquired_date: '2024-07-15',
+          fiscal_year: 2567,
+          budget_source: 'งบกองทุนหลักประกันสุขภาพตำบล (สปสช.)',
+          vendor: 'บจก. เมดิคอล ซัพพลาย แอนด์ เซอร์วิส',
+          cost_price: 95000.0,
+          useful_life_years: 5,
+          salvage_value: 1.0,
+          status: 'active',
+          notes: 'อุปกรณ์ช่วยฟื้นคืนชีพขั้นพื้นฐานสำหรับกรณีเกิดเหตุผู้ป่วยหัวใจหยุดเต้นฉับพลัน'
+        },
+        {
+          asset_code: 'ค.08/2568/002',
+          name: 'ตู้แช่เก็บรักษายาและวัคซีนควบคุมอุณหภูมิ 2-8 องศาเซลเซียส พร้อมระบบเตือนภัย',
+          category_id: 8,
+          brand: 'Haier',
+          model: 'HXC-158 Biomedical Vaccine Refrigerator',
+          serial_number: 'HR-HXC158-4412',
+          department_id: 4,
+          sub_department_id: 11,
+          custodian_name: 'นางสมพร รักษ์อนามัย',
+          location_room: 'ห้องเวชปฏิบัติและฉีดวัคซีน รพ.สต.',
+          acquired_date: '2025-02-18',
+          fiscal_year: 2568,
+          budget_source: 'งบเงินอุดหนุนถ่ายโอน รพ.สต.',
+          vendor: 'บจก. ไบโอเมดิคอล เทคโนโลยี',
+          cost_price: 135000.0,
+          useful_life_years: 8,
+          salvage_value: 1.0,
+          status: 'active',
+          notes: 'ใช้เก็บรักษาวัคซีนป้องกันโรคเด็กแรกเกิดและเซรุ่มป้องกันพิษสุนัขบ้าตามมาตรฐาน GSP'
+        },
+        {
+          asset_code: 'ค.02/2567/003',
+          name: 'รถพยาบาลฉุกเฉิน (Ambulance) พร้อมอุปกรณ์กู้ชีพขั้นสูง EMS ตามมาตรฐาน สพฉ.',
+          category_id: 2,
+          brand: 'Toyota',
+          model: 'Hiace Commuter ดีเซล 2.8L กู้ชีพขั้นสูง',
+          serial_number: 'TY-AMB-88310',
+          department_id: 4,
+          sub_department_id: 11,
+          custodian_name: 'นางสมพร รักษ์อนามัย',
+          location_room: 'จุดจอดรถพยาบาล รพ.สต.',
+          acquired_date: '2024-09-10',
+          fiscal_year: 2567,
+          budget_source: 'งบประมาณเทศบัญญัติ',
+          vendor: 'บจก. แอมบูแลนซ์ โมดิฟายด์ เซ็นเตอร์',
+          cost_price: 2350000.0,
+          useful_life_years: 8,
+          salvage_value: 1.0,
+          status: 'active',
+          notes: 'ใช้ส่งต่อผู้ป่วยฉุกเฉินวิกฤตและออกรับผู้ประสบอุบัติเหตุระบบบริการการแพทย์ฉุกเฉิน 1669'
+        },
+        {
+          asset_code: 'ค.11/2568/002',
+          name: 'จอภาพอัจฉริยะระบบสัมผัส Interactive Smart Board ขนาด 75 นิ้ว 4K สำหรับห้องเรียนดิจิทัล',
+          category_id: 11,
+          brand: 'Newline',
+          model: 'TT-7521Q 4K Ultra HD พร้อมระบบปฏิบัติการคู่',
+          serial_number: 'NL-7521-1189',
+          department_id: 5,
+          sub_department_id: 16,
+          custodian_name: 'นางสาวดวงใจ การศึกษา',
+          location_room: 'ห้องปฏิบัติการคอมพิวเตอร์และสื่อดิจิทัล',
+          acquired_date: '2025-01-20',
+          fiscal_year: 2568,
+          budget_source: 'งบเงินอุดหนุนการจัดการศึกษาขั้นพื้นฐาน',
+          vendor: 'บจก. เอ็ดดูเคชั่น อินโนเวชั่น ไทยแลนด์',
+          cost_price: 145000.0,
+          useful_life_years: 5,
+          salvage_value: 1.0,
+          status: 'active',
+          notes: 'ใช้จัดการเรียนการสอนแบบ Active Learning และสื่อมัลติมีเดียสำหรับนักเรียน'
+        },
+        {
+          asset_code: 'ค.12/2567/002',
+          name: 'ชุดเครื่องเล่นสนามเด็กเล่นกลางแจ้งรวมมิตร มอก. เสริมทักษะพัฒนาการเด็ก ศพด.',
+          category_id: 12,
+          brand: 'Playground Pro',
+          model: 'Classic Wonder Land Series ชิงช้า-สไลเดอร์-อุโมงค์',
+          serial_number: 'PGP-2567-004',
+          department_id: 5,
+          sub_department_id: 15,
+          custodian_name: 'นางสาวดวงใจ การศึกษา',
+          location_room: 'ลานกิจกรรมกลางแจ้ง ศพด. เทศบาล',
+          acquired_date: '2024-05-18',
+          fiscal_year: 2567,
+          budget_source: 'งบประมาณเทศบัญญัติ',
+          vendor: 'บจก. เพลย์กราวด์ แอนด์ สปอร์ต อิควิปเมนท์',
+          cost_price: 220000.0,
+          useful_life_years: 8,
+          salvage_value: 1.0,
+          status: 'active',
+          notes: 'เครื่องเล่นสนามมาตรฐานความปลอดภัย มอก.3000 สำหรับพัฒนาการกล้ามเนื้อมัดใหญ่เด็กปฐมวัย'
+        },
+        {
+          asset_code: 'ค.01/2568/002',
+          name: 'เครื่องฟอกอากาศฆ่าเชื้อโรคระบบ HEPA H14 สำหรับห้องเรียนเด็กปฐมวัย (ชุด 4 เครื่อง)',
+          category_id: 1,
+          brand: 'Daikin',
+          model: 'MC55UVM6 Streamer Technology',
+          serial_number: 'DK-MC55-SET4',
+          department_id: 5,
+          sub_department_id: 15,
+          custodian_name: 'นางสาวดวงใจ การศึกษา',
+          location_room: 'ห้องเรียนระดับปฐมวัย ศพด.',
+          acquired_date: '2025-02-12',
+          fiscal_year: 2568,
+          budget_source: 'งบประมาณเทศบัญญัติ',
+          vendor: 'หจก. ลานนา แอร์คอนดิชั่น แอนด์ ซัพพลาย',
+          cost_price: 58000.0,
+          useful_life_years: 5,
+          salvage_value: 1.0,
+          status: 'active',
+          notes: 'ใช้กรองฝุ่นละออง PM 2.5 และฆ่าเชื้อแบคทีเรีย/ไวรัสในห้องเรียนเด็กเล็ก'
+        },
+        {
+          asset_code: 'ค.08/2568/003',
+          name: 'รถเข็นวีลแชร์ผู้ป่วยและคนพิการชนิดพับได้ น้ำหนักเบา สำหรับบริการประชาชนยืมใช้ (ชุด 6 คัน)',
+          category_id: 8,
+          brand: 'Karma',
+          model: 'Ergo 105 อะลูมิเนียมอัลลอยด์',
+          serial_number: 'KM-ERGO-SET6',
+          department_id: 6,
+          sub_department_id: 19,
+          custodian_name: 'นางกานดา สวัสดิ์ดี',
+          location_room: 'ห้องปฏิบัติงานกองสวัสดิการสังคม ชั้น 1',
+          acquired_date: '2025-01-15',
+          fiscal_year: 2568,
+          budget_source: 'งบประมาณเทศบัญญัติ',
+          vendor: 'บจก. กู้ดเวลเนส การแพทย์',
+          cost_price: 72000.0,
+          useful_life_years: 5,
+          salvage_value: 1.0,
+          status: 'active',
+          notes: 'ใช้สำหรับบริการยืมอุปกรณ์ฟื้นฟูสมรรถภาพแก่คนพิการและผู้สูงอายุในชุมชน'
+        },
+        {
+          asset_code: 'ค.08/2567/002',
+          name: 'เตียงผู้ป่วยปรับระดับ 3 ไกร์ พร้อมที่นอนลมป้องกันแผลกดทับ (ชุด 3 ชุด)',
+          category_id: 8,
+          brand: 'Paramount',
+          model: 'A5 Series Manual Bed พร้อมที่นอนลม',
+          serial_number: 'PM-BED3-SET3',
+          department_id: 6,
+          sub_department_id: 19,
+          custodian_name: 'นางกานดา สวัสดิ์ดี',
+          location_room: 'คลังเก็บอุปกรณ์สงเคราะห์ กองสวัสดิการสังคม',
+          acquired_date: '2024-06-20',
+          fiscal_year: 2567,
+          budget_source: 'งบกองทุนสวัสดิการชุมชน',
+          vendor: 'บจก. สยามเมดิคอล แคร์',
+          cost_price: 105000.0,
+          useful_life_years: 8,
+          salvage_value: 1.0,
+          status: 'active',
+          notes: 'เตียงบริการยืมสำหรับผู้ป่วยติดเตียงและผู้สูงอายุภาวะพึ่งพิงในเขตเทศบาล'
+        }
+      ];
+
+      const insertOtherAsset = db.prepare(`
+        INSERT INTO assets (
+          asset_code, name, category_id, brand, model, serial_number,
+          department_id, sub_department_id, custodian_name, location_room, acquired_date,
+          fiscal_year, budget_source, vendor, cost_price, useful_life_years,
+          salvage_value, status, notes
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `);
+
+      const checkOther = db.prepare('SELECT id FROM assets WHERE asset_code = ?');
+      const insertOtherAudit = db.prepare(`
+        INSERT OR IGNORE INTO annual_audit_details (audit_id, asset_id, physical_status, verified_by, verified_at, remarks)
+        VALUES (?, ?, ?, ?, ?, ?)
+      `);
+
+      for (const a of allNewAssets) {
+        const existing = checkOther.get(a.asset_code);
+        let assetId = existing?.id;
+        if (!existing) {
+          const res = insertOtherAsset.run(
+            a.asset_code, a.name, a.category_id, a.brand, a.model, a.serial_number,
+            a.department_id, a.sub_department_id, a.custodian_name, a.location_room, a.acquired_date,
+            a.fiscal_year, a.budget_source, a.vendor, a.cost_price, a.useful_life_years,
+            a.salvage_value, a.status, a.notes
+          );
+          assetId = res.lastInsertRowid;
+        }
+        if (assetId) {
+          insertOtherAudit.run(1, assetId, 'normal', 'คณะกรรมการตรวจสอบพัสดุ', '2025-09-25 11:00:00', 'ตรวจนับหน้างาน สภาพดีพร้อมใช้งานตามภารกิจ');
+        }
+      }
+    }
+  } catch (err) {
+    console.error('Error auto-seeding other specialized assets:', err.message);
+  }
 }
 
