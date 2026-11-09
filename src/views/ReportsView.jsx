@@ -18,12 +18,13 @@ import {
 import { formatBaht, formatThaiDate } from '../utils/formatters.js';
 import { openPrintWindow, generateSKR1HTML, generateST3HTML, generateReconciliationHTML, getGarudaSVG, renderGovHeader, renderSignatureItem } from '../utils/printTemplates.js';
 
-export default function ReportsView({ settings, departments }) {
+export default function ReportsView({ settings, departments = [], subDepartments = [] }) {
   const [reportType, setReportType] = useState('st2');
   const [assets, setAssets] = useState([]);
   const [items, setItems] = useState([]);
   const [disposals, setDisposals] = useState([]);
   const [selectedDept, setSelectedDept] = useState('');
+  const [selectedSubDept, setSelectedSubDept] = useState('');
   const [loading, setLoading] = useState(false);
 
   // SKR.1 state
@@ -137,12 +138,16 @@ export default function ReportsView({ settings, departments }) {
 
   useEffect(() => {
     fetchData();
-  }, [selectedDept]);
+  }, [selectedDept, selectedSubDept]);
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const q = selectedDept ? `?department_id=${selectedDept}` : '';
+      const params = new URLSearchParams();
+      if (selectedDept) params.append('department_id', selectedDept);
+      if (selectedSubDept) params.append('sub_department_id', selectedSubDept);
+      const q = params.toString() ? `?${params.toString()}` : '';
+
       const [resA, resI, resD] = await Promise.all([
         fetch(`/api/assets${q}`),
         fetch('/api/inventory'),
@@ -226,7 +231,7 @@ export default function ReportsView({ settings, departments }) {
         <td class="text-right">${a.cost_price.toLocaleString('th-TH', { minimumFractionDigits: 2 })}</td>
         <td class="text-right">${a.depreciation?.accumulated?.toLocaleString('th-TH', { minimumFractionDigits: 2 }) || '0.00'}</td>
         <td class="text-right font-bold">${a.depreciation?.bookValue?.toLocaleString('th-TH', { minimumFractionDigits: 2 }) || '0.00'}</td>
-        <td>${a.department_name}</td>
+        <td>${a.department_name} ${a.sub_department_name ? `(${a.sub_department_name})` : ''}</td>
         <td>${a.custodian_name || '-'}</td>
         <td class="text-center">${a.status === 'active' ? 'ปกติ' : a.status}</td>
       </tr>
@@ -447,13 +452,29 @@ export default function ReportsView({ settings, departments }) {
             <>
               <select
                 value={selectedDept}
-                onChange={e => setSelectedDept(e.target.value)}
+                onChange={e => {
+                  setSelectedDept(e.target.value);
+                  setSelectedSubDept('');
+                }}
                 className="px-3 py-1.5 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-gov-500"
               >
                 <option value="">ทุกสำนัก/กอง</option>
                 {departments.map(d => (
                   <option key={d.id} value={d.id}>{d.name}</option>
                 ))}
+              </select>
+
+              <select
+                value={selectedSubDept}
+                onChange={e => setSelectedSubDept(e.target.value)}
+                className="px-3 py-1.5 border border-indigo-200 bg-indigo-50/20 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 font-medium"
+              >
+                <option value="">ทุกหน่วยงานย่อย/ฝ่าย</option>
+                {subDepartments
+                  .filter(sd => !selectedDept || String(sd.department_id) === String(selectedDept))
+                  .map(sd => (
+                    <option key={sd.id} value={sd.id}>{sd.name}</option>
+                  ))}
               </select>
 
               <button
@@ -494,7 +515,10 @@ export default function ReportsView({ settings, departments }) {
                     <tr key={a.id} className="hover:bg-slate-50">
                       <td className="py-2 px-3 font-mono font-bold text-gov-800">{a.asset_code}</td>
                       <td className="py-2 px-3 font-semibold text-slate-900">{a.name}</td>
-                      <td className="py-2 px-3 text-slate-600">{a.department_name}</td>
+                      <td className="py-2 px-3 text-slate-600">
+                        <div>{a.department_name}</div>
+                        {a.sub_department_name && <div className="text-[10px] text-indigo-700 font-semibold">• {a.sub_department_name}</div>}
+                      </td>
                       <td className="py-2 px-3 text-right">{formatBaht(a.cost_price)}</td>
                       <td className="py-2 px-3 text-right text-rose-600">-{formatBaht(a.depreciation?.accumulated)}</td>
                       <td className="py-2 px-3 text-right font-bold text-emerald-600">{formatBaht(a.depreciation?.bookValue)}</td>

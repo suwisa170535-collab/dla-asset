@@ -416,6 +416,87 @@ app.delete('/api/departments/:id', (req, res) => {
 });
 
 // -------------------------------------------------------------
+// SUB-DEPARTMENTS (หน่วยงานย่อย / ฝ่าย / ศพด. / รพ.สต. / โรงเรียน)
+// -------------------------------------------------------------
+app.get('/api/sub-departments', (req, res) => {
+  try {
+    const { department_id } = req.query;
+    let sql = `
+      SELECT sd.*, 
+             d.name as department_name, d.code as department_code,
+             (SELECT count(*) FROM assets WHERE sub_department_id = sd.id) as asset_count
+      FROM sub_departments sd
+      LEFT JOIN departments d ON sd.department_id = d.id
+      WHERE 1=1
+    `;
+    const params = [];
+    if (department_id) {
+      sql += ` AND sd.department_id = ?`;
+      params.push(Number(department_id));
+    }
+    sql += ` ORDER BY d.code ASC, sd.code ASC`;
+    const rows = db.prepare(sql).all(...params);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/sub-departments', (req, res) => {
+  try {
+    const { department_id, code, name, head_name, head_position, notes, actorName, actorRole } = req.body;
+    if (!department_id || !code || !name) {
+      return res.status(400).json({ error: 'กรุณากรอกสำนัก/กอง รหัส และชื่อหน่วยงานย่อย' });
+    }
+    const stmt = db.prepare('INSERT INTO sub_departments (department_id, code, name, head_name, head_position, notes) VALUES (?, ?, ?, ?, ?, ?)');
+    const result = stmt.run(Number(department_id), code, name, head_name || null, head_position || null, notes || null);
+    logAudit('CREATE', 'SUB_DEPARTMENT', result.lastInsertRowid, actorName, actorRole, `เพิ่มหน่วยงานย่อย: ${name} (${code})`);
+    res.json({ id: result.lastInsertRowid, success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/sub-departments/:id', (req, res) => {
+  try {
+    const { department_id, code, name, head_name, head_position, notes, actorName, actorRole } = req.body;
+    const stmt = db.prepare(`
+      UPDATE sub_departments 
+      SET department_id = ?, code = ?, name = ?, head_name = ?, head_position = ?, notes = ?
+      WHERE id = ?
+    `);
+    stmt.run(Number(department_id), code, name, head_name || null, head_position || null, notes || null, req.params.id);
+    logAudit('UPDATE', 'SUB_DEPARTMENT', req.params.id, actorName, actorRole, `แก้ไขหน่วยงานย่อย: ${name} (${code})`);
+    res.json({ success: true, message: 'บันทึกการแก้ไขหน่วยงานย่อยเรียบร้อยแล้ว' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/sub-departments/:id', (req, res) => {
+  try {
+    const subDeptId = req.params.id;
+    const subDept = db.prepare('SELECT * FROM sub_departments WHERE id = ?').get(subDeptId);
+    if (!subDept) {
+      return res.status(404).json({ error: 'ไม่พบหน่วยงานย่อยนี้' });
+    }
+
+    const inUseAssets = db.prepare('SELECT count(*) as count FROM assets WHERE sub_department_id = ?').get(subDeptId)?.count || 0;
+    if (inUseAssets > 0) {
+      return res.status(400).json({ 
+        error: `ไม่สามารถลบหน่วยงานย่อย "${subDept.name}" ได้ เนื่องจากมีครุภัณฑ์สังกัดอยู่ ${inUseAssets} รายการ กรุณาย้ายครุภัณฑ์ก่อนทำการลบ` 
+      });
+    }
+
+    db.prepare('DELETE FROM sub_departments WHERE id = ?').run(subDeptId);
+    logAudit('DELETE', 'SUB_DEPARTMENT', subDeptId, req.body?.actorName, req.body?.actorRole, `ลบหน่วยงานย่อย: ${subDept.name} (${subDept.code})`);
+    res.json({ success: true, message: 'ลบหน่วยงานย่อยเรียบร้อยแล้ว' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// -------------------------------------------------------------
 // CATEGORIES (หมวดหมู่ครุภัณฑ์ตามระเบียบกรมบัญชีกลางและกระทรวงมหาดไทย)
 // -------------------------------------------------------------
 app.get('/api/categories', (req, res) => {
@@ -552,15 +633,17 @@ app.delete('/api/categories/:id', (req, res) => {
 // -------------------------------------------------------------
 app.get('/api/assets', (req, res) => {
   try {
-    const { search, department_id, category_id, fiscal_year, status } = req.query;
+    const { search, department_id, sub_department_id, category_id, fiscal_year, status } = req.query;
 
     let query = `
       SELECT a.*, 
              c.name as category_name, c.prefix as category_prefix,
-             d.name as department_name, d.code as department_code
+             d.name as department_name, d.code as department_code,
+             sd.name as sub_department_name, sd.code as sub_department_code
       FROM assets a
       LEFT JOIN categories c ON a.category_id = c.id
       LEFT JOIN departments d ON a.department_id = d.id
+      LEFT JOIN sub_departments sd ON a.sub_department_id = sd.id
       WHERE 1=1
     `;
     const params = [];
@@ -573,6 +656,10 @@ app.get('/api/assets', (req, res) => {
     if (department_id) {
       query += ` AND a.department_id = ?`;
       params.push(Number(department_id));
+    }
+    if (sub_department_id) {
+      query += ` AND a.sub_department_id = ?`;
+      params.push(Number(sub_department_id));
     }
     if (category_id) {
       query += ` AND a.category_id = ?`;
@@ -627,15 +714,16 @@ app.post('/api/assets/import-batch', (req, res) => {
 
     const categories = db.prepare('SELECT id, name, prefix, useful_life_years FROM categories').all();
     const departments = db.prepare('SELECT id, name, code FROM departments').all();
+    const subDepartments = db.prepare('SELECT id, department_id, name, code FROM sub_departments').all();
     const defaultFY = db.prepare("SELECT value FROM settings WHERE key = 'fiscal_year'").get()?.value || '2569';
 
     const insertStmt = db.prepare(`
       INSERT INTO assets (
         asset_code, name, category_id, brand, model, serial_number,
-        department_id, custodian_name, location_room, acquired_date,
+        department_id, sub_department_id, custodian_name, location_room, acquired_date,
         fiscal_year, budget_source, vendor, cost_price, useful_life_years,
         salvage_value, status, notes
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     let importedCount = 0;
@@ -657,6 +745,15 @@ app.post('/api/assets/import-batch', (req, res) => {
         (item.department && d.name.includes(item.department))
       );
       if (!matchedDept) matchedDept = departments[0];
+
+      // Match sub-department
+      let matchedSubDept = null;
+      if (item.sub_department) {
+        matchedSubDept = subDepartments.find(sd =>
+          (sd.department_id === matchedDept.id || !sd.department_id) &&
+          (sd.name === item.sub_department || sd.code === item.sub_department || sd.name.includes(item.sub_department))
+        );
+      }
 
       // Format acquired date
       let acqDate = item.acquired_date;
@@ -709,6 +806,7 @@ app.post('/api/assets/import-batch', (req, res) => {
         item.model || '',
         item.serial_number || '',
         matchedDept.id,
+        matchedSubDept ? matchedSubDept.id : null,
         item.custodian_name || '',
         item.location_room || '',
         acqDate,
@@ -844,7 +942,7 @@ app.post('/api/assets', (req, res) => {
   try {
     const {
       asset_code, name, category_id, brand, model, serial_number,
-      department_id, custodian_name, location_room, acquired_date,
+      department_id, sub_department_id, custodian_name, location_room, acquired_date,
       fiscal_year, budget_source, vendor, cost_price, useful_life_years,
       salvage_value, status, notes,
       warranty_expiry_date, vendor_phone, contract_number, procurement_method,
@@ -856,18 +954,20 @@ app.post('/api/assets', (req, res) => {
     const stmt = db.prepare(`
       INSERT INTO assets (
         asset_code, name, category_id, brand, model, serial_number,
-        department_id, custodian_name, location_room, acquired_date,
+        department_id, sub_department_id, custodian_name, location_room, acquired_date,
         fiscal_year, budget_source, vendor, cost_price, useful_life_years,
         salvage_value, status, notes,
         warranty_expiry_date, vendor_phone, contract_number, procurement_method,
         deed_number, land_area, gps_location, asset_type,
         photo_url, document_url, document_name
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     const result = stmt.run(
       asset_code, name, category_id, brand || '', model || '', serial_number || '',
-      department_id, custodian_name || '', location_room || '', acquired_date,
+      department_id ? Number(department_id) : 1,
+      sub_department_id ? Number(sub_department_id) : null,
+      custodian_name || '', location_room || '', acquired_date,
       Number(fiscal_year), budget_source || 'เงินงบประมาณเทศบาล', vendor || '',
       Number(cost_price), Number(useful_life_years),
       salvage_value !== undefined ? Number(salvage_value) : 1.0,
@@ -890,7 +990,7 @@ app.put('/api/assets/:id', (req, res) => {
   try {
     const {
       name, category_id, brand, model, serial_number,
-      department_id, custodian_name, location_room, acquired_date,
+      department_id, sub_department_id, custodian_name, location_room, acquired_date,
       fiscal_year, budget_source, vendor, cost_price, useful_life_years,
       salvage_value, status, notes,
       warranty_expiry_date, vendor_phone, contract_number, procurement_method,
@@ -902,7 +1002,7 @@ app.put('/api/assets/:id', (req, res) => {
     const stmt = db.prepare(`
       UPDATE assets SET
         name = ?, category_id = ?, brand = ?, model = ?, serial_number = ?,
-        department_id = ?, custodian_name = ?, location_room = ?, acquired_date = ?,
+        department_id = ?, sub_department_id = ?, custodian_name = ?, location_room = ?, acquired_date = ?,
         fiscal_year = ?, budget_source = ?, vendor = ?, cost_price = ?, useful_life_years = ?,
         salvage_value = ?, status = ?, notes = ?,
         warranty_expiry_date = ?, vendor_phone = ?, contract_number = ?, procurement_method = ?,
@@ -916,7 +1016,9 @@ app.put('/api/assets/:id', (req, res) => {
 
     stmt.run(
       name, category_id, brand, model, serial_number,
-      department_id, custodian_name, location_room, acquired_date,
+      department_id ? Number(department_id) : 1,
+      sub_department_id ? Number(sub_department_id) : null,
+      custodian_name, location_room, acquired_date,
       Number(fiscal_year), budget_source, vendor, Number(cost_price), Number(useful_life_years),
       Number(salvage_value), status, notes,
       warranty_expiry_date || null, vendor_phone || null, contract_number || null, procurement_method || 'เฉพาะเจาะจง',
@@ -1575,14 +1677,17 @@ app.get('/api/annual-audits/:id', (req, res) => {
     // Fetch items with status in this audit
     const items = db.prepare(`
       SELECT a.id as asset_id, a.asset_code, a.name, a.brand, a.model, a.location_room, a.custodian_name,
-             c.name as category_name, d.name as department_name,
+             a.department_id, a.sub_department_id,
+             c.name as category_name, d.name as department_name, d.code as department_code,
+             sd.name as sub_department_name, sd.code as sub_department_code,
              aad.physical_status, aad.verified_by, aad.verified_at, aad.remarks
       FROM assets a
       LEFT JOIN categories c ON a.category_id = c.id
       LEFT JOIN departments d ON a.department_id = d.id
+      LEFT JOIN sub_departments sd ON a.sub_department_id = sd.id
       LEFT JOIN annual_audit_details aad ON aad.asset_id = a.id AND aad.audit_id = ?
       WHERE a.status != 'disposed'
-      ORDER BY d.code ASC, a.asset_code ASC
+      ORDER BY d.code ASC, sd.code ASC, a.asset_code ASC
     `).all(req.params.id);
 
     res.json({
@@ -1869,12 +1974,12 @@ app.get('/api/transfers', (req, res) => {
 app.post('/api/transfers', (req, res) => {
   try {
     const {
-      asset_id, to_department_id, transfer_date, reason,
+      asset_id, to_department_id, to_sub_department_id, transfer_date, reason,
       deliverer_name, receiver_name, new_location_room, new_custodian_name,
       approver_name, notes, actorName, actorRole
     } = req.body;
 
-    const asset = db.prepare('SELECT department_id, name, asset_code FROM assets WHERE id = ?').get(asset_id);
+    const asset = db.prepare('SELECT department_id, sub_department_id, name, asset_code FROM assets WHERE id = ?').get(asset_id);
     if (!asset) return res.status(404).json({ error: 'Asset not found' });
 
     const from_department_id = asset.department_id;
@@ -1897,15 +2002,22 @@ app.post('/api/transfers', (req, res) => {
       new_location_room || '', new_custodian_name || '', approver_name || '', notes || ''
     );
 
-    // Immediately update asset's department, custodian, and room
+    // Immediately update asset's department, sub_department, custodian, and room
     db.prepare(`
       UPDATE assets
       SET department_id = ?,
+          sub_department_id = ?,
           custodian_name = ?,
           location_room = ?,
           updated_at = datetime('now', 'localtime')
       WHERE id = ?
-    `).run(Number(to_department_id), new_custodian_name || '', new_location_room || '', Number(asset_id));
+    `).run(
+      Number(to_department_id),
+      to_sub_department_id !== undefined ? (to_sub_department_id ? Number(to_sub_department_id) : null) : asset.sub_department_id,
+      new_custodian_name || '',
+      new_location_room || '',
+      Number(asset_id)
+    );
 
     const fromDept = db.prepare('SELECT name FROM departments WHERE id = ?').get(from_department_id);
     const toDept = db.prepare('SELECT name FROM departments WHERE id = ?').get(to_department_id);
@@ -1930,10 +2042,11 @@ app.post('/api/assets/batch-qr', async (req, res) => {
 
     const placeholders = asset_ids.map(() => '?').join(',');
     const query = `
-      SELECT a.*, c.name as category_name, d.name as department_name
+      SELECT a.*, c.name as category_name, d.name as department_name, sd.name as sub_department_name
       FROM assets a
       LEFT JOIN categories c ON a.category_id = c.id
       LEFT JOIN departments d ON a.department_id = d.id
+      LEFT JOIN sub_departments sd ON a.sub_department_id = sd.id
       WHERE a.id IN (${placeholders})
       ORDER BY a.asset_code ASC
     `;

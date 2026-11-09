@@ -64,6 +64,29 @@ export function renderSignatureItem(name, title, date = 'วันที่ ....
   `;
 }
 
+/**
+ * Returns dynamic executive and clerk titles based on organization type (อบจ. / เทศบาล / อบต.)
+ */
+export function getExecutiveTitles(settings = {}) {
+  const type = settings?.org_type || '';
+  if (type.includes('จังหวัด') || type.includes('อบจ')) {
+    return {
+      executiveTitle: 'นายกองค์การบริหารส่วนจังหวัด',
+      clerkTitle: 'ปลัดองค์การบริหารส่วนจังหวัด'
+    };
+  }
+  if (type.includes('องค์การบริหารส่วนตำบล') || type.includes('อบต')) {
+    return {
+      executiveTitle: 'นายกองค์การบริหารส่วนตำบล',
+      clerkTitle: 'ปลัดองค์การบริหารส่วนตำบล'
+    };
+  }
+  return {
+    executiveTitle: 'นายกเทศมนตรี',
+    clerkTitle: 'ปลัดเทศบาล'
+  };
+}
+
 export function openPrintWindow(htmlContent, title = 'พิมพ์เอกสารราชการ') {
   const win = window.open('', '_blank', 'width=950,height=1000');
   if (!win) {
@@ -340,7 +363,7 @@ export function generateST1HTML(asset, settings, depData) {
             ${asset.gps_location ? `<div style="margin-top: 2px;"><strong>พิกัด GPS/แผนที่:</strong> ${asset.gps_location}</div>` : ''}
           </td>
           <td style="border: none; width: ${asset.photo_url ? '35%' : '45%'}; vertical-align: top; padding: 3px 0;">
-            <div><strong>สำนัก/กองที่ครอบครอง:</strong> ${asset.department_name || '-'}</div>
+            <div><strong>สำนัก/กองที่ครอบครอง:</strong> ${asset.department_name || '-'} ${asset.sub_department_name ? `<span style="color: #1e3a8a; font-weight: 600;">(${asset.sub_department_name})</span>` : ''}</div>
             <div style="margin-top: 2px;"><strong>ผู้รับผิดชอบดูแล:</strong> ${asset.custodian_name || '-'}</div>
             <div style="margin-top: 2px;"><strong>วันที่ตรวจรับ:</strong> ${formatThaiDate(asset.acquired_date)}</div>
             <div style="margin-top: 2px;"><strong>ปีงบประมาณ:</strong> พ.ศ. ${asset.fiscal_year}</div>
@@ -389,12 +412,12 @@ export function generateST1HTML(asset, settings, depData) {
     </div>
 
     <div class="doc-signatures" style="margin-top: ${isShortTable ? '65px' : '30px'};">
-      <!-- Official 4-tier Municipal Signature Block -->
+      <!-- Official 4-tier Signature Block -->
       <div class="sig-grid-4">
         ${renderSignatureItem(asset.custodian_name, 'ผู้ครอบครองดูแลทรัพย์สิน')}
         ${renderSignatureItem(settings.supply_officer_name, 'เจ้าหน้าที่พัสดุผู้จัดทำ')}
-        ${renderSignatureItem(settings.clerk_name, 'ปลัดเทศบาล / หัวหน้าพัสดุ')}
-        ${renderSignatureItem(settings.mayor_name, 'นายกเทศมนตรี / สั่งการ')}
+        ${renderSignatureItem(settings.clerk_name, `${getExecutiveTitles(settings).clerkTitle} / หัวหน้าพัสดุ`)}
+        ${renderSignatureItem(settings.mayor_name, `${getExecutiveTitles(settings).executiveTitle} / สั่งการ`)}
       </div>
     </div>
   `;
@@ -523,7 +546,7 @@ export function generateQrStickerHTML(asset, settings, qrDataUrl) {
         <div style="width: 60%; font-size: 11px; line-height: 1.3;">
           <div style="font-size: 13px; font-weight: bold; color: #000;">${asset.asset_code}</div>
           <div style="font-weight: 600; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${asset.name}</div>
-          <div>กอง: ${asset.department_name || '-'}</div>
+          <div>กอง: ${asset.department_name || '-'} ${asset.sub_department_name ? `<span style="color: #1e3a8a;">(${asset.sub_department_name})</span>` : ''}</div>
           <div>ผู้ดูแล: ${asset.custodian_name || '-'}</div>
           <div>ตรวจรับ: ${formatThaiDate(asset.acquired_date)}</div>
         </div>
@@ -560,7 +583,7 @@ export function generateBatchQrStickersHTML(items, settings) {
         <div style="width: 62%; font-size: 11px; line-height: 1.3;">
           <div style="font-size: 13px; font-weight: bold; font-family: monospace; color: #000;">${asset.asset_code}</div>
           <div style="font-weight: 600; font-size: 11px; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${asset.name}</div>
-          <div style="font-size: 10px; color: #333;">กอง: ${asset.department_name || '-'}</div>
+          <div style="font-size: 10px; color: #333;">กอง: ${asset.department_name || '-'} ${asset.sub_department_name ? `<span style="color: #1e3a8a;">(${asset.sub_department_name})</span>` : ''}</div>
           <div style="font-size: 10px; color: #555;">ตรวจรับ: ${formatThaiDate(asset.acquired_date)}</div>
         </div>
         <div style="width: 35%; text-align: center;">
@@ -765,8 +788,8 @@ export function generateTransferVoucherHTML(transfer, settings) {
         </div>
 
         <div class="sig-grid-2 sig-tier-gap">
-          ${renderSignatureItem(settings.clerk_name, 'ปลัดเทศบาล / หัวหน้าเจ้าหน้าที่พัสดุ')}
-          ${renderSignatureItem(transfer.approver_name || settings.mayor_name, 'นายกเทศมนตรี / ผู้มีอำนาจสั่งการ')}
+          ${renderSignatureItem(settings.clerk_name, `${getExecutiveTitles(settings).clerkTitle} / หัวหน้าเจ้าหน้าที่พัสดุ`)}
+          ${renderSignatureItem(transfer.approver_name || settings.mayor_name, `${getExecutiveTitles(settings).executiveTitle} / ผู้มีอำนาจสั่งการ`)}
         </div>
       </div>
     </div>
@@ -845,8 +868,8 @@ export function generateSKR1HTML(skrData, monthName, year, settings) {
     <div class="doc-signatures" style="margin-top: ${isSinglePage ? '85px' : '30px'};">
       <div class="sig-grid-3">
         ${renderSignatureItem(settings.supply_officer_name, 'เจ้าหน้าที่ผู้จัดทำสรุปรายงาน')}
-        ${renderSignatureItem(settings.clerk_name, 'ปลัดเทศบาล / หัวหน้าเจ้าหน้าที่พัสดุ')}
-        ${renderSignatureItem(settings.mayor_name, 'นายกเทศมนตรี / ผู้บริหารท้องถิ่น')}
+        ${renderSignatureItem(settings.clerk_name, `${getExecutiveTitles(settings).clerkTitle} / หัวหน้าเจ้าหน้าที่พัสดุ`)}
+        ${renderSignatureItem(settings.mayor_name, `${getExecutiveTitles(settings).executiveTitle} / ผู้บริหารท้องถิ่น`)}
       </div>
     </div>
   `;
@@ -889,7 +912,7 @@ export function generateST3HTML(asset, settings) {
           </tr>
           <tr>
             <th style="text-align: left;">สำนัก/กอง ผู้ครอบครอง</th>
-            <td>${asset.department_name || '-'}</td>
+            <td>${asset.department_name || '-'} ${asset.sub_department_name ? `<span style="color: #1e3a8a;">(${asset.sub_department_name})</span>` : ''}</td>
             <th style="text-align: left;">ผู้รับผิดชอบดูแล</th>
             <td>${asset.custodian_name || '-'}</td>
           </tr>
@@ -929,12 +952,12 @@ export function generateST3HTML(asset, settings) {
       </div>
 
       <div class="doc-signatures" style="margin-top: 65px;">
-        <!-- Official 4-tier Municipal Signature Block for ST.3 Land & Building Register -->
+        <!-- Official 4-tier Signature Block for ST.3 Land & Building Register -->
         <div class="sig-grid-4">
           ${renderSignatureItem(settings.supply_officer_name, 'เจ้าหน้าที่พัสดุผู้จัดทำ')}
           ${renderSignatureItem('ผู้อำนวยการกองช่าง', 'ผู้ตรวจสอบสิ่งปลูกสร้าง')}
-          ${renderSignatureItem(settings.clerk_name, 'ปลัดเทศบาล / หัวหน้าพัสดุ')}
-          ${renderSignatureItem(settings.mayor_name, 'นายกเทศมนตรี / สั่งการ')}
+          ${renderSignatureItem(settings.clerk_name, `${getExecutiveTitles(settings).clerkTitle} / หัวหน้าพัสดุ`)}
+          ${renderSignatureItem(settings.mayor_name, `${getExecutiveTitles(settings).executiveTitle} / สั่งการ`)}
         </div>
       </div>
     </div>
@@ -1015,8 +1038,8 @@ export function generateDisposalVoucherHTML(disp, settings) {
       <div class="doc-signatures" style="margin-top: 65px;">
         <div class="sig-grid-3">
           ${renderSignatureItem(settings.supply_officer_name, 'เจ้าหน้าที่พัสดุผู้รายงานตัดบัญชี')}
-          ${renderSignatureItem(settings.clerk_name, 'ปลัดเทศบาล / หัวหน้าเจ้าหน้าที่พัสดุ')}
-          ${renderSignatureItem(disp.approved_by || settings.mayor_name, 'นายกเทศมนตรี / ผู้มีอำนาจสั่งการจำหน่าย')}
+          ${renderSignatureItem(settings.clerk_name, `${getExecutiveTitles(settings).clerkTitle} / หัวหน้าเจ้าหน้าที่พัสดุ`)}
+          ${renderSignatureItem(disp.approved_by || settings.mayor_name, `${getExecutiveTitles(settings).executiveTitle} / ผู้มีอำนาจสั่งการจำหน่าย`)}
         </div>
       </div>
     </div>
@@ -1186,9 +1209,9 @@ export function generateReconciliationHTML(reportData, fiscalYear, settings = {}
 
       <div class="sig-grid-4" style="margin-top: 25px;">
         ${renderSignatureItem(settings.supply_officer_name, 'นักวิชาการพัสดุ (ผู้จัดทำ)')}
-        ${renderSignatureItem('นางวราภรณ์ ทรัพย์เพิ่ม', 'ผู้อำนวยการกองคลัง (ผู้ตรวจสอบ)')}
-        ${renderSignatureItem(settings.clerk_name, 'ปลัดเทศบาล')}
-        ${renderSignatureItem(settings.mayor_name, 'นายกเทศมนตรี')}
+        ${renderSignatureItem('ผู้อำนวยการกองคลัง', 'ผู้อำนวยการกองคลัง (ผู้ตรวจสอบ)')}
+        ${renderSignatureItem(settings.clerk_name, getExecutiveTitles(settings).clerkTitle)}
+        ${renderSignatureItem(settings.mayor_name, getExecutiveTitles(settings).executiveTitle)}
       </div>
     </div>
   `;

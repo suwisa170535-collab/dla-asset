@@ -14,7 +14,7 @@ import {
 import { formatBaht, formatThaiDate } from '../utils/formatters.js';
 import { generateTransferVoucherHTML, openPrintWindow } from '../utils/printTemplates.js';
 
-export default function TransferView({ settings, departments, currentUser }) {
+export default function TransferView({ settings, departments, subDepartments = [], currentUser }) {
   const [transfers, setTransfers] = useState([]);
   const [assets, setAssets] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -24,6 +24,7 @@ export default function TransferView({ settings, departments, currentUser }) {
   const [form, setForm] = useState({
     asset_id: '',
     to_department_id: '',
+    to_sub_department_id: '',
     transfer_date: new Date().toISOString().split('T')[0],
     reason: 'ปรับเกลี่ยการใช้งานทรัพย์สินภายในเทศบาลตามความจำเป็น',
     deliverer_name: currentUser?.name || '',
@@ -282,7 +283,10 @@ export default function TransferView({ settings, departments, currentUser }) {
                 <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs grid grid-cols-2 gap-2">
                   <div>
                     <span className="text-slate-500">สังกัดกองปัจจุบัน:</span>
-                    <strong className="text-gov-800 block">{selectedAssetInfo.department_name}</strong>
+                    <strong className="text-gov-800 block">
+                      {selectedAssetInfo.department_name}
+                      {selectedAssetInfo.sub_department_name ? ` (${selectedAssetInfo.sub_department_name})` : ''}
+                    </strong>
                   </div>
                   <div>
                     <span className="text-slate-500">ผู้ดูแลปัจจุบัน:</span>
@@ -292,11 +296,11 @@ export default function TransferView({ settings, departments, currentUser }) {
               )}
 
               <div className="grid grid-cols-2 gap-3">
-                <div className="col-span-2">
+                <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">โอนย้ายไปยังสำนัก/กองใหม่ *</label>
                   <select
                     value={form.to_department_id}
-                    onChange={e => setForm({ ...form, to_department_id: e.target.value })}
+                    onChange={e => setForm({ ...form, to_department_id: e.target.value, to_sub_department_id: '' })}
                     required
                     className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-gov-500 font-bold text-emerald-800"
                   >
@@ -304,6 +308,22 @@ export default function TransferView({ settings, departments, currentUser }) {
                     {departments.map(d => (
                       <option key={d.id} value={d.id}>{d.name}</option>
                     ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-indigo-700 mb-1">หน่วยงานย่อย/ฝ่าย ปลายทาง</label>
+                  <select
+                    value={form.to_sub_department_id || ''}
+                    onChange={e => setForm({ ...form, to_sub_department_id: e.target.value })}
+                    className="w-full px-3 py-2 border border-indigo-200 bg-indigo-50/20 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 font-medium"
+                  >
+                    <option value="">-- ไม่ระบุ / สังกัดกองโดยตรง --</option>
+                    {subDepartments
+                      .filter(sd => String(sd.department_id) === String(form.to_department_id))
+                      .map(sd => (
+                        <option key={sd.id} value={sd.id}>{sd.name}</option>
+                      ))}
                   </select>
                 </div>
 

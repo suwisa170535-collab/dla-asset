@@ -27,6 +27,18 @@ export function initDatabase() {
       head_position TEXT
     );
 
+    CREATE TABLE IF NOT EXISTS sub_departments (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      department_id INTEGER NOT NULL REFERENCES departments(id) ON DELETE CASCADE,
+      code TEXT NOT NULL,
+      name TEXT NOT NULL,
+      head_name TEXT,
+      head_position TEXT,
+      notes TEXT,
+      created_at TEXT DEFAULT (datetime('now', 'localtime')),
+      UNIQUE(department_id, code)
+    );
+
     CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       username TEXT UNIQUE NOT NULL,
@@ -264,6 +276,7 @@ export function initDatabase() {
     CREATE INDEX IF NOT EXISTS idx_transfers_asset ON asset_transfers(asset_id);
     CREATE INDEX IF NOT EXISTS idx_maintenance_asset ON maintenance_records(asset_id);
     CREATE INDEX IF NOT EXISTS idx_audit_timestamp ON audit_logs(timestamp);
+    CREATE INDEX IF NOT EXISTS idx_sub_departments_dept ON sub_departments(department_id);
   `);
 
   // Migrate columns for warranty, contract & land/building assets, photos & documents
@@ -280,7 +293,8 @@ export function initDatabase() {
     { name: 'document_url', type: 'TEXT' },
     { name: 'document_name', type: 'TEXT' },
     { name: 'tax_expiry_date', type: 'TEXT' },
-    { name: 'insurance_expiry_date', type: 'TEXT' }
+    { name: 'insurance_expiry_date', type: 'TEXT' },
+    { name: 'sub_department_id', type: 'INTEGER REFERENCES sub_departments(id)' }
   ];
 
   for (const col of extraCols) {
@@ -290,6 +304,18 @@ export function initDatabase() {
       // Column already exists, safe to ignore
     }
   }
+
+  try {
+    db.exec(`CREATE INDEX IF NOT EXISTS idx_assets_sub_department ON assets(sub_department_id);`);
+  } catch (e) {}
+
+  try {
+    db.exec(`ALTER TABLE users ADD COLUMN sub_department_id INTEGER REFERENCES sub_departments(id)`);
+  } catch (e) {}
+
+  try {
+    db.exec(`ALTER TABLE requisitions ADD COLUMN sub_department_id INTEGER REFERENCES sub_departments(id)`);
+  } catch (e) {}
 
   // Ensure all standard government asset categories exist (ตามมาตรฐานกรมบัญชีกลางและกระทรวงมหาดไทย)
   try {
@@ -327,6 +353,94 @@ export function initDatabase() {
     }
   } catch (e) {
     console.error('Error auto-seeding categories:', e.message);
+  }
+
+  // Ensure default municipal sub-departments / divisions exist (หน่วยงานย่อย / ฝ่าย / ศพด. / โรงเรียน / รพ.สต.)
+  try {
+    const existingSubDepts = db.prepare('SELECT count(*) as count FROM sub_departments').get()?.count || 0;
+    if (existingSubDepts === 0) {
+      const standardSubDepts = [
+        // สำนักปลัดเทศบาล (code 01)
+        { dept_code: '01', code: '01-01', name: 'ฝ่ายอำนวยการ', head_name: 'นายสมเกียรติ ยิ้มแย้ม', head_position: 'หัวหน้าฝ่ายอำนวยการ', notes: 'งานธุรการ สารบรรณ การเจ้าหน้าที่ ประชาสัมพันธ์' },
+        { dept_code: '01', code: '01-02', name: 'ฝ่ายแผนงานและงบประมาณ', head_name: 'นางสาวสุภาวดี ชัยชนะ', head_position: 'หัวหน้าฝ่ายแผนงานฯ', notes: 'งานจัดทำแผนพัฒนาท้องถิ่น งานวิเคราะห์นโยบาย' },
+        { dept_code: '01', code: '01-03', name: 'งานป้องกันและบรรเทาสาธารณภัย', head_name: 'จ่าเอกสมหมาย สู้ภัย', head_position: 'เจ้าพนักงานป้องกันฯ ชำนาญงาน', notes: 'งานดับเพลิง กู้ชีพ กู้ภัย และระงับอัคคีภัย' },
+        { dept_code: '01', code: '01-04', name: 'ฝ่ายนิติการและงานทะเบียน', head_name: 'นายนรินทร์ นิติธรรม', head_position: 'นิติกรชำนาญการ', notes: 'งานกฎหมาย นิติกรรม และงานทะเบียนราษฎร' },
+
+        // กองคลัง (code 02)
+        { dept_code: '02', code: '02-01', name: 'ฝ่ายการเงินและบัญชี', head_name: 'นางพิมพ์ใจ เงินงาม', head_position: 'หัวหน้าฝ่ายการเงินฯ', notes: 'งานรับเงิน เบิกจ่ายเงิน และลงบัญชี e-LAAS' },
+        { dept_code: '02', code: '02-02', name: 'ฝ่ายพัสดุและทรัพย์สิน', head_name: 'นางสาวนิตยา พัสดุเจริญ', head_position: 'หัวหน้าฝ่ายพัสดุฯ', notes: 'งานจัดซื้อจัดจ้าง ควบคุมทะเบียนทรัพย์สิน สท.1 สท.3' },
+        { dept_code: '02', code: '02-03', name: 'ฝ่ายพัฒนารายได้และแผนที่ภาษี', head_name: 'นายชาญชัย มั่งมี', head_position: 'หัวหน้าฝ่ายพัฒนารายได้', notes: 'งานจัดเก็บภาษีที่ดินและสิ่งปลูกสร้าง ภาษีป้าย' },
+
+        // กองช่าง (code 03)
+        { dept_code: '03', code: '03-01', name: 'ฝ่ายแบบแผนและก่อสร้าง', head_name: 'นายประสิทธิ์ สถาปัตย์', head_position: 'หัวหน้าฝ่ายแบบแผนฯ', notes: 'งานออกแบบ ควบคุมอาคาร ประมาณราคา' },
+        { dept_code: '03', code: '03-02', name: 'ฝ่ายการโยธา', head_name: 'นายเอกชัย ช่างประดิษฐ์', head_position: 'นายช่างโยธาชำนาญงาน', notes: 'งานก่อสร้างถนน สะพาน ท่อระบายน้ำ' },
+        { dept_code: '03', code: '03-03', name: 'ฝ่ายสาธารณูปโภคและไฟฟ้า', head_name: 'นายสมบัติ แสงทอง', head_position: 'นายช่างไฟฟ้า', notes: 'งานซ่อมบำรุงไฟฟ้าสาธารณะ เครื่องจักรกล' },
+
+        // กองสาธารณสุขและสิ่งแวดล้อม (code 04)
+        { dept_code: '04', code: '04-01', name: 'ฝ่ายบริการสาธารณสุข / รพ.สต.', head_name: 'นางสมพร รักษ์อนามัย', head_position: 'พยาบาลวิชาชีพชำนาญการ', notes: 'ศูนย์บริการสาธารณสุขเทศบาล / รพ.สต. ถ่ายโอน' },
+        { dept_code: '04', code: '04-02', name: 'ฝ่ายรักษาความสะอาดและจัดการขยะ', head_name: 'นายมนัส สะอาดดี', head_position: 'หัวหน้าฝ่ายรักษาความสะอาดฯ', notes: 'งานเก็บขนขยะ จัดการสิ่งปฏิกูล รถขยะ' },
+        { dept_code: '04', code: '04-03', name: 'ฝ่ายสุขาภิบาลและอนามัยสิ่งแวดล้อม', head_name: 'นางสาววรรณา สิ่งแวดล้อม', head_position: 'นักวิชาการสุขาภิบาล', notes: 'งานตรวจตลาดสด คุ้มครองผู้บริโภค' },
+
+        // กองการศึกษา ศาสนาและวัฒนธรรม (code 05)
+        { dept_code: '05', code: '05-01', name: 'ฝ่ายบริหารการศึกษา', head_name: 'นางสาวดวงใจ การศึกษา', head_position: 'นักวิชาการศึกษาปฏิบัติการ', notes: 'งานแผนการศึกษา ทุนการศึกษา กีฬา' },
+        { dept_code: '05', code: '05-02', name: 'ศูนย์พัฒนาเด็กเล็ก (ศพด. เทศบาล)', head_name: 'นางมาลี รักเด็ก', head_position: 'ครูผู้ดูแลเด็ก / หัวหน้า ศพด.', notes: 'ศูนย์พัฒนาเด็กเล็กเทศบาลตำบลสุขเกษม' },
+        { dept_code: '05', code: '05-03', name: 'โรงเรียนเทศบาล 1 (สุขเกษมวิทยานุสรณ์)', head_name: 'นายวิศิษฏ์ ครูเก่ง', head_position: 'ผู้อำนวยการโรงเรียนเทศบาล', notes: 'โรงเรียนสังกัดเทศบาลตำบลสุขเกษม' },
+        { dept_code: '05', code: '05-04', name: 'ฝ่ายส่งเสริมศาสนา ศิลปะ และวัฒนธรรม', head_name: 'นายอนุรักษ์ สืบสาน', head_position: 'เจ้าพนักงานส่งเสริมฯ', notes: 'งานประเพณี วัฒนธรรมท้องถิ่น กิจกรรมชุมชน' },
+
+        // กองสวัสดิการสังคม (code 06)
+        { dept_code: '06', code: '06-01', name: 'ฝ่ายพัฒนาชุมชน', head_name: 'นางกานดา สวัสดิ์ดี', head_position: 'นักพัฒนาชุมชนชำนาญการ', notes: 'งานส่งเสริมกลุ่มอาชีพ ประชาคมหมู่บ้าน' },
+        { dept_code: '06', code: '06-02', name: 'ฝ่ายสังคมสงเคราะห์', head_name: 'นายปรีชา เมตตาธรรม', head_position: 'นักสังคมสงเคราะห์', notes: 'งานเบี้ยยังชีพผู้สูงอายุ ผู้พิการ และผู้ด้อยโอกาส' }
+      ];
+
+      const insertSubDept = db.prepare(`
+        INSERT INTO sub_departments (department_id, code, name, head_name, head_position, notes)
+        VALUES (?, ?, ?, ?, ?, ?)
+      `);
+
+      for (const s of standardSubDepts) {
+        const dept = db.prepare('SELECT id FROM departments WHERE code = ?').get(s.dept_code);
+        if (dept) {
+          insertSubDept.run(dept.id, s.code, s.name, s.head_name, s.head_position, s.notes);
+        }
+      }
+
+      // Associate some demo assets to relevant sub_departments
+      try {
+        const subDepts = db.prepare('SELECT id, department_id, name FROM sub_departments').all();
+        const assets = db.prepare('SELECT id, department_id, name, location_room FROM assets WHERE sub_department_id IS NULL').all();
+        const updateAsset = db.prepare('UPDATE assets SET sub_department_id = ? WHERE id = ?');
+
+        for (const a of assets) {
+          const matching = subDepts.filter(sd => sd.department_id === a.department_id);
+          if (matching.length > 0) {
+            // Pick based on keywords or default to first sub_dept
+            let pick = matching[0];
+            const lowerLoc = (a.location_room || '').toLowerCase();
+            const lowerName = (a.name || '').toLowerCase();
+            for (const sd of matching) {
+              if (lowerLoc.includes('ศพด') || lowerName.includes('ศพด') || lowerLoc.includes('เด็ก')) {
+                if (sd.name.includes('ศูนย์พัฒนาเด็กเล็ก')) pick = sd;
+              } else if (lowerLoc.includes('โรงเรียน') || lowerName.includes('โรงเรียน') || lowerLoc.includes('รร.')) {
+                if (sd.name.includes('โรงเรียน')) pick = sd;
+              } else if (lowerLoc.includes('ดับเพลิง') || lowerName.includes('ดับเพลิง') || lowerName.includes('กู้ภัย')) {
+                if (sd.name.includes('ป้องกัน')) pick = sd;
+              } else if (lowerLoc.includes('พัสดุ') || lowerName.includes('พัสดุ')) {
+                if (sd.name.includes('พัสดุ')) pick = sd;
+              } else if (lowerLoc.includes('โยธา') || lowerLoc.includes('ช่าง') || lowerName.includes('ถนน')) {
+                if (sd.name.includes('โยธา')) pick = sd;
+              } else if (lowerLoc.includes('อนามัย') || lowerLoc.includes('รพ.สต') || lowerName.includes('แพทย์')) {
+                if (sd.name.includes('สาธารณสุข') || sd.name.includes('รพ.สต')) pick = sd;
+              }
+            }
+            updateAsset.run(pick.id, a.id);
+          }
+        }
+      } catch (err) {
+        console.error('Error linking sample assets to sub_departments:', err.message);
+      }
+    }
+  } catch (e) {
+    console.error('Error auto-seeding sub_departments:', e.message);
   }
 
   // Ensure default municipal user accounts exist

@@ -31,6 +31,7 @@ export default function App() {
   });
 
   const [departments, setDepartments] = useState([]);
+  const [subDepartments, setSubDepartments] = useState([]);
   const [categories, setCategories] = useState([]);
   const [summary, setSummary] = useState(null);
   const [auditLogs, setAuditLogs] = useState([]);
@@ -53,9 +54,10 @@ export default function App() {
   // Load Initial Settings & Metadata
   const loadInitialData = async () => {
     try {
-      const [resS, resD, resC, resSum, resLogs, resInv] = await Promise.all([
+      const [resS, resD, resSubD, resC, resSum, resLogs, resInv] = await Promise.all([
         fetch('/api/settings').then(r => r.json()),
         fetch('/api/departments').then(r => r.json()),
+        fetch('/api/sub-departments').then(r => r.json()),
         fetch('/api/categories').then(r => r.json()),
         fetch('/api/reports/summary').then(r => r.json()),
         fetch('/api/audit-logs?limit=10').then(r => r.json()),
@@ -64,12 +66,25 @@ export default function App() {
 
       if (resS && Object.keys(resS).length > 0) setSettings(resS);
       if (resD) setDepartments(resD);
+      if (resSubD) setSubDepartments(resSubD);
       if (resC) setCategories(resC);
       if (resSum) setSummary(resSum);
       if (resLogs) setAuditLogs(resLogs);
       if (resInv) setInventoryItems(resInv);
     } catch (err) {
       console.error('Failed to load initial data:', err);
+    }
+  };
+
+  const fetchSubDepartments = async () => {
+    try {
+      const res = await fetch('/api/sub-departments');
+      if (res.ok) {
+        const data = await res.json();
+        setSubDepartments(data);
+      }
+    } catch (err) {
+      console.error('Failed to load sub-departments:', err);
     }
   };
 
@@ -119,6 +134,7 @@ export default function App() {
             <AssetManagementView
               settings={settings}
               departments={departments}
+              subDepartments={subDepartments}
               categories={categories}
               currentUser={currentUser}
               currentRole={currentRole}
@@ -136,6 +152,7 @@ export default function App() {
             <TransferView
               settings={settings}
               departments={departments}
+              subDepartments={subDepartments}
               currentUser={currentUser}
             />
           )}
@@ -165,6 +182,8 @@ export default function App() {
           {activeTab === 'annual-audit' && (
             <AnnualAuditView
               settings={settings}
+              departments={departments}
+              subDepartments={subDepartments}
               currentUser={currentUser}
             />
           )}
@@ -180,6 +199,7 @@ export default function App() {
             <ReportsView
               settings={settings}
               departments={departments}
+              subDepartments={subDepartments}
             />
           )}
 
@@ -193,6 +213,8 @@ export default function App() {
               setSettings={setSettings}
               departments={departments}
               fetchDepartments={loadInitialData}
+              subDepartments={subDepartments}
+              fetchSubDepartments={fetchSubDepartments}
               categories={categories}
               fetchCategories={loadInitialData}
               currentUser={currentUser}

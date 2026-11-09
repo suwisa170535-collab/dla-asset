@@ -33,8 +33,10 @@ import {
 export default function SettingsView({ 
   settings, 
   setSettings, 
-  departments, 
+  departments = [], 
   fetchDepartments, 
+  subDepartments = [],
+  fetchSubDepartments,
   categories = [], 
   fetchCategories, 
   currentUser 
@@ -212,6 +214,104 @@ export default function SettingsView({
     } catch (err) {
       console.error(err);
       alert('เกิดข้อผิดพลาดในการลบสำนัก/กอง');
+    }
+  };
+
+  // Sub-Department Management State
+  const [selectedSubDeptFilterDept, setSelectedSubDeptFilterDept] = useState('');
+  const [newSubDept, setNewSubDept] = useState({
+    department_id: departments[0]?.id || 1,
+    code: '',
+    name: '',
+    head_name: '',
+    head_position: '',
+    notes: ''
+  });
+  const [editingSubDept, setEditingSubDept] = useState(null);
+
+  const handleAddSubDept = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await fetch('/api/sub-departments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...newSubDept,
+          actorName: currentUser?.name,
+          actorRole: currentUser?.title
+        })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setNewSubDept({
+          department_id: departments[0]?.id || 1,
+          code: '',
+          name: '',
+          head_name: '',
+          head_position: '',
+          notes: ''
+        });
+        if (fetchSubDepartments) fetchSubDepartments();
+        alert('✅ เพิ่มหน่วยงานย่อย/ฝ่าย เรียบร้อยแล้ว');
+      } else {
+        alert(`เกิดข้อผิดพลาด: ${data.error}`);
+      }
+    } catch (err) {
+      console.error(err);
+      alert('เกิดข้อผิดพลาดในการเชื่อมต่อ');
+    }
+  };
+
+  const handleUpdateSubDept = async (e) => {
+    e.preventDefault();
+    if (!editingSubDept) return;
+    try {
+      const res = await fetch(`/api/sub-departments/${editingSubDept.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...editingSubDept,
+          actorName: currentUser?.name,
+          actorRole: currentUser?.title
+        })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setEditingSubDept(null);
+        if (fetchSubDepartments) fetchSubDepartments();
+        alert('✅ บันทึกการแก้ไขหน่วยงานย่อยเรียบร้อยแล้ว');
+      } else {
+        alert(`เกิดข้อผิดพลาด: ${data.error}`);
+      }
+    } catch (err) {
+      console.error(err);
+      alert('เกิดข้อผิดพลาดในการแก้ไขหน่วยงานย่อย');
+    }
+  };
+
+  const handleDeleteSubDept = async (sd) => {
+    const confirmDelete = window.confirm(`คุณแน่ใจหรือไม่ว่าต้องการลบหน่วยงานย่อย "${sd.name}" (รหัส ${sd.code})?`);
+    if (!confirmDelete) return;
+
+    try {
+      const res = await fetch(`/api/sub-departments/${sd.id}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          actorName: currentUser?.name,
+          actorRole: currentUser?.title
+        })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        if (fetchSubDepartments) fetchSubDepartments();
+        alert('✅ ลบหน่วยงานย่อยเรียบร้อยแล้ว');
+      } else {
+        alert(data.error || 'เกิดข้อผิดพลาดในการลบหน่วยงานย่อย');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('เกิดข้อผิดพลาดในการลบหน่วยงานย่อย');
     }
   };
 
@@ -703,7 +803,11 @@ export default function SettingsView({
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">นายกเทศมนตรี / นายก อบต. *</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">
+                {formData.org_type?.includes('จังหวัด') ? 'นายก อบจ. *' :
+                 formData.org_type?.includes('ตำบล') && !formData.org_type?.includes('เทศบาล') ? 'นายก อบต. *' :
+                 'นายกเทศมนตรี / ผู้บริหารสูงสุด *'}
+              </label>
               <input
                 type="text"
                 value={formData.mayor_name}
@@ -714,7 +818,11 @@ export default function SettingsView({
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">ปลัดเทศบาล / ปลัด อบต. *</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">
+                {formData.org_type?.includes('จังหวัด') ? 'ปลัด อบจ. *' :
+                 formData.org_type?.includes('ตำบล') && !formData.org_type?.includes('เทศบาล') ? 'ปลัด อบต. *' :
+                 'ปลัดเทศบาล / ปลัดองค์กร *'}
+              </label>
               <input
                 type="text"
                 value={formData.clerk_name}
@@ -841,6 +949,200 @@ export default function SettingsView({
                 className="px-4 py-2 bg-gov-700 hover:bg-gov-800 text-white font-bold rounded-xl text-xs whitespace-nowrap shadow-sm"
               >
                 เพิ่ม
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      {/* ------------------------------------------------------------- */}
+      {/* SUB-DEPARTMENTS MANAGEMENT (หน่วยงานย่อย / ฝ่าย / ศพด. / โรงเรียน / รพ.สต.) */}
+      {/* ------------------------------------------------------------- */}
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 pb-3 mb-4 gap-2">
+          <div className="flex items-center space-x-2">
+            <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center font-bold">
+              <Layers className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center space-x-2">
+                <h2 className="font-bold text-slate-900 text-base">รายชื่อหน่วยงานย่อย / ฝ่าย / ศพด. / โรงเรียน / รพ.สต.</h2>
+                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-indigo-100 text-indigo-800">
+                  {subDepartments.length} หน่วยงานย่อย
+                </span>
+              </div>
+              <p className="text-xs text-slate-500">โครงสร้างองค์กรระดับที่ 2 เพื่อแยกบัญชีทรัพย์สิน ทะเบียน สท.1 สท.3 และการตรวจนับรายฝ่าย</p>
+            </div>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <label className="text-xs text-slate-500 whitespace-nowrap font-medium">สังกัดกอง:</label>
+            <select
+              value={selectedSubDeptFilterDept}
+              onChange={e => setSelectedSubDeptFilterDept(e.target.value)}
+              className="px-3 py-1.5 border border-slate-200 rounded-xl text-xs bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500"
+            >
+              <option value="">ทุกสำนัก/กอง (ทั้งหมด {subDepartments.length})</option>
+              {departments.map(d => (
+                <option key={d.id} value={d.id}>{d.name}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Sub-departments List */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
+          {subDepartments
+            .filter(sd => !selectedSubDeptFilterDept || String(sd.department_id) === String(selectedSubDeptFilterDept))
+            .map(sd => (
+              <div key={sd.id} className="p-3.5 bg-slate-50 hover:bg-indigo-50/40 transition rounded-xl border border-slate-200 text-xs flex flex-col justify-between group">
+                <div>
+                  <div className="flex items-center justify-between gap-1 mb-1.5">
+                    <span className="font-semibold px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 border border-indigo-100 text-[11px]">
+                      {sd.department_name || departments.find(d => d.id === sd.department_id)?.name || 'สำนัก/กอง'}
+                    </span>
+                    <span className="font-mono bg-white px-2 py-0.5 rounded border border-slate-200 text-slate-500 font-semibold text-[10px]">
+                      รหัส {sd.code}
+                    </span>
+                  </div>
+
+                  <div className="font-bold text-slate-900 text-sm mt-1">
+                    {sd.name}
+                  </div>
+
+                  {sd.notes && (
+                    <div className="text-[11px] text-slate-500 mt-1 italic line-clamp-1">
+                      {sd.notes}
+                    </div>
+                  )}
+
+                  <div className="mt-2.5 space-y-0.5 text-slate-600 text-[11px]">
+                    <div>
+                      <span className="text-slate-400">หัวหน้าฝ่าย/ผู้ดูแล:</span> {sd.head_name || '-'}
+                    </div>
+                    {sd.head_position && (
+                      <div className="text-slate-500 text-[10.5px]">
+                        <span className="text-slate-400">ตำแหน่ง:</span> {sd.head_position}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="mt-3 pt-2.5 border-t border-slate-200/80 flex items-center justify-between">
+                  <span className="text-[11px] font-semibold text-slate-500">
+                    ครุภัณฑ์ในสังกัด: <strong className="text-indigo-700">{sd.asset_count || 0}</strong> ชิ้น
+                  </span>
+
+                  <div className="flex items-center space-x-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setEditingSubDept({ ...sd })}
+                      className="flex items-center space-x-1 px-2 py-1 bg-white hover:bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-semibold shadow-xs transition"
+                      title="แก้ไขข้อมูลหน่วยงานย่อย"
+                    >
+                      <Edit2 className="w-3 h-3 text-indigo-600" />
+                      <span>แก้ไข</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteSubDept(sd)}
+                      className="flex items-center space-x-1 px-2 py-1 bg-white hover:bg-rose-50 text-rose-600 border border-rose-200 rounded-lg text-xs font-semibold shadow-xs transition"
+                      title="ลบหน่วยงานย่อยนี้"
+                    >
+                      <Trash2 className="w-3 h-3 text-rose-500" />
+                      <span>ลบ</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+        </div>
+
+        {/* Add Sub-Department Inline Form */}
+        <form onSubmit={handleAddSubDept} className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+          <div className="text-xs font-bold text-slate-700 uppercase flex items-center space-x-1.5">
+            <Plus className="w-3.5 h-3.5 text-indigo-600" />
+            <span>เพิ่มหน่วยงานย่อย / ฝ่าย / ศพด. / โรงเรียน ใหม่</span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
+            <div className="lg:col-span-2">
+              <label className="block text-[11px] font-bold text-slate-600 mb-1">สังกัดสำนัก/กอง *</label>
+              <select
+                value={newSubDept.department_id}
+                onChange={e => setNewSubDept({ ...newSubDept, department_id: Number(e.target.value) })}
+                required
+                className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs bg-white font-medium"
+              >
+                {departments.map(d => (
+                  <option key={d.id} value={d.id}>{d.name} ({d.code})</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-bold text-slate-600 mb-1">รหัสฝ่าย/หน่วยงาน *</label>
+              <input
+                type="text"
+                placeholder="เช่น 05-02"
+                value={newSubDept.code}
+                onChange={e => setNewSubDept({ ...newSubDept, code: e.target.value })}
+                required
+                className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs font-mono font-bold bg-white"
+              />
+            </div>
+
+            <div className="lg:col-span-2">
+              <label className="block text-[11px] font-bold text-slate-600 mb-1">ชื่อหน่วยงานย่อย / ฝ่าย / ศูนย์ฯ *</label>
+              <input
+                type="text"
+                placeholder="เช่น ศูนย์พัฒนาเด็กเล็ก 1 หรือ ฝ่ายการเงิน"
+                value={newSubDept.name}
+                onChange={e => setNewSubDept({ ...newSubDept, name: e.target.value })}
+                required
+                className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs font-bold bg-white"
+              />
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-bold text-slate-600 mb-1">หัวหน้าฝ่าย/ผู้ดูแล</label>
+              <input
+                type="text"
+                placeholder="ชื่อ-นามสกุล"
+                value={newSubDept.head_name}
+                onChange={e => setNewSubDept({ ...newSubDept, head_name: e.target.value })}
+                className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs bg-white"
+              />
+            </div>
+
+            <div className="lg:col-span-3">
+              <label className="block text-[11px] font-bold text-slate-600 mb-1">ตำแหน่ง</label>
+              <input
+                type="text"
+                placeholder="เช่น หัวหน้าฝ่ายอำนวยการ / ผอ.โรงเรียน"
+                value={newSubDept.head_position}
+                onChange={e => setNewSubDept({ ...newSubDept, head_position: e.target.value })}
+                className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs bg-white"
+              />
+            </div>
+
+            <div className="lg:col-span-2">
+              <label className="block text-[11px] font-bold text-slate-600 mb-1">ภารกิจ/หมายเหตุ</label>
+              <input
+                type="text"
+                placeholder="เช่น งานดับเพลิง / งานสารบรรณ"
+                value={newSubDept.notes}
+                onChange={e => setNewSubDept({ ...newSubDept, notes: e.target.value })}
+                className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs bg-white"
+              />
+            </div>
+
+            <div className="flex items-end">
+              <button
+                type="submit"
+                className="w-full py-2 bg-indigo-700 hover:bg-indigo-800 text-white font-bold rounded-xl text-xs whitespace-nowrap shadow-sm transition"
+              >
+                + เพิ่มหน่วยงานย่อย
               </button>
             </div>
           </div>
@@ -1536,6 +1838,120 @@ export default function SettingsView({
                 <button
                   type="submit"
                   className="px-5 py-2 bg-gov-700 hover:bg-gov-800 text-white font-bold rounded-xl text-xs shadow-md transition"
+                >
+                  บันทึกการแก้ไข
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Sub-Department Modal */}
+      {editingSubDept && (
+        <div className="fixed inset-0 z-50 overflow-y-auto flex justify-center p-3 sm:p-4 bg-black/40 backdrop-blur-xs">
+          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-lg w-full my-auto p-6 max-h-[92vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex justify-between items-center border-b border-slate-100 pb-3 mb-4">
+              <div className="flex items-center space-x-2">
+                <Layers className="w-5 h-5 text-indigo-700" />
+                <h3 className="font-bold text-slate-900 text-base">แก้ไขข้อมูลหน่วยงานย่อย / ฝ่าย</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEditingSubDept(null)}
+                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdateSubDept} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">สังกัดสำนัก/กอง *</label>
+                <select
+                  value={editingSubDept.department_id}
+                  onChange={e => setEditingSubDept({ ...editingSubDept, department_id: Number(e.target.value) })}
+                  required
+                  className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs bg-white font-medium focus:ring-2 focus:ring-indigo-500"
+                >
+                  {departments.map(d => (
+                    <option key={d.id} value={d.id}>{d.name} ({d.code})</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">รหัสฝ่าย *</label>
+                  <input
+                    type="text"
+                    value={editingSubDept.code}
+                    onChange={e => setEditingSubDept({ ...editingSubDept, code: e.target.value })}
+                    required
+                    placeholder="เช่น 05-02"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs font-mono font-bold focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-bold text-slate-700 mb-1">ชื่อหน่วยงานย่อย / ฝ่าย *</label>
+                  <input
+                    type="text"
+                    value={editingSubDept.name}
+                    onChange={e => setEditingSubDept({ ...editingSubDept, name: e.target.value })}
+                    required
+                    placeholder="เช่น ศูนย์พัฒนาเด็กเล็ก 1"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm font-bold focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">หัวหน้าฝ่าย/ผู้ดูแล</label>
+                  <input
+                    type="text"
+                    value={editingSubDept.head_name || ''}
+                    onChange={e => setEditingSubDept({ ...editingSubDept, head_name: e.target.value })}
+                    placeholder="ชื่อ-นามสกุล"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">ตำแหน่ง</label>
+                  <input
+                    type="text"
+                    value={editingSubDept.head_position || ''}
+                    onChange={e => setEditingSubDept({ ...editingSubDept, head_position: e.target.value })}
+                    placeholder="ตำแหน่ง"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">ภารกิจ/หมายเหตุ</label>
+                <textarea
+                  value={editingSubDept.notes || ''}
+                  onChange={e => setEditingSubDept({ ...editingSubDept, notes: e.target.value })}
+                  rows={2}
+                  placeholder="รายละเอียดงานหรือสถานที่ตั้ง"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+
+              <div className="border-t border-slate-100 pt-3 flex justify-end space-x-2">
+                <button
+                  type="button"
+                  onClick={() => setEditingSubDept(null)}
+                  className="px-4 py-2 border border-slate-200 text-slate-600 font-semibold rounded-xl text-xs hover:bg-slate-50 transition"
+                >
+                  ยกเลิก
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 bg-indigo-700 hover:bg-indigo-800 text-white font-bold rounded-xl text-xs shadow-md transition"
                 >
                   บันทึกการแก้ไข
                 </button>

@@ -36,11 +36,12 @@ import {
 import { formatBaht, formatThaiDate, ASSET_STATUS_MAP } from '../utils/formatters.js';
 import { generateST1HTML, generateST3HTML, generateQrStickerHTML, generateBatchQrStickersHTML, generateInspectionHTML, openPrintWindow } from '../utils/printTemplates.js';
 
-export default function AssetManagementView({ settings, departments = [], categories = [], currentUser, currentRole }) {
+export default function AssetManagementView({ settings, departments = [], subDepartments = [], categories = [], currentUser, currentRole }) {
   const [assets, setAssets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDept, setSelectedDept] = useState('');
+  const [selectedSubDept, setSelectedSubDept] = useState('');
   const [selectedCat, setSelectedCat] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
   const [viewMode, setViewMode] = useState(() => localStorage.getItem('asset_view_mode') || 'table');
@@ -189,6 +190,7 @@ export default function AssetManagementView({ settings, departments = [], catego
     model: '',
     serial_number: '',
     department_id: 1,
+    sub_department_id: '',
     custodian_name: '',
     location_room: '',
     acquired_date: new Date().toISOString().split('T')[0],
@@ -228,6 +230,7 @@ export default function AssetManagementView({ settings, departments = [], catego
       const params = new URLSearchParams();
       if (searchTerm) params.append('search', searchTerm);
       if (selectedDept) params.append('department_id', selectedDept);
+      if (selectedSubDept) params.append('sub_department_id', selectedSubDept);
       if (selectedCat) params.append('category_id', selectedCat);
       if (selectedStatus && selectedStatus !== 'expiring_warranty') {
         params.append('status', selectedStatus);
@@ -256,7 +259,7 @@ export default function AssetManagementView({ settings, departments = [], catego
 
   useEffect(() => {
     fetchAssets();
-  }, [searchTerm, selectedDept, selectedCat, selectedStatus]);
+  }, [searchTerm, selectedDept, selectedSubDept, selectedCat, selectedStatus]);
 
   // Update auto code preview when category or fiscal year changes
   useEffect(() => {
@@ -416,6 +419,7 @@ export default function AssetManagementView({ settings, departments = [], catego
       salvage_value: asset.salvage_value !== undefined ? asset.salvage_value : 1.0,
       fiscal_year: asset.fiscal_year || Number(settings?.fiscal_year) || 2569,
       department_id: asset.department_id || 1,
+      sub_department_id: asset.sub_department_id || '',
       category_id: asset.category_id || 1,
       status: asset.status || 'active',
       notes: asset.notes || '',
@@ -834,7 +838,7 @@ export default function AssetManagementView({ settings, departments = [], catego
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+      <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
         <div className="relative lg:col-span-2">
           <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
           <input
@@ -849,13 +853,31 @@ export default function AssetManagementView({ settings, departments = [], catego
         <div>
           <select
             value={selectedDept}
-            onChange={(e) => setSelectedDept(e.target.value)}
+            onChange={(e) => {
+              setSelectedDept(e.target.value);
+              setSelectedSubDept('');
+            }}
             className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gov-500"
           >
             <option value="">ทุกสำนัก/กอง</option>
             {departments.map((d) => (
               <option key={d.id} value={d.id}>{d.name}</option>
             ))}
+          </select>
+        </div>
+
+        <div>
+          <select
+            value={selectedSubDept}
+            onChange={(e) => setSelectedSubDept(e.target.value)}
+            className="w-full px-3 py-2 border border-indigo-200 bg-indigo-50/30 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium text-slate-800"
+          >
+            <option value="">ทุกหน่วยงานย่อย/ฝ่าย</option>
+            {subDepartments
+              .filter(sd => !selectedDept || String(sd.department_id) === String(selectedDept))
+              .map((sd) => (
+                <option key={sd.id} value={sd.id}>{sd.name} ({sd.code})</option>
+              ))}
           </select>
         </div>
 
@@ -1051,6 +1073,12 @@ export default function AssetManagementView({ settings, departments = [], catego
                         <span className="text-slate-500">สำนัก/กอง:</span>
                         <strong className="text-slate-800">{asset.department_name || '-'}</strong>
                       </div>
+                      {asset.sub_department_name && (
+                        <div className="flex justify-between text-indigo-700">
+                          <span className="text-slate-500">ฝ่าย/หน่วยงาน:</span>
+                          <strong className="text-indigo-700 font-semibold">{asset.sub_department_name}</strong>
+                        </div>
+                      )}
                       <div className="flex justify-between">
                         <span className="text-slate-500">ผู้ดูแล:</span>
                         <span className="text-slate-700">{asset.custodian_name || '-'}</span>
@@ -1262,6 +1290,12 @@ export default function AssetManagementView({ settings, departments = [], catego
                       {/* สำนัก/กอง & ผู้ดูแล */}
                       <td className="py-3 px-3">
                         <div className="font-semibold text-slate-800 text-xs">{asset.department_name}</div>
+                        {asset.sub_department_name && (
+                          <div className="text-[11px] font-semibold text-indigo-700 mt-0.5 flex items-center">
+                            <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 mr-1 inline-block"></span>
+                            {asset.sub_department_name}
+                          </div>
+                        )}
                         <div className="text-xs text-slate-600 mt-0.5">ผู้ดูแล: <span className="font-medium text-slate-700">{asset.custodian_name || '-'}</span></div>
                         <div className="text-[11px] text-slate-400 truncate max-w-[170px]">ห้อง: {asset.location_room || '-'}</div>
                         {asset.deed_number && <div className="text-[11px] text-blue-600 font-medium mt-0.5 truncate max-w-[170px]">โฉนด: {asset.deed_number}</div>}
@@ -1470,18 +1504,36 @@ export default function AssetManagementView({ settings, departments = [], catego
                   />
                 </div>
 
-                {/* Department & Custodian */}
+                {/* Department & Sub-Department */}
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">สำนัก/กอง ที่ครอบครอง *</label>
                   <select
                     value={formData.department_id}
-                    onChange={e => setFormData({ ...formData, department_id: Number(e.target.value) })}
+                    onChange={e => {
+                      const newDeptId = Number(e.target.value);
+                      setFormData({ ...formData, department_id: newDeptId, sub_department_id: '' });
+                    }}
                     required
                     className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-gov-500"
                   >
                     {departments.map(d => (
                       <option key={d.id} value={d.id}>{d.name}</option>
                     ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-indigo-700 mb-1">หน่วยงานย่อย / ฝ่าย / ศพด. / โรงเรียน</label>
+                  <select
+                    value={formData.sub_department_id || ''}
+                    onChange={e => setFormData({ ...formData, sub_department_id: e.target.value ? Number(e.target.value) : '' })}
+                    className="w-full px-3 py-2 border border-indigo-200 bg-indigo-50/20 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 font-medium"
+                  >
+                    <option value="">-- ไม่ระบุ / สังกัดส่วนกลางของกอง --</option>
+                    {subDepartments
+                      .filter(sd => String(sd.department_id) === String(formData.department_id))
+                      .map(sd => (
+                        <option key={sd.id} value={sd.id}>{sd.name} ({sd.code})</option>
+                      ))}
                   </select>
                 </div>
                 <div>
@@ -1824,12 +1876,29 @@ export default function AssetManagementView({ settings, departments = [], catego
                   <label className="block text-xs font-bold text-slate-700 mb-1">สำนัก/กองที่รับผิดชอบ *</label>
                   <select
                     value={editFormData.department_id || 1}
-                    onChange={e => setEditFormData({ ...editFormData, department_id: Number(e.target.value) })}
+                    onChange={e => setEditFormData({ ...editFormData, department_id: Number(e.target.value), sub_department_id: '' })}
                     className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-gov-500 font-medium"
                   >
                     {departments.map(d => (
                       <option key={d.id} value={d.id}>{d.name}</option>
                     ))}
+                  </select>
+                </div>
+
+                {/* หน่วยงานย่อย / ฝ่าย */}
+                <div>
+                  <label className="block text-xs font-bold text-indigo-700 mb-1">หน่วยงานย่อย / ฝ่าย / ศพด. / โรงเรียน</label>
+                  <select
+                    value={editFormData.sub_department_id || ''}
+                    onChange={e => setEditFormData({ ...editFormData, sub_department_id: e.target.value ? Number(e.target.value) : '' })}
+                    className="w-full px-3 py-2 border border-indigo-200 bg-indigo-50/20 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 font-medium"
+                  >
+                    <option value="">-- ไม่ระบุ / สังกัดส่วนกลางของกอง --</option>
+                    {subDepartments
+                      .filter(sd => String(sd.department_id) === String(editFormData.department_id || 1))
+                      .map(sd => (
+                        <option key={sd.id} value={sd.id}>{sd.name} ({sd.code})</option>
+                      ))}
                   </select>
                 </div>
 
@@ -2402,7 +2471,7 @@ export default function AssetManagementView({ settings, departments = [], catego
                   <div><strong>หมวดหมู่:</strong> {selectedAssetForDetail.category_name}</div>
                   <div><strong>ยี่ห้อ/รุ่น:</strong> {selectedAssetForDetail.brand || '-'} รุ่น {selectedAssetForDetail.model || '-'}</div>
                   <div><strong>หมายเลขเครื่อง (S/N):</strong> <span className="font-mono">{selectedAssetForDetail.serial_number || '-'}</span></div>
-                  <div><strong>สำนัก/กอง:</strong> <span className="font-semibold text-gov-800">{selectedAssetForDetail.department_name}</span></div>
+                  <div><strong>สำนัก/กอง:</strong> <span className="font-semibold text-gov-800">{selectedAssetForDetail.department_name}</span> {selectedAssetForDetail.sub_department_name && <span className="text-indigo-700 font-bold ml-1.5 px-2 py-0.5 bg-indigo-50 border border-indigo-200 rounded-md">({selectedAssetForDetail.sub_department_name})</span>}</div>
                   <div><strong>ผู้ครอบครองดูแล:</strong> {selectedAssetForDetail.custodian_name || '-'} | ห้อง: {selectedAssetForDetail.location_room || '-'}</div>
                 </div>
               </div>

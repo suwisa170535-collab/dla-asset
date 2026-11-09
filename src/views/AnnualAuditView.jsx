@@ -12,16 +12,26 @@ import {
   Search,
   Check,
   X,
-  FileCheck
+  FileCheck,
+  Building2,
+  Filter,
+  CheckCircle,
+  RotateCcw
 } from 'lucide-react';
 import { formatThaiDate } from '../utils/formatters.js';
-import { openPrintWindow, getGarudaSVG, renderGovHeader, renderSignatureItem } from '../utils/printTemplates.js';
+import { openPrintWindow, getGarudaSVG, renderGovHeader, renderSignatureItem, getExecutiveTitles } from '../utils/printTemplates.js';
 
-export default function AnnualAuditView({ settings, currentUser }) {
+export default function AnnualAuditView({ settings, currentUser, departments = [], subDepartments = [] }) {
   const [audits, setAudits] = useState([]);
   const [activeAudit, setActiveAudit] = useState(null);
   const [auditDetails, setAuditDetails] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Filter States
+  const [selectedDept, setSelectedDept] = useState('');
+  const [selectedSubDept, setSelectedSubDept] = useState('');
+  const [selectedStatus, setSelectedStatus] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Scanner Simulator Modal
   const [showScannerModal, setShowScannerModal] = useState(false);
@@ -32,9 +42,9 @@ export default function AnnualAuditView({ settings, currentUser }) {
   // New Audit Round Modal
   const [showNewAuditModal, setShowNewAuditModal] = useState(false);
   const [newAuditForm, setNewAuditForm] = useState({
-    fiscal_year: Number(settings.fiscal_year) || 2569,
+    fiscal_year: Number(settings?.fiscal_year) || 2569,
     audit_date: new Date().toISOString().split('T')[0],
-    committee_chairman: `${settings.clerk_name || 'นางพิมพา จิตตรง'} (ปลัดเทศบาล - ประธานกรรมการ)`,
+    committee_chairman: `${settings?.clerk_name || 'นางพิมพา จิตตรง'} (${getExecutiveTitles(settings).clerkTitle} - ประธานกรรมการ)`,
     committee_members: 'นายเอกชัย ช่างประดิษฐ์ (ผอ.กองช่าง), นางวราภรณ์ ทรัพย์เพิ่ม (ผอ.กองคลัง), นางสาวนิตยา พัสดุเจริญ (นักวิชาการพัสดุ - เลขานุการ)',
     notes: 'การตรวจสอบพัสดุประจำปีตามระเบียบกระทรวงการคลังฯ พ.ศ. 2560 ข้อ 213'
   });
@@ -61,7 +71,7 @@ export default function AnnualAuditView({ settings, currentUser }) {
       const res = await fetch(`/api/annual-audits/${auditId}`);
       const data = await res.json();
       setActiveAudit(data.audit);
-      setAuditDetails(data.items);
+      setAuditDetails(data.items || []);
     } catch (err) {
       console.error(err);
     }
@@ -70,6 +80,37 @@ export default function AnnualAuditView({ settings, currentUser }) {
   useEffect(() => {
     fetchAudits();
   }, []);
+
+  // Filter sub-departments when department is selected
+  const availableSubDepts = selectedDept
+    ? subDepartments.filter(sd => String(sd.department_id) === String(selectedDept))
+    : subDepartments;
+
+  // Filtered audit items
+  const filteredAuditDetails = auditDetails.filter(item => {
+    if (selectedDept && String(item.department_id) !== String(selectedDept)) {
+      return false;
+    }
+    if (selectedSubDept && String(item.sub_department_id) !== String(selectedSubDept)) {
+      return false;
+    }
+    if (selectedStatus) {
+      if (selectedStatus === 'pending' && item.physical_status) return false;
+      if (selectedStatus !== 'pending' && item.physical_status !== selectedStatus) return false;
+    }
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase().trim();
+      const code = (item.asset_code || '').toLowerCase();
+      const name = (item.name || '').toLowerCase();
+      const brand = (item.brand || '').toLowerCase();
+      const custodian = (item.custodian_name || '').toLowerCase();
+      const room = (item.location_room || '').toLowerCase();
+      if (!code.includes(q) && !name.includes(q) && !brand.includes(q) && !custodian.includes(q) && !room.includes(q)) {
+        return false;
+      }
+    }
+    return true;
+  });
 
   // Record single check
   const handleVerifyAsset = async (assetId, status, remark = '') => {
@@ -104,7 +145,7 @@ export default function AnnualAuditView({ settings, currentUser }) {
     if (!scannedCode) return;
 
     const matched = auditDetails.find(item =>
-      item.asset_code.toLowerCase().includes(scannedCode.toLowerCase().trim())
+      (item.asset_code || '').toLowerCase().includes(scannedCode.toLowerCase().trim())
     );
 
     if (matched) {
@@ -145,28 +186,40 @@ export default function AnnualAuditView({ settings, currentUser }) {
     }
   };
 
-  // Print Official Inspection Sheet
-  const handlePrintInspectionReport = () => {
+  // Complete Audit Round
+  const handleCompleteAudit = async () => {
+    if (!activeAudit) return;
+    if (!window.confirm(`ยืนยันการปิดรอบการตรวจสอบพัสดุประจำปี พ.ศ. ${activeAudit.fiscal_year} หรือไม่?\n\nเมื่อปิดรอบแล้วถือว่าการตรวจนับเสร็จสิ้นสมบูรณ์ตามระเบียบฯ`)) {
+      return;
+    }
+    try {
+      const res = await fetch(`/api/annual-audits/${activeAudit.id}/complete`, { method: 'PUT' });
+      if (res.ok) {
+        fetchAudits();
+        fetchAuditDetails(activeAudit.id);
+        alert('✅ บันทึกปิดรอบการตรวจสอบพัสดุประจำปีเรียบร้อยแล้ว');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('เกิดข้อผิดพลาดในการปิดรอบตรวจสอบ');
+    }
+  };
+
+  // Print Official Inspection Sheet (รองรับทั้งพิมพ์รวมแยกตามกอง และพิมพ์เฉพาะกอง)
+  const handlePrintInspectionReport = (deptId = null) => {
     if (!activeAudit) return;
 
-    const rows = auditDetails.map((item, idx) => `
-      <tr style="font-size: 11px;">
-        <td class="text-center" style="padding: 3px 2px;">${idx + 1}</td>
-        <td class="text-center font-bold font-mono" style="padding: 3px 2px; font-size: 10.5px; color: #1e3a8a;">${item.asset_code}</td>
-        <td style="padding: 3px 4px;"><strong>${item.name}</strong></td>
-        <td style="padding: 3px 4px; font-size: 10.5px;">${item.department_name}</td>
-        <td style="padding: 3px 4px; font-size: 10.5px;">${item.location_room || '-'}</td>
-        <td class="text-center font-bold" style="padding: 3px 2px; font-size: 10.5px; color: ${item.physical_status === 'normal' ? '#047857' : '#b91c1c'};">
-          ${item.physical_status === 'normal' ? '✓ ปกติ' :
-            item.physical_status === 'damaged' ? 'ชำรุด' :
-            item.physical_status === 'worn_out' ? 'เสื่อมสภาพ' :
-            item.physical_status === 'missing' ? 'หาไม่พบ' : 'รอตรวจ'}
-        </td>
-        <td style="padding: 3px 4px; font-size: 10px; color: #475569;">${item.remarks || '-'}</td>
-      </tr>
-    `).join('');
+    const orgName = settings?.org_name || 'เทศบาลตำบลสุขเกษมพัฒนา';
+    const { executiveTitle } = getExecutiveTitles(settings);
 
-    const orgName = settings.org_name || 'เทศบาลตำบลสุขเกษมพัฒนา';
+    // Determine target items to print
+    const isSpecificDept = deptId !== null && deptId !== '';
+    const targetDept = isSpecificDept ? departments.find(d => String(d.id) === String(deptId)) : null;
+    const targetDeptName = targetDept ? targetDept.name : (selectedDept ? departments.find(d => String(d.id) === String(selectedDept))?.name : '');
+
+    const itemsToPrint = isSpecificDept
+      ? auditDetails.filter(i => String(i.department_id) === String(deptId))
+      : auditDetails;
 
     // Parse committee members nicely into a numbered list
     const committeeList = [];
@@ -201,38 +254,164 @@ export default function AnnualAuditView({ settings, currentUser }) {
       return m ? m[1].trim() : str.trim();
     };
 
-    const chairmanSig = extractCleanName(committeeList[0], settings.clerk_name || 'ประธานกรรมการ');
+    const chairmanSig = extractCleanName(committeeList[0], settings?.clerk_name || 'ประธานกรรมการ');
     const memberSig = extractCleanName(committeeList[1], 'นายเอกชัย ช่างประดิษฐ์');
-    const secSig = extractCleanName(committeeList.length > 2 ? committeeList[committeeList.length - 1] : committeeList[2], settings.supply_officer_name || 'นางสาวนิตยา พัสดุเจริญ');
+    const secSig = extractCleanName(committeeList.length > 2 ? committeeList[committeeList.length - 1] : committeeList[2], settings?.supply_officer_name || 'นางสาวนิตยา พัสดุเจริญ');
 
-    const isSingle = (auditDetails?.length || 0) <= 10;
+    // Counts for the items to print
+    const printNormal = itemsToPrint.filter(i => i.physical_status === 'normal').length;
+    const printDamaged = itemsToPrint.filter(i => i.physical_status === 'damaged').length;
+    const printWorn = itemsToPrint.filter(i => i.physical_status === 'worn_out').length;
+    const printMissing = itemsToPrint.filter(i => i.physical_status === 'missing').length;
+    const printPending = itemsToPrint.filter(i => !i.physical_status).length;
+
+    let tableRowsHTML = '';
+
+    if (isSpecificDept) {
+      // Single department list
+      tableRowsHTML = itemsToPrint.map((item, idx) => `
+        <tr style="font-size: 11px;">
+          <td class="text-center" style="padding: 3px 2px;">${idx + 1}</td>
+          <td class="text-center font-bold font-mono" style="padding: 3px 2px; font-size: 10.5px; color: #1e3a8a;">${item.asset_code}</td>
+          <td style="padding: 3px 4px;">
+            <strong>${item.name}</strong>
+            ${item.brand || item.model ? `<div style="font-size: 9.5px; color: #64748b;">${[item.brand, item.model].filter(Boolean).join(' ')}</div>` : ''}
+          </td>
+          <td style="padding: 3px 4px; font-size: 10px;">
+            ${item.sub_department_name ? `<span style="color: #1d4ed8; font-weight: 600;">${item.sub_department_name}</span>` : '<span style="color: #64748b;">ส่วนกลางกอง</span>'}
+          </td>
+          <td style="padding: 3px 4px; font-size: 10px;">
+            <div>${item.location_room || '-'}</div>
+            ${item.custodian_name ? `<div style="font-size: 9px; color: #64748b;">ผู้ถือ: ${item.custodian_name}</div>` : ''}
+          </td>
+          <td class="text-center font-bold" style="padding: 3px 2px; font-size: 10.5px; color: ${
+            item.physical_status === 'normal' ? '#047857' :
+            item.physical_status === 'damaged' ? '#b45309' :
+            item.physical_status === 'worn_out' ? '#7e22ce' :
+            item.physical_status === 'missing' ? '#b91c1c' : '#64748b'
+          };">
+            ${
+              item.physical_status === 'normal' ? '✓ ปกติ' :
+              item.physical_status === 'damaged' ? 'ชำรุด' :
+              item.physical_status === 'worn_out' ? 'เสื่อมสภาพ' :
+              item.physical_status === 'missing' ? 'หาไม่พบ' : 'รอตรวจ'
+            }
+          </td>
+          <td style="padding: 3px 4px; font-size: 9.5px; color: #475569;">${item.remarks || '-'}</td>
+        </tr>
+      `).join('');
+    } else {
+      // All departments grouped by department
+      const grouped = {};
+      itemsToPrint.forEach(item => {
+        const dName = item.department_name || 'ไม่ระบุสำนัก/กอง';
+        if (!grouped[dName]) grouped[dName] = [];
+        grouped[dName].push(item);
+      });
+
+      const groupSections = [];
+      Object.keys(grouped).sort().forEach(dName => {
+        const dItems = grouped[dName];
+        const dNormal = dItems.filter(i => i.physical_status === 'normal').length;
+        const dDamaged = dItems.filter(i => i.physical_status === 'damaged' || i.physical_status === 'worn_out').length;
+        const dMissing = dItems.filter(i => i.physical_status === 'missing').length;
+        const dPending = dItems.filter(i => !i.physical_status).length;
+
+        // Group Header Row
+        groupSections.push(`
+          <tr style="background: #f1f5f9; border-top: 1.5px solid #94a3b8; border-bottom: 1.5px solid #cbd5e1;">
+            <td colspan="7" style="padding: 5px 8px; font-weight: bold; font-size: 11px; color: #1e3a8a;">
+              📁 ${dName} &nbsp;—&nbsp; รวม ${dItems.length} รายการ
+              <span style="font-weight: normal; font-size: 10px; color: #475569; margin-left: 6px;">
+                (ปกติ: ${dNormal} | ชำรุด/เสื่อมสภาพ: ${dDamaged} | หาไม่พบ: ${dMissing} | รอตรวจ: ${dPending})
+              </span>
+            </td>
+          </tr>
+        `);
+
+        // Rows inside group
+        dItems.forEach((item, idx) => {
+          groupSections.push(`
+            <tr style="font-size: 11px;">
+              <td class="text-center" style="padding: 3px 2px;">${idx + 1}</td>
+              <td class="text-center font-bold font-mono" style="padding: 3px 2px; font-size: 10.5px; color: #1e3a8a;">${item.asset_code}</td>
+              <td style="padding: 3px 4px;">
+                <strong>${item.name}</strong>
+                ${item.brand || item.model ? `<div style="font-size: 9.5px; color: #64748b;">${[item.brand, item.model].filter(Boolean).join(' ')}</div>` : ''}
+              </td>
+              <td style="padding: 3px 4px; font-size: 10px;">
+                <div>${item.department_name}</div>
+                ${item.sub_department_name ? `<div style="color: #1d4ed8; font-weight: 600;">[${item.sub_department_name}]</div>` : ''}
+              </td>
+              <td style="padding: 3px 4px; font-size: 10px;">
+                <div>${item.location_room || '-'}</div>
+                ${item.custodian_name ? `<div style="font-size: 9px; color: #64748b;">ผู้ถือ: ${item.custodian_name}</div>` : ''}
+              </td>
+              <td class="text-center font-bold" style="padding: 3px 2px; font-size: 10.5px; color: ${
+                item.physical_status === 'normal' ? '#047857' :
+                item.physical_status === 'damaged' ? '#b45309' :
+                item.physical_status === 'worn_out' ? '#7e22ce' :
+                item.physical_status === 'missing' ? '#b91c1c' : '#64748b'
+              };">
+                ${
+                  item.physical_status === 'normal' ? '✓ ปกติ' :
+                  item.physical_status === 'damaged' ? 'ชำรุด' :
+                  item.physical_status === 'worn_out' ? 'เสื่อมสภาพ' :
+                  item.physical_status === 'missing' ? 'หาไม่พบ' : 'รอตรวจ'
+                }
+              </td>
+              <td style="padding: 3px 4px; font-size: 9.5px; color: #475569;">${item.remarks || '-'}</td>
+            </tr>
+          `);
+        });
+      });
+
+      tableRowsHTML = groupSections.join('');
+    }
+
+    const isSingle = (itemsToPrint?.length || 0) <= 8;
+    const reportTitle = isSpecificDept
+      ? `รายงานผลการตรวจสอบพัสดุและครุภัณฑ์ ประจำปีงบประมาณ พ.ศ. ${activeAudit.fiscal_year} (สังกัด: ${targetDeptName})`
+      : `รายงานผลการตรวจสอบพัสดุและครุภัณฑ์ ประจำปีงบประมาณ พ.ศ. ${activeAudit.fiscal_year} (แยกตามสำนัก/กอง)`;
+
     const innerContent = `
       <div class="doc-body">
         ${renderGovHeader(orgName, 'แบบรายงานผลตรวจพัสดุ', 46)}
         <div class="header-title" style="font-size: 16px; margin-top: 2px; margin-bottom: 2px;">รายงานผลการตรวจสอบพัสดุและครุภัณฑ์ ประจำปีงบประมาณ พ.ศ. ${activeAudit.fiscal_year}</div>
-        <div class="header-sub" style="font-size: 12.5px; margin-bottom: 6px;">${orgName}</div>
-        <div style="font-size: 11px; margin-bottom: 6px; text-align: center; color: #475569;">
-          ตามระเบียบกระทรวงการคลังว่าด้วยการจัดซื้อจัดจ้างและการบริหารพัสดุภาครัฐ พ.ศ. 2560 ข้อ 213 - 214 | วันที่ตรวจนับ: ${formatThaiDate(activeAudit.audit_date)}
+        ${isSpecificDept ? `<div style="text-align: center; font-size: 13.5px; font-weight: bold; color: #1e3a8a; margin-bottom: 2px;">หน่วยงาน: ${targetDeptName}</div>` : ''}
+        <div class="header-sub" style="font-size: 12.5px; margin-bottom: 4px;">${orgName}</div>
+        <div style="font-size: 10.5px; margin-bottom: 6px; text-align: center; color: #475569;">
+          ตามระเบียบกระทรวงการคลังว่าด้วยการจัดซื้อจัดจ้างและการบริหารพัสดุภาครัฐ พ.ศ. 2560 ข้อ 213 - 214 | วันที่เริ่มตรวจนับ: ${formatThaiDate(activeAudit.audit_date)}
         </div>
 
-        <div style="margin-bottom: 6px; font-size: 11px; background: #f8fafc; border: 1px solid #cbd5e1; padding: 4px 10px; border-radius: 4px; line-height: 1.45;">
+        <div style="margin-bottom: 4px; font-size: 10.5px; background: #f8fafc; border: 1px solid #cbd5e1; padding: 4px 10px; border-radius: 4px; line-height: 1.45;">
           <strong>คณะกรรมการตรวจสอบพัสดุประจำปี:</strong> ${committeeList.map((c, i) => `<strong>${i + 1}.</strong> ${c}`).join(' &nbsp;&nbsp;|&nbsp;&nbsp; ')}
+        </div>
+
+        <div style="margin-bottom: 6px; font-size: 10px; background: #f1f5f9; border: 1px solid #cbd5e1; padding: 3px 10px; border-radius: 4px; display: flex; justify-content: space-between;">
+          <div><strong>ขอบเขต:</strong> ${isSpecificDept ? targetDeptName : 'ทุกสำนัก/กอง (แยกเป็นกองๆ)'} (รวมทั้งสิ้น ${itemsToPrint.length} รายการ)</div>
+          <div>
+            <span style="color: #047857; font-weight: bold;">✓ ปกติ: ${printNormal}</span> &nbsp;|&nbsp;
+            <span style="color: #b45309; font-weight: bold;">⚠ ชำรุด/เสื่อมสภาพ: ${printDamaged + printWorn}</span> &nbsp;|&nbsp;
+            <span style="color: #b91c1c; font-weight: bold;">❌ หาไม่พบ: ${printMissing}</span> &nbsp;|&nbsp;
+            <span style="color: #64748b;">⏳ รอตรวจ: ${printPending}</span>
+          </div>
         </div>
 
         <table style="margin-top: 4px; margin-bottom: 6px;">
           <thead>
-            <tr style="background: #f1f5f9;">
+            <tr style="background: #f8fafc;">
               <th style="width: 5%; font-size: 11px; padding: 3px 2px;">ที่</th>
               <th style="width: 16%; font-size: 11px; padding: 3px 2px;">รหัสครุภัณฑ์</th>
-              <th style="width: 27%; font-size: 11px; padding: 3px 4px;">ชื่อรายการครุภัณฑ์</th>
-              <th style="width: 13%; font-size: 11px; padding: 3px 3px;">สำนัก/กอง</th>
-              <th style="width: 13%; font-size: 11px; padding: 3px 3px;">สถานที่ตั้ง</th>
+              <th style="width: 26%; font-size: 11px; padding: 3px 4px;">ชื่อรายการครุภัณฑ์</th>
+              <th style="width: 14%; font-size: 11px; padding: 3px 3px;">${isSpecificDept ? 'ฝ่าย/งานย่อย' : 'สำนัก/กอง / ฝ่ายย่อย'}</th>
+              <th style="width: 13%; font-size: 11px; padding: 3px 3px;">สถานที่ตั้ง / ผู้ถือ</th>
               <th style="width: 11%; font-size: 11px; padding: 3px 2px;">ผลตรวจนับ</th>
               <th style="width: 15%; font-size: 11px; padding: 3px 3px;">หมายเหตุ</th>
             </tr>
           </thead>
           <tbody>
-            ${rows}
+            ${tableRowsHTML}
           </tbody>
         </table>
       </div>
@@ -245,22 +424,22 @@ export default function AnnualAuditView({ settings, currentUser }) {
           ${renderSignatureItem(secSig, 'กรรมการและเลขานุการ', `วันที่ ${formatThaiDate(activeAudit.audit_date)}`, '20px')}
         </div>
 
-        <!-- Mayor's Endorsement & Directives (ระเบียบฯ ข้อ 214) Side-by-Side Compact Layout -->
+        <!-- Executive Directives (ระเบียบฯ ข้อ 214) Dynamic Title for อบจ., เทศบาล, อบต. -->
         <div style="margin-top: 8px; border: 1.2px solid #000; padding: 8px 12px; border-radius: 4px; page-break-inside: avoid; background: #fff;">
           <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
             <div style="flex: 1;">
-              <div style="font-weight: bold; font-size: 11.5px; margin-bottom: 4px; color: #1e293b;">
-                คำสั่ง / ข้อสั่งการของนายกเทศมนตรี (ตามระเบียบฯ ข้อ 214):
+              <div style="font-weight: bold; font-size: 11px; margin-bottom: 4px; color: #1e293b;">
+                คำสั่ง / ข้อสั่งการของ${executiveTitle} (ตามระเบียบฯ ข้อ 214):
               </div>
               <div style="font-size: 10.5px; line-height: 1.5; color: #334155;">
-                <div style="margin-bottom: 3px;">[ &nbsp; ] <strong>ทราบ</strong> รายงานผลการตรวจสอบพัสดุประจำปีงบประมาณ พ.ศ. ${activeAudit.fiscal_year}</div>
-                <div style="margin-bottom: 3px;">[ &nbsp; ] <strong>อนุมัติ</strong> ให้ดำเนินการจำหน่ายพัสดุชำรุด/เสื่อมสภาพตามระเบียบฯ ข้อ 215</div>
-                <div style="margin-bottom: 3px;">[ &nbsp; ] <strong>มอบหมาย</strong> ให้เจ้าหน้าที่พัสดุจัดทำรายงานขออนุมัติจำหน่ายต่อไป</div>
+                <div style="margin-bottom: 2px;">[ &nbsp; ] <strong>ทราบ</strong> รายงานผลการตรวจสอบพัสดุประจำปีงบประมาณ พ.ศ. ${activeAudit.fiscal_year} ${isSpecificDept ? `(${targetDeptName})` : ''}</div>
+                <div style="margin-bottom: 2px;">[ &nbsp; ] <strong>อนุมัติ</strong> ให้ดำเนินการจำหน่ายพัสดุชำรุด/เสื่อมสภาพตามระเบียบฯ ข้อ 215</div>
+                <div style="margin-bottom: 2px;">[ &nbsp; ] <strong>มอบหมาย</strong> ให้เจ้าหน้าที่พัสดุจัดทำรายงานขออนุมัติจำหน่ายต่อไป</div>
                 <div>[ &nbsp; ] อื่นๆ: ............................................................................................................</div>
               </div>
             </div>
-            <div style="width: 230px; text-align: center; flex-shrink: 0; padding-top: 35px;">
-              ${renderSignatureItem(settings.mayor_name, 'นายกเทศมนตรี', 'วันที่ ....../....../...........', '24px')}
+            <div style="width: 230px; text-align: center; flex-shrink: 0; padding-top: 32px;">
+              ${renderSignatureItem(settings?.mayor_name, executiveTitle, 'วันที่ ....../....../...........', '22px')}
             </div>
           </div>
         </div>
@@ -269,14 +448,19 @@ export default function AnnualAuditView({ settings, currentUser }) {
 
     const html = isSingle ? `<div class="single-page-wrapper">${innerContent}</div>` : innerContent;
 
-    openPrintWindow(html, `รายงานผลการตรวจสอบพัสดุประจำปี ${activeAudit.fiscal_year}`);
+    openPrintWindow(html, reportTitle);
   };
 
-  // Stats for active audit
-  const verifiedCount = auditDetails.filter(i => i.physical_status).length;
-  const normalCount = auditDetails.filter(i => i.physical_status === 'normal').length;
-  const damagedCount = auditDetails.filter(i => i.physical_status === 'damaged').length;
-  const missingCount = auditDetails.filter(i => i.physical_status === 'missing').length;
+  // Stats for the currently filtered view
+  const currentViewItems = filteredAuditDetails;
+  const verifiedCount = currentViewItems.filter(i => i.physical_status).length;
+  const normalCount = currentViewItems.filter(i => i.physical_status === 'normal').length;
+  const damagedCount = currentViewItems.filter(i => i.physical_status === 'damaged').length;
+  const wornOutCount = currentViewItems.filter(i => i.physical_status === 'worn_out').length;
+  const missingCount = currentViewItems.filter(i => i.physical_status === 'missing').length;
+
+  // Selected department object
+  const currentDeptObj = departments.find(d => String(d.id) === String(selectedDept));
 
   return (
     <div className="space-y-5">
@@ -309,61 +493,219 @@ export default function AnnualAuditView({ settings, currentUser }) {
         </div>
       </div>
 
-      {/* Select Active Round */}
-      <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center space-x-3">
-          <span className="text-xs font-bold text-slate-500 uppercase">รอบการตรวจสอบ:</span>
-          <select
-            value={activeAudit?.id || ''}
-            onChange={e => fetchAuditDetails(Number(e.target.value))}
-            className="px-3 py-1.5 border border-slate-200 rounded-xl text-sm font-bold text-gov-800 focus:ring-2 focus:ring-gov-500"
-          >
-            {audits.map(a => (
-              <option key={a.id} value={a.id}>
-                รอบปีงบประมาณ {a.fiscal_year} ({a.audit_code}) - {a.status === 'completed' ? 'เสร็จสิ้นแล้ว' : 'กำลังดำเนินการ'}
-              </option>
-            ))}
-          </select>
+      {/* Select Active Round & Main Print Actions */}
+      <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center space-x-2">
+            <span className="text-xs font-bold text-slate-500 uppercase">รอบการตรวจสอบ:</span>
+            <select
+              value={activeAudit?.id || ''}
+              onChange={e => fetchAuditDetails(Number(e.target.value))}
+              className="px-3 py-1.5 border border-slate-200 rounded-xl text-sm font-bold text-gov-800 focus:ring-2 focus:ring-gov-500 bg-slate-50"
+            >
+              {audits.map(a => (
+                <option key={a.id} value={a.id}>
+                  รอบปีงบประมาณ {a.fiscal_year} ({a.audit_code}) - {a.status === 'completed' ? 'เสร็จสิ้นแล้ว' : 'กำลังดำเนินการ'}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {activeAudit?.status === 'completed' ? (
+            <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+              <CheckCircle className="w-3.5 h-3.5 mr-1 text-emerald-600" />
+              ปิดรอบเรียบร้อยแล้ว
+            </span>
+          ) : (
+            <button
+              onClick={handleCompleteAudit}
+              className="inline-flex items-center space-x-1 px-3 py-1.5 bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-700 rounded-xl text-xs font-semibold border border-slate-300 transition"
+              title="เมื่อตรวจนับครบถ้วนแล้ว ให้กดเพื่อปิดรอบการตรวจสอบประจำปี"
+            >
+              <CheckCircle className="w-3.5 h-3.5 text-slate-500" />
+              <span>ปิดรอบการตรวจสอบ</span>
+            </button>
+          )}
         </div>
 
-        <button
-          onClick={handlePrintInspectionReport}
-          className="flex items-center space-x-1.5 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-bold transition border border-slate-300"
-        >
-          <Printer className="w-4 h-4" />
-          <span>พิมพ์ใบสำรวจ / รายงานผลตรวจนับ</span>
-        </button>
+        {/* Print Buttons Group */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Print specific department button (when department is filtered) */}
+          {selectedDept && (
+            <button
+              onClick={() => handlePrintInspectionReport(selectedDept)}
+              className="flex items-center space-x-1.5 px-3.5 py-2 bg-blue-50 hover:bg-blue-100 text-blue-800 rounded-xl text-xs font-bold transition border border-blue-300 shadow-sm"
+              title="พิมพ์เฉพาะครุภัณฑ์ในสำนัก/กองที่เลือก"
+            >
+              <Building2 className="w-4 h-4 text-blue-600" />
+              <span>พิมพ์เฉพาะ: {currentDeptObj?.name || 'กองที่เลือก'} ({currentViewItems.length})</span>
+            </button>
+          )}
+
+          {/* Print all departments grouped */}
+          <button
+            onClick={() => handlePrintInspectionReport(null)}
+            className="flex items-center space-x-1.5 px-3.5 py-2 bg-gov-700 hover:bg-gov-800 text-white rounded-xl text-xs font-bold transition shadow-sm"
+            title="พิมพ์รายงานสรุปผลการตรวจสอบพัสดุประจำปี แยกเป็นรายสำนัก/กองครบทุกหน่วยงาน"
+          >
+            <Printer className="w-4 h-4" />
+            <span>พิมพ์รายงานผลตรวจนับ (แยกตามสำนัก/กอง)</span>
+          </button>
+        </div>
       </div>
 
       {/* Verification KPI Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-          <div className="text-xs text-slate-500">ความคืบหน้าการตรวจ</div>
-          <div className="text-xl font-bold text-gov-800 mt-1">
-            {verifiedCount} / {auditDetails.length} รายการ
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <div className="text-xs font-bold text-slate-600 flex items-center space-x-1.5">
+            <span className="w-2 h-2 rounded-full bg-gov-600"></span>
+            <span>
+              สถิติผลการตรวจนับ: {currentDeptObj ? `${currentDeptObj.name}${selectedSubDept ? ` (${subDepartments.find(s => String(s.id) === String(selectedSubDept))?.name || ''})` : ''}` : 'ภาพรวมทั้งเทศบาล / อบจ. (ทุกกอง)'}
+            </span>
           </div>
-          <div className="text-[11px] text-slate-400">
-            ({auditDetails.length > 0 ? Math.round((verifiedCount / auditDetails.length) * 100) : 0}%)
+          <div className="text-xs text-slate-500">
+            แสดง {currentViewItems.length} จากทั้งหมด {auditDetails.length} รายการ
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-          <div className="text-xs text-emerald-600 font-semibold">สภาพปกติ</div>
-          <div className="text-xl font-bold text-emerald-700 mt-1">{normalCount} รายการ</div>
-          <div className="text-[11px] text-slate-400">ใช้งานได้เรียบร้อย</div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+            <div className="text-xs text-slate-500 font-medium">ความคืบหน้าการตรวจ</div>
+            <div className="text-xl font-bold text-gov-800 mt-1">
+              {verifiedCount} / {currentViewItems.length} รายการ
+            </div>
+            <div className="text-[11px] text-slate-400">
+              ({currentViewItems.length > 0 ? Math.round((verifiedCount / currentViewItems.length) * 100) : 0}%)
+            </div>
+          </div>
+
+          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+            <div className="text-xs text-emerald-600 font-semibold">สภาพปกติ</div>
+            <div className="text-xl font-bold text-emerald-700 mt-1">{normalCount} รายการ</div>
+            <div className="text-[11px] text-slate-400">ใช้งานได้เรียบร้อย</div>
+          </div>
+
+          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+            <div className="text-xs text-amber-600 font-semibold">ชำรุด / เสื่อมสภาพ</div>
+            <div className="text-xl font-bold text-amber-700 mt-1">{damagedCount + wornOutCount} รายการ</div>
+            <div className="text-[11px] text-slate-400">ชำรุด {damagedCount} | เสื่อมสภาพ {wornOutCount}</div>
+          </div>
+
+          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+            <div className="text-xs text-rose-600 font-semibold">สูญหาย / หาไม่พบ</div>
+            <div className="text-xl font-bold text-rose-700 mt-1">{missingCount} รายการ</div>
+            <div className="text-[11px] text-slate-400">ต้องสอบสวนข้อเท็จจริง</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Filter Toolbar (แยกเป็นกองๆ, ฝ่ายย่อย, สถานะ, ค้นหา) */}
+      <div className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+          {/* Department Filter */}
+          <div>
+            <label className="block text-[11px] font-bold text-slate-600 mb-1">
+              🏢 สำนัก / กอง
+            </label>
+            <select
+              value={selectedDept}
+              onChange={e => {
+                setSelectedDept(e.target.value);
+                setSelectedSubDept(''); // reset sub-dept when dept changes
+              }}
+              className="w-full px-2.5 py-1.5 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 focus:ring-2 focus:ring-gov-500 bg-slate-50"
+            >
+              <option value="">ทุกสำนัก/กอง (ทั้งหมด {auditDetails.length})</option>
+              {departments.map(d => {
+                const count = auditDetails.filter(i => String(i.department_id) === String(d.id)).length;
+                return (
+                  <option key={d.id} value={d.id}>
+                    {d.name} ({count} รายการ)
+                  </option>
+                );
+              })}
+            </select>
+          </div>
+
+          {/* Sub-Department Filter */}
+          <div>
+            <label className="block text-[11px] font-bold text-slate-600 mb-1">
+              📁 ฝ่าย / งานย่อย {selectedDept ? `(ใน ${currentDeptObj?.name || ''})` : ''}
+            </label>
+            <select
+              value={selectedSubDept}
+              onChange={e => setSelectedSubDept(e.target.value)}
+              className="w-full px-2.5 py-1.5 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 focus:ring-2 focus:ring-gov-500 bg-slate-50"
+            >
+              <option value="">ทุกฝ่าย/งานย่อย</option>
+              {availableSubDepts.map(sd => {
+                const count = auditDetails.filter(i => String(i.sub_department_id) === String(sd.id)).length;
+                return (
+                  <option key={sd.id} value={sd.id}>
+                    {sd.name} ({count} รายการ)
+                  </option>
+                );
+              })}
+            </select>
+          </div>
+
+          {/* Audit Status Filter */}
+          <div>
+            <label className="block text-[11px] font-bold text-slate-600 mb-1">
+              🔎 ผลการตรวจนับ
+            </label>
+            <select
+              value={selectedStatus}
+              onChange={e => setSelectedStatus(e.target.value)}
+              className="w-full px-2.5 py-1.5 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 focus:ring-2 focus:ring-gov-500 bg-slate-50"
+            >
+              <option value="">ทุกสถานะผลตรวจ</option>
+              <option value="normal">✓ ปกติ พร้อมใช้งาน</option>
+              <option value="damaged">⚠ ชำรุด ต้องส่งซ่อม</option>
+              <option value="worn_out">เสื่อมสภาพ เสนอแทงจำหน่าย</option>
+              <option value="missing">❌ สูญหาย / หาไม่พบ</option>
+              <option value="pending">⏳ ยังไม่ได้ตรวจนับ</option>
+            </select>
+          </div>
+
+          {/* Search Box */}
+          <div>
+            <label className="block text-[11px] font-bold text-slate-600 mb-1">
+              🔍 ค้นหารหัส / รายการครุภัณฑ์
+            </label>
+            <div className="relative">
+              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                placeholder="พิมพ์รหัส, ชื่อ, ผู้ถือครอง, ห้อง..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="w-full pl-8 pr-2.5 py-1.5 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-gov-500"
+              />
+            </div>
+          </div>
         </div>
 
-        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-          <div className="text-xs text-amber-600 font-semibold">ชำรุด / เสื่อมสภาพ</div>
-          <div className="text-xl font-bold text-amber-700 mt-1">{damagedCount} รายการ</div>
-          <div className="text-[11px] text-slate-400">เสนอซ่อมหรือจำหน่าย</div>
-        </div>
-
-        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-          <div className="text-xs text-rose-600 font-semibold">สูญหาย / หาไม่พบ</div>
-          <div className="text-xl font-bold text-rose-700 mt-1">{missingCount} รายการ</div>
-          <div className="text-[11px] text-slate-400">ต้องสอบสวนข้อเท็จจริง</div>
-        </div>
+        {/* Filter Summary & Reset Button */}
+        {(selectedDept || selectedSubDept || selectedStatus || searchQuery) && (
+          <div className="flex items-center justify-between pt-1 border-t border-slate-100 text-xs text-slate-500">
+            <div>
+              กำลังกรองข้อมูล: พบ <span className="font-bold text-gov-800">{currentViewItems.length}</span> จากทั้งหมด {auditDetails.length} รายการ
+            </div>
+            <button
+              onClick={() => {
+                setSelectedDept('');
+                setSelectedSubDept('');
+                setSelectedStatus('');
+                setSearchQuery('');
+              }}
+              className="flex items-center space-x-1 text-slate-500 hover:text-rose-600 font-semibold"
+            >
+              <RotateCcw className="w-3 h-3" />
+              <span>ล้างตัวกรองทั้งหมด</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Checklist Table */}
@@ -373,103 +715,131 @@ export default function AnnualAuditView({ settings, currentUser }) {
             <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 text-xs uppercase font-semibold">
               <tr>
                 <th className="py-3 px-4">รหัสครุภัณฑ์</th>
-                <th className="py-3 px-4">ชื่อครุภัณฑ์</th>
-                <th className="py-3 px-4">สำนัก/กอง & สถานที่</th>
+                <th className="py-3 px-4">ชื่อรายการครุภัณฑ์</th>
+                <th className="py-3 px-4">สำนัก/กอง & ฝ่ายย่อย</th>
+                <th className="py-3 px-4">สถานที่ตั้ง & ผู้ถือครอง</th>
                 <th className="py-3 px-4 text-center">สถานะการตรวจ</th>
                 <th className="py-3 px-4">หมายเหตุ / ผู้ตรวจ</th>
                 <th className="py-3 px-4 text-center">เช็กสถานะรวดเร็ว</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {auditDetails.map((item) => (
-                <tr key={item.asset_id} className="hover:bg-slate-50/80 transition">
-                  <td className="py-3.5 px-4 font-mono font-bold text-gov-800 whitespace-nowrap">
-                    {item.asset_code}
-                  </td>
-                  <td className="py-3.5 px-4 font-semibold text-slate-900">
-                    {item.name}
-                    <div className="text-xs text-slate-400 font-normal">
-                      {item.brand} {item.model}
-                    </div>
-                  </td>
-                  <td className="py-3.5 px-4 text-xs">
-                    <div className="font-semibold text-slate-800">{item.department_name}</div>
-                    <div className="text-slate-400">ห้อง: {item.location_room || '-'}</div>
-                  </td>
-                  <td className="py-3.5 px-4 text-center whitespace-nowrap">
-                    {item.physical_status === 'normal' && (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
-                        <CheckCircle2 className="w-3.5 h-3.5 mr-1" /> ปกติ
-                      </span>
-                    )}
-                    {item.physical_status === 'damaged' && (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300">
-                        <AlertTriangle className="w-3.5 h-3.5 mr-1" /> ชำรุด
-                      </span>
-                    )}
-                    {item.physical_status === 'worn_out' && (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-100 text-purple-800 border border-purple-300">
-                        เสื่อมสภาพ
-                      </span>
-                    )}
-                    {item.physical_status === 'missing' && (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-100 text-rose-800 border border-rose-300">
-                        หาไม่พบ
-                      </span>
-                    )}
-                    {!item.physical_status && (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-500">
-                        รอตรวจนับ
-                      </span>
-                    )}
-                  </td>
-                  <td className="py-3.5 px-4 text-xs">
-                    <div className="text-slate-700">{item.remarks || '-'}</div>
-                    {item.verified_by && (
-                      <div className="text-[10px] text-slate-400 mt-0.5">
-                        ผู้ตรวจ: {item.verified_by} ({item.verified_at})
-                      </div>
-                    )}
-                  </td>
-                  <td className="py-3.5 px-4 text-center whitespace-nowrap">
-                    <div className="flex items-center justify-center space-x-1">
-                      <button
-                        onClick={() => handleVerifyAsset(item.asset_id, 'normal', 'ตรวจสอบแล้ว สภาพดี')}
-                        title="ทำเครื่องหมายว่าปกติ"
-                        className={`p-1.5 rounded-lg border transition ${
-                          item.physical_status === 'normal'
-                            ? 'bg-emerald-600 text-white border-emerald-600'
-                            : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border-emerald-200'
-                        }`}
-                      >
-                        <Check className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleVerifyAsset(item.asset_id, 'damaged', 'ตรวจพบอาการชำรุด')}
-                        title="ทำเครื่องหมายว่าชำรุด"
-                        className={`p-1.5 rounded-lg border transition ${
-                          item.physical_status === 'damaged'
-                            ? 'bg-amber-600 text-white border-amber-600'
-                            : 'bg-amber-50 text-amber-700 hover:bg-amber-100 border-amber-200'
-                        }`}
-                      >
-                        <AlertTriangle className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleVerifyAsset(item.asset_id, 'missing', 'ไม่พบตัวทรัพย์สินในพื้นที่')}
-                        title="ทำเครื่องหมายว่าหาไม่พบ"
-                        className={`p-1.5 rounded-lg border transition ${
-                          item.physical_status === 'missing'
-                            ? 'bg-rose-600 text-white border-rose-600'
-                            : 'bg-rose-50 text-rose-700 hover:bg-rose-100 border-rose-200'
-                        }`}
-                      >
-                        <HelpCircle className="w-4 h-4" />
-                      </button>
-                    </div>
+              {currentViewItems.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="py-8 text-center text-slate-400 text-xs">
+                    ไม่พบข้อมูลครุภัณฑ์ตามเงื่อนไขที่เลือก
                   </td>
                 </tr>
-              ))}
+              ) : (
+                currentViewItems.map((item) => (
+                  <tr key={item.asset_id} className="hover:bg-slate-50/80 transition">
+                    <td className="py-3 px-4 font-mono font-bold text-gov-800 whitespace-nowrap">
+                      {item.asset_code}
+                    </td>
+                    <td className="py-3 px-4 font-semibold text-slate-900">
+                      {item.name}
+                      <div className="text-xs text-slate-400 font-normal">
+                        {[item.brand, item.model].filter(Boolean).join(' ') || item.category_name}
+                      </div>
+                    </td>
+                    <td className="py-3 px-4 text-xs">
+                      <div className="font-semibold text-slate-800 flex items-center space-x-1">
+                        <Building2 className="w-3 h-3 text-slate-400 inline" />
+                        <span>{item.department_name}</span>
+                      </div>
+                      {item.sub_department_name ? (
+                        <div className="mt-0.5">
+                          <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+                            ฝ่าย/งาน: {item.sub_department_name}
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="text-[10px] text-slate-400">ส่วนกลางกอง</div>
+                      )}
+                    </td>
+                    <td className="py-3 px-4 text-xs">
+                      <div className="text-slate-700">ห้อง: {item.location_room || '-'}</div>
+                      {item.custodian_name && (
+                        <div className="text-[10.5px] text-slate-500 mt-0.5">
+                          ผู้ถือ: {item.custodian_name}
+                        </div>
+                      )}
+                    </td>
+                    <td className="py-3 px-4 text-center whitespace-nowrap">
+                      {item.physical_status === 'normal' && (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                          <CheckCircle2 className="w-3.5 h-3.5 mr-1" /> ปกติ
+                        </span>
+                      )}
+                      {item.physical_status === 'damaged' && (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300">
+                          <AlertTriangle className="w-3.5 h-3.5 mr-1" /> ชำรุด
+                        </span>
+                      )}
+                      {item.physical_status === 'worn_out' && (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-100 text-purple-800 border border-purple-300">
+                          เสื่อมสภาพ
+                        </span>
+                      )}
+                      {item.physical_status === 'missing' && (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-100 text-rose-800 border border-rose-300">
+                          หาไม่พบ
+                        </span>
+                      )}
+                      {!item.physical_status && (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-500">
+                          รอตรวจนับ
+                        </span>
+                      )}
+                    </td>
+                    <td className="py-3 px-4 text-xs">
+                      <div className="text-slate-700">{item.remarks || '-'}</div>
+                      {item.verified_by && (
+                        <div className="text-[10px] text-slate-400 mt-0.5">
+                          ผู้ตรวจ: {item.verified_by} {item.verified_at ? `(${item.verified_at.split(' ')[0]})` : ''}
+                        </div>
+                      )}
+                    </td>
+                    <td className="py-3 px-4 text-center whitespace-nowrap">
+                      <div className="flex items-center justify-center space-x-1">
+                        <button
+                          onClick={() => handleVerifyAsset(item.asset_id, 'normal', 'ตรวจสอบแล้ว สภาพดี')}
+                          title="ทำเครื่องหมายว่าปกติ"
+                          className={`p-1.5 rounded-lg border transition ${
+                            item.physical_status === 'normal'
+                              ? 'bg-emerald-600 text-white border-emerald-600'
+                              : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border-emerald-200'
+                          }`}
+                        >
+                          <Check className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleVerifyAsset(item.asset_id, 'damaged', 'ตรวจพบอาการชำรุด')}
+                          title="ทำเครื่องหมายว่าชำรุด"
+                          className={`p-1.5 rounded-lg border transition ${
+                            item.physical_status === 'damaged'
+                              ? 'bg-amber-600 text-white border-amber-600'
+                              : 'bg-amber-50 text-amber-700 hover:bg-amber-100 border-amber-200'
+                          }`}
+                        >
+                          <AlertTriangle className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleVerifyAsset(item.asset_id, 'missing', 'ไม่พบตัวทรัพย์สินในพื้นที่')}
+                          title="ทำเครื่องหมายว่าหาไม่พบ"
+                          className={`p-1.5 rounded-lg border transition ${
+                            item.physical_status === 'missing'
+                              ? 'bg-rose-600 text-white border-rose-600'
+                              : 'bg-rose-50 text-rose-700 hover:bg-rose-100 border-rose-200'
+                          }`}
+                        >
+                          <HelpCircle className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
