@@ -16,12 +16,33 @@ import {
 import { formatBaht, formatThaiDate } from '../utils/formatters.js';
 import { openPrintWindow, generatePD2HTML } from '../utils/printTemplates.js';
 
+export const STANDARD_MATERIAL_CATEGORIES = [
+  'วัสดุสำนักงาน',
+  'วัสดุคอมพิวเตอร์',
+  'วัสดุไฟฟ้าและวิทยุ',
+  'วัสดุก่อสร้าง',
+  'วัสดุยานพาหนะและขนส่ง',
+  'วัสดุเชื้อเพลิงและหล่อลื่น',
+  'วัสดุการเกษตร',
+  'วัสดุงานบ้านงานครัว',
+  'วัสดุการแพทย์และวิทยาศาสตร์',
+  'วัสดุการศึกษา',
+  'วัสดุความปลอดภัย',
+  'วัสดุเคมีภัณฑ์',
+  'วัสดุโฆษณาและเผยแพร่',
+  'วัสดุเครื่องแต่งกาย',
+  'วัสดุดนตรีและกีฬา',
+  'วัสดุโรงงานและเครื่องมือช่าง',
+  'วัสดุอื่น ๆ'
+];
+
 export default function InventoryView({ settings = {}, currentUser }) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [lowStockFilter, setLowStockFilter] = useState(false);
+  const [categoriesSummary, setCategoriesSummary] = useState([]);
 
   // Modals
   const [showAddMasterModal, setShowAddMasterModal] = useState(false);
@@ -29,6 +50,36 @@ export default function InventoryView({ settings = {}, currentUser }) {
   const [selectedItemForReceive, setSelectedItemForReceive] = useState(null);
   const [showLotsModal, setShowLotsModal] = useState(false);
   const [selectedItemLots, setSelectedItemLots] = useState(null);
+
+  // Fetch Categories Summary
+  const fetchCategoriesSummary = async () => {
+    try {
+      const res = await fetch('/api/inventory/categories');
+      if (res.ok) {
+        const data = await res.json();
+        setCategoriesSummary(data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch categories summary:', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchCategoriesSummary();
+  }, []);
+
+  // Compute union of standard categories and any extra categories present in DB
+  const availableCategories = Array.from(new Set([
+    ...STANDARD_MATERIAL_CATEGORIES,
+    ...categoriesSummary.map(c => c.category).filter(Boolean)
+  ]));
+
+  const categoryCountMap = categoriesSummary.reduce((acc, c) => {
+    acc[c.category] = c.count;
+    return acc;
+  }, {});
+
+  const totalItemCount = categoriesSummary.reduce((sum, c) => sum + (c.count || 0), 0) || items.length;
 
   // Print Stock Card (แบบ พด.2)
   const handlePrintStockCard = async (item) => {
@@ -150,6 +201,7 @@ export default function InventoryView({ settings = {}, currentUser }) {
       if (res.ok) {
         setShowAddMasterModal(false);
         fetchItems();
+        fetchCategoriesSummary();
         setMasterForm({
           item_code: '',
           name: '',
@@ -182,7 +234,7 @@ export default function InventoryView({ settings = {}, currentUser }) {
             <span>ระบบบริหารจัดการพัสดุคลังย่อย (Inventory & FIFO Stock)</span>
           </h1>
           <p className="text-slate-500 text-sm mt-1">
-            ควบคุมสต็อกวัสดุสำนักงานแบบเข้าก่อนออกก่อน (FIFO) และระบบแจ้งเตือนจุดสั่งซื้อขั้นต่ำ (Reorder Point)
+            ควบคุมสต็อกพัสดุสิ้นเปลืองทุกหมวดหมู่ (17 หมวดตามระเบียบกระทรวงการคลังฯ พ.ศ. 2560 และ e-LAAS) แบบเข้าก่อนออกก่อน (FIFO) พร้อมระบบแจ้งเตือนจุดสั่งซื้อขั้นต่ำ (Reorder Point)
           </p>
         </div>
         <button
@@ -192,6 +244,52 @@ export default function InventoryView({ settings = {}, currentUser }) {
           <Plus className="w-4 h-4" />
           <span>เพิ่มรายการวัสดุใหม่</span>
         </button>
+      </div>
+
+      {/* Category Pills Quick Filter */}
+      <div className="flex items-center space-x-2 overflow-x-auto pb-1.5 scrollbar-thin">
+        <button
+          onClick={() => setSelectedCategory('')}
+          className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition flex items-center space-x-1.5 ${
+            selectedCategory === ''
+              ? 'bg-gov-800 text-white shadow-sm'
+              : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+          }`}
+        >
+          <span>ทุกหมวดวัสดุ</span>
+          <span className={`px-1.5 py-0.5 rounded-full text-[10px] ${
+            selectedCategory === '' ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'
+          }`}>
+            {totalItemCount}
+          </span>
+        </button>
+
+        {availableCategories.map(cat => {
+          const count = categoryCountMap[cat] || 0;
+          const isSelected = selectedCategory === cat;
+          return (
+            <button
+              key={cat}
+              onClick={() => setSelectedCategory(isSelected ? '' : cat)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition flex items-center space-x-1.5 ${
+                isSelected
+                  ? 'bg-gov-700 text-white shadow-sm ring-2 ring-gov-500'
+                  : count > 0
+                  ? 'bg-white text-slate-700 border border-slate-200 hover:border-gov-400 hover:bg-slate-50'
+                  : 'bg-slate-50 text-slate-400 border border-slate-200/60 hover:bg-white'
+              }`}
+            >
+              <span>{cat}</span>
+              {count > 0 && (
+                <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${
+                  isSelected ? 'bg-white/25 text-white' : 'bg-gov-50 text-gov-700 font-bold'
+                }`}>
+                  {count}
+                </span>
+              )}
+            </button>
+          );
+        })}
       </div>
 
       {/* Filter and Search Bar */}
@@ -211,13 +309,17 @@ export default function InventoryView({ settings = {}, currentUser }) {
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gov-500"
+            className="px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gov-500 bg-white"
           >
-            <option value="">ทุกหมวดวัสดุ</option>
-            <option value="วัสดุสำนักงาน">วัสดุสำนักงาน</option>
-            <option value="วัสดุคอมพิวเตอร์">วัสดุคอมพิวเตอร์</option>
-            <option value="วัสดุงานบ้านงานครัว">วัสดุงานบ้านงานครัว</option>
-            <option value="วัสดุไฟฟ้าและวิทยุ">วัสดุไฟฟ้าและวิทยุ</option>
+            <option value="">ทุกหมวดวัสดุ ({totalItemCount} รายการ)</option>
+            {availableCategories.map(cat => {
+              const count = categoryCountMap[cat] || 0;
+              return (
+                <option key={cat} value={cat}>
+                  {cat} {count > 0 ? `(${count})` : '(0)'}
+                </option>
+              );
+            })}
           </select>
 
           <button
@@ -274,7 +376,9 @@ export default function InventoryView({ settings = {}, currentUser }) {
                       <div className="text-xs text-slate-400">หน่วยนับ: {item.unit}</div>
                     </td>
                     <td className="py-3.5 px-4 text-xs">
-                      <div className="font-medium text-slate-700">{item.category}</div>
+                      <span className="inline-block px-2 py-0.5 rounded-md font-medium text-[11px] bg-slate-100 text-slate-700 border border-slate-200/60 mb-1">
+                        {item.category}
+                      </span>
                       <div className="text-slate-400">{item.storage_location || 'คลังพัสดุกลาง'}</div>
                     </td>
                     <td className="py-3.5 px-4 text-center whitespace-nowrap">
@@ -569,16 +673,15 @@ export default function InventoryView({ settings = {}, currentUser }) {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">หมวดพัสดุ *</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">หมวดพัสดุ (17 หมวดมาตรฐาน e-LAAS) *</label>
                   <select
                     value={masterForm.category}
                     onChange={e => setMasterForm({ ...masterForm, category: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-gov-500"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-gov-500 bg-white"
                   >
-                    <option value="วัสดุสำนักงาน">วัสดุสำนักงาน</option>
-                    <option value="วัสดุคอมพิวเตอร์">วัสดุคอมพิวเตอร์</option>
-                    <option value="วัสดุงานบ้านงานครัว">วัสดุงานบ้านงานครัว</option>
-                    <option value="วัสดุไฟฟ้าและวิทยุ">วัสดุไฟฟ้าและวิทยุ</option>
+                    {STANDARD_MATERIAL_CATEGORIES.map(cat => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
                   </select>
                 </div>
                 <div className="col-span-2">

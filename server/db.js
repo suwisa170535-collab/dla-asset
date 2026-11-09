@@ -1067,5 +1067,66 @@ export function initDatabase() {
   } catch (err) {
     console.error('Error auto-seeding other specialized assets:', err.message);
   }
+
+  // Ensure all standard government material categories have sample items & FIFO lots
+  try {
+    const additionalInventoryItems = [
+      // วัสดุยานพาหนะและขนส่ง
+      { item_code: 'ว.07-001', name: 'น้ำมันเบรกสังเคราะห์ DOT 4 สำหรับรถส่วนกลาง (กระป๋อง 0.5 ลิตร)', category: 'วัสดุยานพาหนะและขนส่ง', unit: 'กระป๋อง', min_stock: 6, current_stock: 18, unit_price: 180.0, storage_location: 'โรงซ่อมบำรุงยานพาหนะ ชั้น 1' },
+      { item_code: 'ว.07-002', name: 'แบตเตอรี่ยานพาหนะชนิดแห้ง 12V 100Ah มอก. (ลูก)', category: 'วัสดุยานพาหนะและขนส่ง', unit: 'ลูก', min_stock: 2, current_stock: 6, unit_price: 3400.0, storage_location: 'โรงซ่อมบำรุงยานพาหนะ ชั้น 1' },
+      
+      // วัสดุเชื้อเพลิงและหล่อลื่น
+      { item_code: 'ว.08-001', name: 'น้ำมันดีเซลหมุนเร็ว B7 สำหรับเครื่องจักรกลและรถบรรทุก (ลิตร)', category: 'วัสดุเชื้อเพลิงและหล่อลื่น', unit: 'ลิตร', min_stock: 500, current_stock: 2500, unit_price: 32.5, storage_location: 'คลังถังเก็บน้ำมันเชื้อเพลิงส่วนกลาง' },
+      { item_code: 'ว.08-002', name: 'น้ำมันเครื่องยนต์ดีเซลคอมมอนเรล SAE 15W-40 (แกลลอน 6 ลิตร)', category: 'วัสดุเชื้อเพลิงและหล่อลื่น', unit: 'แกลลอน', min_stock: 5, current_stock: 15, unit_price: 850.0, storage_location: 'โรงซ่อมบำรุงยานพาหนะ ชั้น 1' },
+      
+      // วัสดุการเกษตร
+      { item_code: 'ว.09-001', name: 'ปุ๋ยอินทรีย์อัดเม็ดอินทรียวัตถุสูง มอก. (กระสอบละ 50 กก.)', category: 'วัสดุการเกษตร', unit: 'กระสอบ', min_stock: 20, current_stock: 60, unit_price: 380.0, storage_location: 'เรือนเพาะชำ กองสาธารณสุขและสิ่งแวดล้อม' },
+      { item_code: 'ว.09-002', name: 'เมล็ดพันธุ์ผักสวนครัว โครงการเศรษฐกิจพอเพียงชุมชน (ซองละ 50 เมล็ด)', category: 'วัสดุการเกษตร', unit: 'ซอง', min_stock: 50, current_stock: 200, unit_price: 25.0, storage_location: 'ห้องฝ่ายส่งเสริมการเกษตร' },
+      
+      // วัสดุโฆษณาและเผยแพร่
+      { item_code: 'ว.10-001', name: 'ป้ายไวนิลพิมพ์ประชาสัมพันธ์รณรงค์กิจกรรมเทศบาล ขนาด 1x3 เมตร (ผืน)', category: 'วัสดุโฆษณาและเผยแพร่', unit: 'ผืน', min_stock: 5, current_stock: 15, unit_price: 450.0, storage_location: 'คลังเก็บป้าย สำนักปลัด' },
+      { item_code: 'ว.10-002', name: 'แผ่นพลาสติกลูกฟูก (ฟิวเจอร์บอร์ด) หนา 3 มม. ขนาด 120x240 ซม. (แผ่น)', category: 'วัสดุโฆษณาและเผยแพร่', unit: 'แผ่น', min_stock: 10, current_stock: 25, unit_price: 180.0, storage_location: 'ห้องประชาสัมพันธ์ สำนักปลัด' },
+      
+      // วัสดุเครื่องแต่งกาย
+      { item_code: 'ว.11-001', name: 'เสื้อกั๊กสะท้อนแสงแถบ LED สีกากีแกมเขียว สำหรับเจ้าหน้าที่เทศกิจ/อปพร. (ตัว)', category: 'วัสดุเครื่องแต่งกาย', unit: 'ตัว', min_stock: 10, current_stock: 35, unit_price: 320.0, storage_location: 'ห้องฝ่ายปกครอง งานเทศกิจ' },
+      { item_code: 'ว.11-002', name: 'ถุงมือผ้าถักเคลือบยางธรรมชาติกันบาด มอก. (โหลละ 12 คู่)', category: 'วัสดุเครื่องแต่งกาย', unit: 'โหล', min_stock: 10, current_stock: 40, unit_price: 220.0, storage_location: 'คลังพัสดุช่าง ชั้น 1 ช่อง S-02' },
+      
+      // วัสดุดนตรีและกีฬา
+      { item_code: 'ว.12-001', name: 'ลูกฟุตบอลหนังเย็บ มอก. เบอร์ 5 มาตรฐานการแข่งขัน FIFA (ลูก)', category: 'วัสดุดนตรีและกีฬา', unit: 'ลูก', min_stock: 10, current_stock: 30, unit_price: 550.0, storage_location: 'คลังอุปกรณ์กีฬา ศูนย์กีฬาเทศบาล' },
+      { item_code: 'ว.12-002', name: 'ตาข่ายวอลเลย์บอล พร้อมลวดสลิงขึง มอก. (ผืน)', category: 'วัสดุดนตรีและกีฬา', unit: 'ผืน', min_stock: 2, current_stock: 8, unit_price: 890.0, storage_location: 'คลังอุปกรณ์กีฬา ศูนย์กีฬาเทศบาล' },
+      
+      // วัสดุโรงงานและเครื่องมือช่าง
+      { item_code: 'ว.13-001', name: 'ลวดเชื่อมไฟฟ้าสำหรับเหล็กเหนียว RB-26 ขนาด 2.6 มม. (กล่องละ 2 กก.)', category: 'วัสดุโรงงานและเครื่องมือช่าง', unit: 'กล่อง', min_stock: 10, current_stock: 35, unit_price: 260.0, storage_location: 'คลังพัสดุช่าง ชั้น 1 ช่อง W-01' },
+      { item_code: 'ว.13-002', name: 'ใบเจียรเหล็ก/สเตนเลส ขนาด 4 นิ้ว หนา 2 มม. (กล่องละ 25 ใบ)', category: 'วัสดุโรงงานและเครื่องมือช่าง', unit: 'กล่อง', min_stock: 5, current_stock: 20, unit_price: 350.0, storage_location: 'คลังพัสดุช่าง ชั้น 1 ช่อง W-02' },
+      
+      // วัสดุอื่น ๆ
+      { item_code: 'ว.99-001', name: 'เชือกไนลอนถัก ขนาด 8 มม. (ม้วนละ 100 เมตร สำหรับผูกมัดทั่วไป)', category: 'วัสดุอื่น ๆ', unit: 'ม้วน', min_stock: 5, current_stock: 16, unit_price: 320.0, storage_location: 'คลังพัสดุกลาง ชั้น 1 ช่อง G-05' }
+    ];
+
+    const checkItem = db.prepare('SELECT id FROM inventory_items WHERE item_code = ?');
+    const insertItem = db.prepare(`
+      INSERT INTO inventory_items (item_code, name, category, unit, min_stock, current_stock, unit_price, storage_location)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+    const insertLot = db.prepare(`
+      INSERT INTO inventory_lots (item_id, lot_number, received_date, quantity_received, quantity_remaining, unit_cost, supplier, po_number)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    for (const it of additionalInventoryItems) {
+      const existing = checkItem.get(it.item_code);
+      if (!existing) {
+        const res = insertItem.run(
+          it.item_code, it.name, it.category, it.unit, it.min_stock, it.current_stock, it.unit_price, it.storage_location
+        );
+        const newId = res.lastInsertRowid;
+        // create initial FIFO lot
+        const today = new Date().toISOString().split('T')[0];
+        insertLot.run(newId, `LOT-INIT/${it.item_code}`, today, it.current_stock, it.current_stock, it.unit_price, 'ยอดยกมาเริ่มต้นตามระเบียบพัสดุ', 'PO-INIT');
+      }
+    }
+  } catch (err) {
+    console.error('Error auto-seeding additional inventory items:', err.message);
+  }
 }
 

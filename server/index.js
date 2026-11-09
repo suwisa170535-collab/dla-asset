@@ -1136,6 +1136,21 @@ app.get('/api/inventory', (req, res) => {
   }
 });
 
+// Get Inventory Categories with summary counts
+app.get('/api/inventory/categories', (req, res) => {
+  try {
+    const categories = db.prepare(`
+      SELECT category, COUNT(*) as count 
+      FROM inventory_items 
+      GROUP BY category 
+      ORDER BY count DESC, category ASC
+    `).all();
+    res.json(categories);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Add New Inventory Item Master
 app.post('/api/inventory', (req, res) => {
   try {

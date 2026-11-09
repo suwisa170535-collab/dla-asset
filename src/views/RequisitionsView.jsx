@@ -487,7 +487,7 @@ export default function RequisitionsView({ settings, departments, currentUser, c
                         <option value="">-- เลือกรายการพัสดุ --</option>
                         {inventoryItems.map(item => (
                           <option key={item.id} value={item.id}>
-                            {item.name} ({item.item_code}) [คงเหลือ: {item.current_stock} {item.unit}]
+                            {item.name} ({item.item_code}) [{item.category} | คงเหลือ: {item.current_stock} {item.unit}]
                           </option>
                         ))}
                       </select>
