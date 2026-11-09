@@ -265,109 +265,73 @@ export default function AnnualAuditView({ settings, currentUser, departments = [
     const printMissing = itemsToPrint.filter(i => i.physical_status === 'missing').length;
     const printPending = itemsToPrint.filter(i => !i.physical_status).length;
 
-    let tableRowsHTML = '';
+    // Always build the grouped list with data attributes so user can toggle live
+    const grouped = {};
+    auditDetails.forEach(item => {
+      const dName = item.department_name || 'ไม่ระบุสำนัก/กอง';
+      if (!grouped[dName]) grouped[dName] = [];
+      grouped[dName].push(item);
+    });
 
-    if (isSpecificDept) {
-      // Single department list
-      tableRowsHTML = itemsToPrint.map((item, idx) => `
-        <tr style="font-size: 11px;">
-          <td class="text-center" style="padding: 3px 2px;">${idx + 1}</td>
-          <td class="text-center font-bold font-mono" style="padding: 3px 2px; font-size: 10.5px; color: #1e3a8a;">${item.asset_code}</td>
-          <td style="padding: 3px 4px;">
-            <strong>${item.name}</strong>
-            ${item.brand || item.model ? `<div style="font-size: 9.5px; color: #64748b;">${[item.brand, item.model].filter(Boolean).join(' ')}</div>` : ''}
+    const groupSections = [];
+    Object.keys(grouped).sort().forEach(dName => {
+      const dItems = grouped[dName];
+      const deptIdVal = dItems[0]?.department_id || '';
+      const dNormal = dItems.filter(i => i.physical_status === 'normal').length;
+      const dDamaged = dItems.filter(i => i.physical_status === 'damaged' || i.physical_status === 'worn_out').length;
+      const dMissing = dItems.filter(i => i.physical_status === 'missing').length;
+      const dPending = dItems.filter(i => !i.physical_status).length;
+
+      // Group Header Row with data-header-dept-id
+      groupSections.push(`
+        <tr data-header-dept-id="${deptIdVal}" data-dept-name="${dName}" style="background: #f1f5f9; border-top: 1.5px solid #94a3b8; border-bottom: 1.5px solid #cbd5e1;">
+          <td colspan="7" style="padding: 5px 8px; font-weight: bold; font-size: 11px; color: #1e3a8a;">
+            📁 ${dName} &nbsp;—&nbsp; รวม ${dItems.length} รายการ
+            <span style="font-weight: normal; font-size: 10px; color: #475569; margin-left: 6px;">
+              (ปกติ: ${dNormal} | ชำรุด/เสื่อมสภาพ: ${dDamaged} | หาไม่พบ: ${dMissing} | รอตรวจ: ${dPending})
+            </span>
           </td>
-          <td style="padding: 3px 4px; font-size: 10px;">
-            ${item.sub_department_name ? `<span style="color: #1d4ed8; font-weight: 600;">${item.sub_department_name}</span>` : '<span style="color: #64748b;">ส่วนกลางกอง</span>'}
-          </td>
-          <td style="padding: 3px 4px; font-size: 10px;">
-            <div>${item.location_room || '-'}</div>
-            ${item.custodian_name ? `<div style="font-size: 9px; color: #64748b;">ผู้ถือ: ${item.custodian_name}</div>` : ''}
-          </td>
-          <td class="text-center font-bold" style="padding: 3px 2px; font-size: 10.5px; color: ${
-            item.physical_status === 'normal' ? '#047857' :
-            item.physical_status === 'damaged' ? '#b45309' :
-            item.physical_status === 'worn_out' ? '#7e22ce' :
-            item.physical_status === 'missing' ? '#b91c1c' : '#64748b'
-          };">
-            ${
-              item.physical_status === 'normal' ? '✓ ปกติ' :
-              item.physical_status === 'damaged' ? 'ชำรุด' :
-              item.physical_status === 'worn_out' ? 'เสื่อมสภาพ' :
-              item.physical_status === 'missing' ? 'หาไม่พบ' : 'รอตรวจ'
-            }
-          </td>
-          <td style="padding: 3px 4px; font-size: 9.5px; color: #475569;">${item.remarks || '-'}</td>
         </tr>
-      `).join('');
-    } else {
-      // All departments grouped by department
-      const grouped = {};
-      itemsToPrint.forEach(item => {
-        const dName = item.department_name || 'ไม่ระบุสำนัก/กอง';
-        if (!grouped[dName]) grouped[dName] = [];
-        grouped[dName].push(item);
-      });
+      `);
 
-      const groupSections = [];
-      Object.keys(grouped).sort().forEach(dName => {
-        const dItems = grouped[dName];
-        const dNormal = dItems.filter(i => i.physical_status === 'normal').length;
-        const dDamaged = dItems.filter(i => i.physical_status === 'damaged' || i.physical_status === 'worn_out').length;
-        const dMissing = dItems.filter(i => i.physical_status === 'missing').length;
-        const dPending = dItems.filter(i => !i.physical_status).length;
-
-        // Group Header Row
+      // Rows inside group with data-dept-id
+      dItems.forEach((item, idx) => {
         groupSections.push(`
-          <tr style="background: #f1f5f9; border-top: 1.5px solid #94a3b8; border-bottom: 1.5px solid #cbd5e1;">
-            <td colspan="7" style="padding: 5px 8px; font-weight: bold; font-size: 11px; color: #1e3a8a;">
-              📁 ${dName} &nbsp;—&nbsp; รวม ${dItems.length} รายการ
-              <span style="font-weight: normal; font-size: 10px; color: #475569; margin-left: 6px;">
-                (ปกติ: ${dNormal} | ชำรุด/เสื่อมสภาพ: ${dDamaged} | หาไม่พบ: ${dMissing} | รอตรวจ: ${dPending})
-              </span>
+          <tr data-dept-id="${item.department_id}" style="font-size: 11px;">
+            <td class="text-center" style="padding: 3px 2px;">${idx + 1}</td>
+            <td class="text-center font-bold font-mono" style="padding: 3px 2px; font-size: 10.5px; color: #1e3a8a;">${item.asset_code}</td>
+            <td style="padding: 3px 4px;">
+              <strong>${item.name}</strong>
+              ${item.brand || item.model ? `<div style="font-size: 9.5px; color: #64748b;">${[item.brand, item.model].filter(Boolean).join(' ')}</div>` : ''}
             </td>
+            <td style="padding: 3px 4px; font-size: 10px;">
+              <div>${item.department_name}</div>
+              ${item.sub_department_name ? `<div style="color: #1d4ed8; font-weight: 600;">[${item.sub_department_name}]</div>` : ''}
+            </td>
+            <td style="padding: 3px 4px; font-size: 10px;">
+              <div>${item.location_room || '-'}</div>
+              ${item.custodian_name ? `<div style="font-size: 9px; color: #64748b;">ผู้ถือ: ${item.custodian_name}</div>` : ''}
+            </td>
+            <td class="text-center font-bold" style="padding: 3px 2px; font-size: 10.5px; color: ${
+              item.physical_status === 'normal' ? '#047857' :
+              item.physical_status === 'damaged' ? '#b45309' :
+              item.physical_status === 'worn_out' ? '#7e22ce' :
+              item.physical_status === 'missing' ? '#b91c1c' : '#64748b'
+            };">
+              ${
+                item.physical_status === 'normal' ? '✓ ปกติ' :
+                item.physical_status === 'damaged' ? 'ชำรุด' :
+                item.physical_status === 'worn_out' ? 'เสื่อมสภาพ' :
+                item.physical_status === 'missing' ? 'หาไม่พบ' : 'รอตรวจ'
+              }
+            </td>
+            <td style="padding: 3px 4px; font-size: 9.5px; color: #475569;">${item.remarks || '-'}</td>
           </tr>
         `);
-
-        // Rows inside group
-        dItems.forEach((item, idx) => {
-          groupSections.push(`
-            <tr style="font-size: 11px;">
-              <td class="text-center" style="padding: 3px 2px;">${idx + 1}</td>
-              <td class="text-center font-bold font-mono" style="padding: 3px 2px; font-size: 10.5px; color: #1e3a8a;">${item.asset_code}</td>
-              <td style="padding: 3px 4px;">
-                <strong>${item.name}</strong>
-                ${item.brand || item.model ? `<div style="font-size: 9.5px; color: #64748b;">${[item.brand, item.model].filter(Boolean).join(' ')}</div>` : ''}
-              </td>
-              <td style="padding: 3px 4px; font-size: 10px;">
-                <div>${item.department_name}</div>
-                ${item.sub_department_name ? `<div style="color: #1d4ed8; font-weight: 600;">[${item.sub_department_name}]</div>` : ''}
-              </td>
-              <td style="padding: 3px 4px; font-size: 10px;">
-                <div>${item.location_room || '-'}</div>
-                ${item.custodian_name ? `<div style="font-size: 9px; color: #64748b;">ผู้ถือ: ${item.custodian_name}</div>` : ''}
-              </td>
-              <td class="text-center font-bold" style="padding: 3px 2px; font-size: 10.5px; color: ${
-                item.physical_status === 'normal' ? '#047857' :
-                item.physical_status === 'damaged' ? '#b45309' :
-                item.physical_status === 'worn_out' ? '#7e22ce' :
-                item.physical_status === 'missing' ? '#b91c1c' : '#64748b'
-              };">
-                ${
-                  item.physical_status === 'normal' ? '✓ ปกติ' :
-                  item.physical_status === 'damaged' ? 'ชำรุด' :
-                  item.physical_status === 'worn_out' ? 'เสื่อมสภาพ' :
-                  item.physical_status === 'missing' ? 'หาไม่พบ' : 'รอตรวจ'
-                }
-              </td>
-              <td style="padding: 3px 4px; font-size: 9.5px; color: #475569;">${item.remarks || '-'}</td>
-            </tr>
-          `);
-        });
       });
+    });
 
-      tableRowsHTML = groupSections.join('');
-    }
+    const tableRowsHTML = groupSections.join('');
 
     const isSingle = (itemsToPrint?.length || 0) <= 8;
     const reportTitle = isSpecificDept
@@ -375,10 +339,28 @@ export default function AnnualAuditView({ settings, currentUser, departments = [
       : `รายงานผลการตรวจสอบพัสดุและครุภัณฑ์ ประจำปีงบประมาณ พ.ศ. ${activeAudit.fiscal_year} (แยกตามสำนัก/กอง)`;
 
     const innerContent = `
+      <!-- In-preview Department Switcher (คลิกสลับดูกองเดี่ยวๆ ได้ทันทีจากในหน้านี้) -->
+      <div class="no-print" style="margin-bottom: 14px; padding: 10px 14px; background: #eff6ff; border: 1.5px solid #93c5fd; border-radius: 8px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+        <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+          <span style="font-size: 12.5px; font-weight: bold; color: #1e3a8a;">📁 สลับดูกองที่ต้องการ:</span>
+          <button onclick="switchDeptView('')" id="btn-view-all" class="dept-pill-btn" style="padding: 5px 12px; font-size: 12px; font-weight: bold; border-radius: 6px; border: 1.5px solid #2563eb; background: #2563eb; color: white; cursor: pointer;">ทุกกอง (รวมทั้งหมด)</button>
+          ${departments.map(d => {
+            const dCount = auditDetails.filter(i => String(i.department_id) === String(d.id)).length;
+            if (dCount === 0) return '';
+            return `
+              <button onclick="switchDeptView('${d.id}', '${d.name.replace(/'/g, "\\'")}')" id="btn-view-${d.id}" class="dept-pill-btn" style="padding: 5px 12px; font-size: 12px; font-weight: 500; border-radius: 6px; border: 1px solid #cbd5e1; background: white; color: #1e293b; cursor: pointer;">
+                ${d.name} (${dCount})
+              </button>
+            `;
+          }).join('')}
+        </div>
+        <div style="font-size: 11px; color: #64748b;">(คลิกเลือกกองที่ต้องการดู/พิมพ์เดี่ยวๆ ได้ทันที แถบนี้จะไม่ถูกพิมพ์ลงกระดาษ)</div>
+      </div>
+
       <div class="doc-body">
         ${renderGovHeader(orgName, 'แบบรายงานผลตรวจพัสดุ', 46)}
         <div class="header-title" style="font-size: 16px; margin-top: 2px; margin-bottom: 2px;">รายงานผลการตรวจสอบพัสดุและครุภัณฑ์ ประจำปีงบประมาณ พ.ศ. ${activeAudit.fiscal_year}</div>
-        ${isSpecificDept ? `<div style="text-align: center; font-size: 13.5px; font-weight: bold; color: #1e3a8a; margin-bottom: 2px;">หน่วยงาน: ${targetDeptName}</div>` : ''}
+        <div id="specific-dept-title" style="text-align: center; font-size: 13.5px; font-weight: bold; color: #1e3a8a; margin-bottom: 2px; ${isSpecificDept ? '' : 'display: none;'}">หน่วยงาน: ${targetDeptName}</div>
         <div class="header-sub" style="font-size: 12.5px; margin-bottom: 4px;">${orgName}</div>
         <div style="font-size: 10.5px; margin-bottom: 6px; text-align: center; color: #475569;">
           ตามระเบียบกระทรวงการคลังว่าด้วยการจัดซื้อจัดจ้างและการบริหารพัสดุภาครัฐ พ.ศ. 2560 ข้อ 213 - 214 | วันที่เริ่มตรวจนับ: ${formatThaiDate(activeAudit.audit_date)}
@@ -389,7 +371,7 @@ export default function AnnualAuditView({ settings, currentUser, departments = [
         </div>
 
         <div style="margin-bottom: 6px; font-size: 10px; background: #f1f5f9; border: 1px solid #cbd5e1; padding: 3px 10px; border-radius: 4px; display: flex; justify-content: space-between;">
-          <div><strong>ขอบเขต:</strong> ${isSpecificDept ? targetDeptName : 'ทุกสำนัก/กอง (แยกเป็นกองๆ)'} (รวมทั้งสิ้น ${itemsToPrint.length} รายการ)</div>
+          <div id="report-scope-text"><strong>ขอบเขต:</strong> ${isSpecificDept ? targetDeptName : 'ทุกสำนัก/กอง (แยกเป็นกองๆ)'} (รวมทั้งสิ้น ${auditDetails.length} รายการ)</div>
           <div>
             <span style="color: #047857; font-weight: bold;">✓ ปกติ: ${printNormal}</span> &nbsp;|&nbsp;
             <span style="color: #b45309; font-weight: bold;">⚠ ชำรุด/เสื่อมสภาพ: ${printDamaged + printWorn}</span> &nbsp;|&nbsp;
@@ -404,7 +386,7 @@ export default function AnnualAuditView({ settings, currentUser, departments = [
               <th style="width: 5%; font-size: 11px; padding: 3px 2px;">ที่</th>
               <th style="width: 16%; font-size: 11px; padding: 3px 2px;">รหัสครุภัณฑ์</th>
               <th style="width: 26%; font-size: 11px; padding: 3px 4px;">ชื่อรายการครุภัณฑ์</th>
-              <th style="width: 14%; font-size: 11px; padding: 3px 3px;">${isSpecificDept ? 'ฝ่าย/งานย่อย' : 'สำนัก/กอง / ฝ่ายย่อย'}</th>
+              <th style="width: 14%; font-size: 11px; padding: 3px 3px;">สำนัก/กอง / ฝ่ายย่อย</th>
               <th style="width: 13%; font-size: 11px; padding: 3px 3px;">สถานที่ตั้ง / ผู้ถือ</th>
               <th style="width: 11%; font-size: 11px; padding: 3px 2px;">ผลตรวจนับ</th>
               <th style="width: 15%; font-size: 11px; padding: 3px 3px;">หมายเหตุ</th>
@@ -432,7 +414,7 @@ export default function AnnualAuditView({ settings, currentUser, departments = [
                 คำสั่ง / ข้อสั่งการของ${executiveTitle} (ตามระเบียบฯ ข้อ 214):
               </div>
               <div style="font-size: 10.5px; line-height: 1.5; color: #334155;">
-                <div style="margin-bottom: 2px;">[ &nbsp; ] <strong>ทราบ</strong> รายงานผลการตรวจสอบพัสดุประจำปีงบประมาณ พ.ศ. ${activeAudit.fiscal_year} ${isSpecificDept ? `(${targetDeptName})` : ''}</div>
+                <div style="margin-bottom: 2px;">[ &nbsp; ] <strong>ทราบ</strong> รายงานผลการตรวจสอบพัสดุประจำปีงบประมาณ พ.ศ. ${activeAudit.fiscal_year} <span id="directive-dept-name">${isSpecificDept ? `(${targetDeptName})` : ''}</span></div>
                 <div style="margin-bottom: 2px;">[ &nbsp; ] <strong>อนุมัติ</strong> ให้ดำเนินการจำหน่ายพัสดุชำรุด/เสื่อมสภาพตามระเบียบฯ ข้อ 215</div>
                 <div style="margin-bottom: 2px;">[ &nbsp; ] <strong>มอบหมาย</strong> ให้เจ้าหน้าที่พัสดุจัดทำรายงานขออนุมัติจำหน่ายต่อไป</div>
                 <div>[ &nbsp; ] อื่นๆ: ............................................................................................................</div>
@@ -444,6 +426,61 @@ export default function AnnualAuditView({ settings, currentUser, departments = [
           </div>
         </div>
       </div>
+
+      <script>
+        function switchDeptView(deptId, deptName) {
+          var allRows = document.querySelectorAll('tr[data-dept-id]');
+          var allHeaders = document.querySelectorAll('tr[data-header-dept-id]');
+          var allBtns = document.querySelectorAll('.dept-pill-btn');
+          var scopeText = document.getElementById('report-scope-text');
+          var specificTitle = document.getElementById('specific-dept-title');
+          var directiveDept = document.getElementById('directive-dept-name');
+
+          allBtns.forEach(function(b) {
+            if ((!deptId && b.id === 'btn-view-all') || b.id === 'btn-view-' + deptId) {
+              b.style.background = '#2563eb';
+              b.style.color = '#ffffff';
+              b.style.borderColor = '#2563eb';
+              b.style.fontWeight = 'bold';
+            } else {
+              b.style.background = '#ffffff';
+              b.style.color = '#1e293b';
+              b.style.borderColor = '#cbd5e1';
+              b.style.fontWeight = '500';
+            }
+          });
+
+          if (!deptId) {
+            allRows.forEach(function(r) { r.style.display = ''; });
+            allHeaders.forEach(function(h) { h.style.display = ''; });
+            if (scopeText) scopeText.innerHTML = '<strong>ขอบเขต:</strong> ทุกสำนัก/กอง (แยกเป็นกองๆ)';
+            if (specificTitle) specificTitle.style.display = 'none';
+            if (directiveDept) directiveDept.innerText = '';
+          } else {
+            allHeaders.forEach(function(h) {
+              if (h.getAttribute('data-header-dept-id') === String(deptId)) {
+                h.style.display = '';
+              } else {
+                h.style.display = 'none';
+              }
+            });
+            allRows.forEach(function(r) {
+              if (r.getAttribute('data-dept-id') === String(deptId)) {
+                r.style.display = '';
+              } else {
+                r.style.display = 'none';
+              }
+            });
+            if (scopeText) scopeText.innerHTML = '<strong>ขอบเขต:</strong> ' + (deptName || 'เฉพาะกองที่เลือก');
+            if (specificTitle) {
+              specificTitle.innerText = 'หน่วยงาน: ' + (deptName || '');
+              specificTitle.style.display = 'block';
+            }
+            if (directiveDept) directiveDept.innerText = '(' + (deptName || '') + ')';
+          }
+        }
+        ${isSpecificDept ? `switchDeptView('${deptId}', '${targetDeptName.replace(/'/g, "\\'")}');` : ''}
+      </script>
     `;
 
     const html = isSingle ? `<div class="single-page-wrapper">${innerContent}</div>` : innerContent;

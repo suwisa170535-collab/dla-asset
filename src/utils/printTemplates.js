@@ -481,7 +481,7 @@ export function generatePD1HTML(req, settings) {
           <div><strong>วันที่ขอเบิก:</strong> ${formatThaiDate(req.requested_date)}</div>
         </div>
         <div class="grid-2">
-          <div><strong>สำนัก/กองที่ขอเบิก:</strong> ${req.department_name || '-'}</div>
+          <div><strong>สำนัก/กองที่ขอเบิก:</strong> ${req.department_name || '-'}${req.sub_department_name ? ` (ฝ่าย/งาน: ${req.sub_department_name})` : ''}</div>
           <div><strong>ชื่อผู้ขอเบิก:</strong> ${req.requester_name} (${req.requester_position || 'เจ้าหน้าที่'})</div>
         </div>
         <div style="margin-bottom: 12px;">

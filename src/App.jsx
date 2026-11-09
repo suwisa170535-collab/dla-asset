@@ -168,6 +168,7 @@ export default function App() {
             <RequisitionsView
               settings={settings}
               departments={departments}
+              subDepartments={subDepartments}
               currentUser={currentUser}
               currentRole={currentRole}
             />

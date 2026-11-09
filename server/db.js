@@ -534,5 +534,222 @@ export function initDatabase() {
   } catch (e) {
     console.error('Error auto-seeding default users:', e.message);
   }
+
+  // Ensure specialized engineering assets & materials exist
+  try {
+    const checkEngAssets = db.prepare("SELECT count(*) as count FROM assets WHERE department_id = 3").get();
+    if (checkEngAssets && checkEngAssets.count < 6) {
+      const engSubDepts = db.prepare("SELECT id, code, name FROM sub_departments WHERE department_id = 3").all();
+      const civilId = engSubDepts.find(s => s.name.includes('โยธา'))?.id || 9;
+      const elecId = engSubDepts.find(s => s.name.includes('ไฟฟ้า') || s.name.includes('สาธารณูปโภค'))?.id || 10;
+      const planId = engSubDepts.find(s => s.name.includes('แบบแผน'))?.id || 8;
+
+      const newAssets = [
+        {
+          asset_code: 'ค.02/2567/002',
+          name: 'รถยนต์บรรทุกดีเซล 6 ล้อ ติดตั้งเครนไฮดรอลิกและกระเช้าซ่อมไฟฟ้า 12 เมตร',
+          category_id: 2,
+          brand: 'Isuzu',
+          model: 'Forward FRR 190 แรงม้า พร้อมกระเช้าฉนวนไฟฟ้า',
+          serial_number: 'FRR90-781422',
+          department_id: 3,
+          sub_department_id: elecId,
+          custodian_name: 'นายเอกชัย ช่างประดิษฐ์',
+          location_room: 'โรงจอดรถยนต์ส่วนกลาง กองช่าง',
+          acquired_date: '2024-03-15',
+          fiscal_year: 2567,
+          budget_source: 'งบประมาณเทศบัญญัติ (เงินรายได้)',
+          vendor: 'บจก. อีซูซุไฮดรอลิกส์ ทรัค คอร์ปอเรชั่น',
+          cost_price: 2450000.0,
+          useful_life_years: 10,
+          salvage_value: 1.0,
+          status: 'active',
+          notes: 'ใช้สำหรับซ่อมแซมและบำรุงรักษาโคมไฟถนนสาธารณะและตัดแต่งกิ่งไม้ใกล้สายไฟ',
+          warranty_expiry_date: '2026-03-15'
+        },
+        {
+          asset_code: 'ค.06/2567/002',
+          name: 'รถตักหน้าขุดหลัง (Backhoe Loader 4WD ชนิดขับเคลื่อน 4 ล้อ)',
+          category_id: 6,
+          brand: 'JCB',
+          model: '3DX Super EcoMax 92 แรงม้า',
+          serial_number: 'JCB3DX-883910',
+          department_id: 3,
+          sub_department_id: civilId,
+          custodian_name: 'นายสมคิด ก่อสร้างดี',
+          location_room: 'โรงจอดเครื่องจักรกล กองช่าง',
+          acquired_date: '2024-05-20',
+          fiscal_year: 2567,
+          budget_source: 'งบเงินอุดหนุนเฉพาะกิจ',
+          vendor: 'บจก. สยามกลการและเครื่องจักรกลหนัก',
+          cost_price: 3200000.0,
+          useful_life_years: 10,
+          salvage_value: 1.0,
+          status: 'active',
+          notes: 'ใช้สำหรับงานขุดลอกคูคลอง กำจัดผักตบชวา และงานบำรุงรักษาทางสาธารณะ'
+        },
+        {
+          asset_code: 'ค.06/2568/002',
+          name: 'เครื่องตัดคอนกรีต/ถนน ชนิดใช้น้ำมันเบนซิน พร้อมใบเพชร 16 นิ้ว',
+          category_id: 6,
+          brand: 'Husqvarna',
+          model: 'FS400 LV เครื่องยนต์ Honda GX390',
+          serial_number: 'HQ-FS400-5542',
+          department_id: 3,
+          sub_department_id: civilId,
+          custodian_name: 'นายธนากร ผิวทางเจริญ',
+          location_room: 'ห้องเก็บเครื่องมือช่าง ชั้น 1 กองช่าง',
+          acquired_date: '2025-01-18',
+          fiscal_year: 2568,
+          budget_source: 'งบประมาณเทศบัญญัติ',
+          vendor: 'หจก. ทูลส์ แอนด์ แมชชินเนอรี่ สุขเกษม',
+          cost_price: 48500.0,
+          useful_life_years: 5,
+          salvage_value: 1.0,
+          status: 'active',
+          notes: 'ใช้สำหรับตัดแนวคอนกรีตและแอสฟัลต์เพื่อซ่อมแซมผิวจราจร'
+        },
+        {
+          asset_code: 'ค.06/2568/003',
+          name: 'เครื่องตบดินแบบสั่นสะเทือน (Plate Compactor 90 กก.)',
+          category_id: 6,
+          brand: 'Mikasa',
+          model: 'MVC-F80H เครื่องยนต์ Honda GX160',
+          serial_number: 'MK-MVC80-9921',
+          department_id: 3,
+          sub_department_id: civilId,
+          custodian_name: 'นายธนากร ผิวทางเจริญ',
+          location_room: 'ห้องเก็บเครื่องมือช่าง ชั้น 1 กองช่าง',
+          acquired_date: '2025-02-10',
+          fiscal_year: 2568,
+          budget_source: 'งบประมาณเทศบัญญัติ',
+          vendor: 'หจก. ทูลส์ แอนด์ แมชชินเนอรี่ สุขเกษม',
+          cost_price: 38500.0,
+          useful_life_years: 5,
+          salvage_value: 1.0,
+          status: 'active',
+          notes: 'ใช้สำหรับตบอัดดิน หินคลุก และยางมะตอยซ่อมแซมหลุมบ่อ'
+        },
+        {
+          asset_code: 'ค.04/2568/001',
+          name: 'เครื่องกำเนิดไฟฟ้าเคลื่อนที่ ชนิดดีเซล แบบเก็บเสียง ขนาด 15 kW',
+          category_id: 4,
+          brand: 'Denyo',
+          model: 'DCA-15ESK Ultra Silent',
+          serial_number: 'DY-DCA15-3310',
+          department_id: 3,
+          sub_department_id: elecId,
+          custodian_name: 'นายเอกชัย ช่างประดิษฐ์',
+          location_room: 'คลังเก็บอุปกรณ์ฉุกเฉิน กองช่าง',
+          acquired_date: '2025-03-05',
+          fiscal_year: 2568,
+          budget_source: 'งบประมาณเทศบัญญัติ',
+          vendor: 'บจก. พาวเวอร์เจนเนอเรเตอร์ ซัพพลาย',
+          cost_price: 265000.0,
+          useful_life_years: 8,
+          salvage_value: 1.0,
+          status: 'active',
+          notes: 'จ่ายไฟฟ้าสำรองกรณีไฟดับฉุกเฉินและงานภาคสนามนอกสถานที่'
+        },
+        {
+          asset_code: 'ค.04/2567/002',
+          name: 'เครื่องตรวจจับแนวท่อและสายไฟใต้ดิน (Underground Utility Locator)',
+          category_id: 4,
+          brand: 'Radiodetection',
+          model: 'RD7200 Precision Cable & Pipe Locator',
+          serial_number: 'RD72-990214',
+          department_id: 3,
+          sub_department_id: planId,
+          custodian_name: 'นายเอกชัย ช่างประดิษฐ์',
+          location_room: 'ห้องปฏิบัติการออกแบบผังเมือง ชั้น 2',
+          acquired_date: '2024-08-12',
+          fiscal_year: 2567,
+          budget_source: 'งบประมาณเทศบัญญัติ',
+          vendor: 'บจก. จีโออินฟอร์มาติกส์ เทคโนโลยี',
+          cost_price: 175000.0,
+          useful_life_years: 5,
+          salvage_value: 1.0,
+          status: 'active',
+          notes: 'ใช้สแกนหาแนวท่อประปาและสายเคเบิลใต้ดินก่อนดำเนินการขุดเจาะถนน'
+        },
+        {
+          asset_code: 'ค.17/2567/001',
+          name: 'เครื่องสูบน้ำดับเพลิงและสูบระบายน้ำฉุกเฉิน ขนาด 8 นิ้ว ลากจูงได้',
+          category_id: 17,
+          brand: 'Kubota',
+          model: 'V2403 Direct Injection ปั๊มหอยโข่ง 8 นิ้ว',
+          serial_number: 'KB-PUMP8-1120',
+          department_id: 3,
+          sub_department_id: elecId,
+          custodian_name: 'นายเอกชัย ช่างประดิษฐ์',
+          location_room: 'โรงจอดเครื่องจักรกล กองช่าง',
+          acquired_date: '2024-06-30',
+          fiscal_year: 2567,
+          budget_source: 'งบประมาณเทศบัญญัติ',
+          vendor: 'บจก. สยามวอเตอร์ปั๊ม แอนด์ เอ็นจิเนียริ่ง',
+          cost_price: 420000.0,
+          useful_life_years: 8,
+          salvage_value: 1.0,
+          status: 'active',
+          notes: 'ใช้สำหรับสูบระบายน้ำป้องกันน้ำท่วมขังในเขตเทศบาล'
+        },
+        {
+          asset_code: 'ค.06/2567/004',
+          name: 'เครื่องพ่นสีตีเส้นจราจรอัตโนมัติ (Line Striper)',
+          category_id: 6,
+          brand: 'Graco',
+          model: 'LineLazer 3400 เครื่องยนต์ Honda GX120',
+          serial_number: 'GR-LL34-4412',
+          department_id: 3,
+          sub_department_id: civilId,
+          custodian_name: 'นายสมคิด ก่อสร้างดี',
+          location_room: 'ห้องเก็บเครื่องมือช่าง ชั้น 1 กองช่าง',
+          acquired_date: '2024-09-08',
+          fiscal_year: 2567,
+          budget_source: 'งบประมาณเทศบัญญัติ',
+          vendor: 'บจก. ทราฟฟิก ซัพพลาย โซลูชั่น',
+          cost_price: 165000.0,
+          useful_life_years: 5,
+          salvage_value: 1.0,
+          status: 'active',
+          notes: 'ใช้สำหรับตีเส้นจราจร ทางม้าลาย และขอบทางในเขตเทศบาล'
+        }
+      ];
+
+      const insertAsset = db.prepare(`
+        INSERT INTO assets (
+          asset_code, name, category_id, brand, model, serial_number,
+          department_id, sub_department_id, custodian_name, location_room, acquired_date,
+          fiscal_year, budget_source, vendor, cost_price, useful_life_years,
+          salvage_value, status, notes, warranty_expiry_date
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `);
+
+      const checkAsset = db.prepare('SELECT id FROM assets WHERE asset_code = ?');
+      const insertAuditDetail = db.prepare(`
+        INSERT OR IGNORE INTO annual_audit_details (audit_id, asset_id, physical_status, verified_by, verified_at, remarks)
+        VALUES (?, ?, ?, ?, ?, ?)
+      `);
+
+      for (const a of newAssets) {
+        const existing = checkAsset.get(a.asset_code);
+        let assetId = existing?.id;
+        if (!existing) {
+          const res = insertAsset.run(
+            a.asset_code, a.name, a.category_id, a.brand, a.model, a.serial_number,
+            a.department_id, a.sub_department_id, a.custodian_name, a.location_room, a.acquired_date,
+            a.fiscal_year, a.budget_source, a.vendor, a.cost_price, a.useful_life_years,
+            a.salvage_value, a.status, a.notes, a.warranty_expiry_date || null
+          );
+          assetId = res.lastInsertRowid;
+        }
+        if (assetId) {
+          insertAuditDetail.run(1, assetId, 'normal', 'นายเอกชัย ช่างประดิษฐ์ (กรรมการ)', '2025-09-25 10:30:00', 'ตรวจนับหน้างานที่โรงจอดเครื่องจักรกล กองช่าง สภาพดีพร้อมใช้งาน');
+        }
+      }
+    }
+  } catch (err) {
+    console.error('Error auto-seeding specialized engineering assets:', err.message);
+  }
 }
 
