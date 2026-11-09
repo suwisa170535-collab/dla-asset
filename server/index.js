@@ -1294,12 +1294,14 @@ app.get('/api/inventory/items/:id/stock-card', (req, res) => {
 // -------------------------------------------------------------
 app.get('/api/requests', (req, res) => {
   try {
-    const { status, department_id } = req.query;
+    const { status, department_id, sub_department_id } = req.query;
 
     let query = `
-      SELECT r.*, d.name as department_name, d.code as department_code
+      SELECT r.*, d.name as department_name, d.code as department_code,
+             sd.name as sub_department_name, sd.code as sub_department_code
       FROM requisitions r
       LEFT JOIN departments d ON r.department_id = d.id
+      LEFT JOIN sub_departments sd ON r.sub_department_id = sd.id
       WHERE 1=1
     `;
     const params = [];
@@ -1311,6 +1313,10 @@ app.get('/api/requests', (req, res) => {
     if (department_id) {
       query += ` AND r.department_id = ?`;
       params.push(Number(department_id));
+    }
+    if (sub_department_id) {
+      query += ` AND r.sub_department_id = ?`;
+      params.push(Number(sub_department_id));
     }
 
     query += ` ORDER BY r.id DESC`;
@@ -1338,7 +1344,7 @@ app.get('/api/requests', (req, res) => {
 // Create Requisition
 app.post('/api/requests', (req, res) => {
   try {
-    const { department_id, requester_name, requester_position, requested_date, purpose, notes, items, actorName, actorRole } = req.body;
+    const { department_id, sub_department_id, requester_name, requester_position, requested_date, purpose, notes, items, actorName, actorRole } = req.body;
 
     // Generate req_number เช่น บบ.04/2569
     const yearSetting = db.prepare("SELECT value FROM settings WHERE key = 'fiscal_year'").get();
@@ -1349,11 +1355,11 @@ app.post('/api/requests', (req, res) => {
     const req_number = `บบ.${nextSeq}/${currentFY}`;
 
     const stmt = db.prepare(`
-      INSERT INTO requisitions (req_number, department_id, requester_name, requester_position, requested_date, purpose, status, notes)
-      VALUES (?, ?, ?, ?, ?, ?, 'pending_approval', ?)
+      INSERT INTO requisitions (req_number, department_id, sub_department_id, requester_name, requester_position, requested_date, purpose, status, notes)
+      VALUES (?, ?, ?, ?, ?, ?, ?, 'pending_approval', ?)
     `);
 
-    const result = stmt.run(req_number, department_id, requester_name, requester_position, requested_date, purpose, notes || '');
+    const result = stmt.run(req_number, department_id, sub_department_id ? Number(sub_department_id) : null, requester_name, requester_position, requested_date, purpose, notes || '');
     const reqId = result.lastInsertRowid;
 
     const itemStmt = db.prepare(`

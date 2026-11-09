@@ -493,64 +493,116 @@ export default function AnnualAuditView({ settings, currentUser, departments = [
         </div>
       </div>
 
-      {/* Select Active Round & Main Print Actions */}
-      <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center space-x-2">
-            <span className="text-xs font-bold text-slate-500 uppercase">รอบการตรวจสอบ:</span>
-            <select
-              value={activeAudit?.id || ''}
-              onChange={e => fetchAuditDetails(Number(e.target.value))}
-              className="px-3 py-1.5 border border-slate-200 rounded-xl text-sm font-bold text-gov-800 focus:ring-2 focus:ring-gov-500 bg-slate-50"
-            >
-              {audits.map(a => (
-                <option key={a.id} value={a.id}>
-                  รอบปีงบประมาณ {a.fiscal_year} ({a.audit_code}) - {a.status === 'completed' ? 'เสร็จสิ้นแล้ว' : 'กำลังดำเนินการ'}
-                </option>
-              ))}
-            </select>
-          </div>
+      {/* Select Active Round & Prominent Print Controller */}
+      <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+        {/* Top line: Round selector & Complete round button */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center space-x-2">
+              <span className="text-xs font-bold text-slate-500 uppercase">รอบการตรวจสอบ:</span>
+              <select
+                value={activeAudit?.id || ''}
+                onChange={e => fetchAuditDetails(Number(e.target.value))}
+                className="px-3 py-1.5 border border-slate-200 rounded-xl text-sm font-bold text-gov-800 focus:ring-2 focus:ring-gov-500 bg-slate-50"
+              >
+                {audits.map(a => (
+                  <option key={a.id} value={a.id}>
+                    รอบปีงบประมาณ {a.fiscal_year} ({a.audit_code}) - {a.status === 'completed' ? 'เสร็จสิ้นแล้ว' : 'กำลังดำเนินการ'}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-          {activeAudit?.status === 'completed' ? (
-            <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-              <CheckCircle className="w-3.5 h-3.5 mr-1 text-emerald-600" />
-              ปิดรอบเรียบร้อยแล้ว
-            </span>
-          ) : (
-            <button
-              onClick={handleCompleteAudit}
-              className="inline-flex items-center space-x-1 px-3 py-1.5 bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-700 rounded-xl text-xs font-semibold border border-slate-300 transition"
-              title="เมื่อตรวจนับครบถ้วนแล้ว ให้กดเพื่อปิดรอบการตรวจสอบประจำปี"
-            >
-              <CheckCircle className="w-3.5 h-3.5 text-slate-500" />
-              <span>ปิดรอบการตรวจสอบ</span>
-            </button>
-          )}
+            {activeAudit?.status === 'completed' ? (
+              <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                <CheckCircle className="w-3.5 h-3.5 mr-1 text-emerald-600" />
+                ปิดรอบเรียบร้อยแล้ว
+              </span>
+            ) : (
+              <button
+                onClick={handleCompleteAudit}
+                className="inline-flex items-center space-x-1 px-3 py-1.5 bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-700 rounded-xl text-xs font-semibold border border-slate-300 transition"
+                title="เมื่อตรวจนับครบถ้วนแล้ว ให้กดเพื่อปิดรอบการตรวจสอบประจำปี"
+              >
+                <CheckCircle className="w-3.5 h-3.5 text-slate-500" />
+                <span>ปิดรอบการตรวจสอบ</span>
+              </button>
+            )}
+          </div>
         </div>
 
-        {/* Print Buttons Group */}
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Print specific department button (when department is filtered) */}
-          {selectedDept && (
-            <button
-              onClick={() => handlePrintInspectionReport(selectedDept)}
-              className="flex items-center space-x-1.5 px-3.5 py-2 bg-blue-50 hover:bg-blue-100 text-blue-800 rounded-xl text-xs font-bold transition border border-blue-300 shadow-sm"
-              title="พิมพ์เฉพาะครุภัณฑ์ในสำนัก/กองที่เลือก"
-            >
-              <Building2 className="w-4 h-4 text-blue-600" />
-              <span>พิมพ์เฉพาะ: {currentDeptObj?.name || 'กองที่เลือก'} ({currentViewItems.length})</span>
-            </button>
-          )}
+        {/* PROMINENT PRINT & DEPARTMENT SELECTOR BOX (จุดเลือกพิมพ์รายงานพัสดุประจำปี) */}
+        <div className="bg-gradient-to-r from-blue-50/80 via-slate-50 to-indigo-50/50 p-4 rounded-xl border-2 border-blue-200 flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div className="flex items-start space-x-3">
+            <div className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center flex-shrink-0 shadow-sm mt-0.5">
+              <Printer className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="text-sm font-bold text-slate-900 flex items-center space-x-2">
+                <span>เลือกพิมพ์รายงานผลการตรวจสอบพัสดุประจำปี:</span>
+              </div>
+              <div className="text-xs text-slate-500 mt-0.5">
+                เลือกได้ว่าจะ <strong className="text-blue-700 font-semibold">พิมพ์เฉพาะกองเดี่ยวๆ</strong> หรือ <strong className="text-slate-700 font-semibold">พิมพ์รวมทุกกอง (แยกตามสังกัด)</strong>
+              </div>
+            </div>
+          </div>
 
-          {/* Print all departments grouped */}
-          <button
-            onClick={() => handlePrintInspectionReport(null)}
-            className="flex items-center space-x-1.5 px-3.5 py-2 bg-gov-700 hover:bg-gov-800 text-white rounded-xl text-xs font-bold transition shadow-sm"
-            title="พิมพ์รายงานสรุปผลการตรวจสอบพัสดุประจำปี แยกเป็นรายสำนัก/กองครบทุกหน่วยงาน"
-          >
-            <Printer className="w-4 h-4" />
-            <span>พิมพ์รายงานผลตรวจนับ (แยกตามสำนัก/กอง)</span>
-          </button>
+          <div className="flex flex-wrap items-center gap-2.5">
+            {/* Direct Department Selector */}
+            <div className="flex items-center space-x-1.5">
+              <label className="text-xs font-bold text-slate-700 whitespace-nowrap">
+                สังกัดกอง:
+              </label>
+              <select
+                value={selectedDept}
+                onChange={e => {
+                  setSelectedDept(e.target.value);
+                  setSelectedSubDept('');
+                }}
+                className="px-3 py-2 border-2 border-blue-500 rounded-xl text-xs font-bold text-slate-800 bg-white focus:ring-2 focus:ring-blue-500 shadow-sm"
+              >
+                <option value="">🏢 ทุกสำนัก/กอง (พิมพ์รวมแยกตามกอง)</option>
+                {departments.map(d => {
+                  const count = auditDetails.filter(i => String(i.department_id) === String(d.id)).length;
+                  return (
+                    <option key={d.id} value={d.id}>
+                      📁 {d.name} ({count} รายการ)
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+
+            {/* Print Action Buttons */}
+            {selectedDept ? (
+              <div className="flex items-center space-x-1.5">
+                <button
+                  onClick={() => handlePrintInspectionReport(selectedDept)}
+                  className="flex items-center space-x-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition shadow-md"
+                  title="พิมพ์เฉพาะรายการครุภัณฑ์ของกองนี้เท่านั้น"
+                >
+                  <Printer className="w-4 h-4" />
+                  <span>พิมพ์เฉพาะ: {currentDeptObj?.name}</span>
+                </button>
+                <button
+                  onClick={() => handlePrintInspectionReport(null)}
+                  className="flex items-center space-x-1 px-3 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl text-xs font-semibold transition"
+                  title="พิมพ์รวมทุกกองในฉบับเดียว"
+                >
+                  <span>หรือพิมพ์รวมทุกกอง</span>
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => handlePrintInspectionReport(null)}
+                className="flex items-center space-x-1.5 px-4 py-2 bg-gov-700 hover:bg-gov-800 text-white rounded-xl text-xs font-bold transition shadow-md"
+                title="พิมพ์รายงานสรุปผลการตรวจสอบพัสดุประจำปี แยกเป็นรายสำนัก/กองครบทุกหน่วยงาน"
+              >
+                <Printer className="w-4 h-4" />
+                <span>พิมพ์รายงานรวม (แยกตามกอง)</span>
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
