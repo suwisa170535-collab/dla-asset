@@ -237,7 +237,7 @@ export default function ReportsView({ settings, departments = [], subDepartments
       </tr>
     `).join('');
 
-    const isSingle = (assets?.length || 0) <= 6;
+    const isSingle = (assets?.length || 0) <= 10;
     const innerContent = `
       <div class="doc-body">
         ${renderGovHeader(orgName, 'แบบ สท.2', 58)}

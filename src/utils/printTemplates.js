@@ -200,7 +200,7 @@ export function openPrintWindow(htmlContent, title = 'พิมพ์เอก�
         }
         .doc-signatures {
           margin-top: auto;
-          padding-top: 25px;
+          padding-top: 28px;
           page-break-inside: avoid;
         }
         /* Official Signatures Grid */
@@ -234,6 +234,7 @@ export function openPrintWindow(htmlContent, title = 'พิมพ์เอก�
           align-items: center;
           text-align: center;
           padding: 0 4px;
+          height: 100%;
           box-sizing: border-box;
         }
         .sig-line {
@@ -259,9 +260,11 @@ export function openPrintWindow(htmlContent, title = 'พิมพ์เอก�
           margin-bottom: 3px;
         }
         .sig-date {
-          font-size: 11.5px;
-          color: #475569;
+          font-size: 12px;
+          color: #1e293b;
           line-height: 1.3;
+          margin-top: auto;
+          padding-top: 2px;
         }
         .sig-tier-gap {
           margin-top: 50px !important; /* ระยะห่างระหว่างชั้นผู้ลงนาม เช่น ผู้ส่งมอบ/รับมอบ กับ ปลัด/นายกเทศมนตรี */
@@ -341,7 +344,7 @@ export function generateST1HTML(asset, settings, depData) {
   `).join('') || '';
 
   const scheduleCount = depData?.schedule?.length || 0;
-  const isShortTable = scheduleCount <= 5;
+  const isShortTable = scheduleCount <= 12;
 
   const content = `
     <div class="doc-body">
@@ -411,7 +414,7 @@ export function generateST1HTML(asset, settings, depData) {
       </table>
     </div>
 
-    <div class="doc-signatures" style="margin-top: ${isShortTable ? '65px' : '30px'};">
+    <div class="doc-signatures"${isShortTable ? '' : ' style="margin-top: 36px;"'}>
       <!-- Official 4-tier Signature Block -->
       <div class="sig-grid-4">
         ${renderSignatureItem(asset.custodian_name, 'ผู้ครอบครองดูแลทรัพย์สิน')}
@@ -512,7 +515,7 @@ export function generatePD1HTML(req, settings) {
         </div>
       </div>
 
-      <div class="doc-signatures" style="margin-top: 55px;">
+      <div class="doc-signatures">
         <!-- Official 4-tier Municipal Signature Block for Store Issue Voucher -->
         <div class="sig-grid-4">
           ${renderSignatureItem(req.requester_name, 'ผู้ขอเบิกพัสดุ', `วันที่ ${formatThaiDate(req.requested_date)}`)}
@@ -686,7 +689,7 @@ export function generateBorrowVoucherHTML(borrow, settings) {
         </div>
       </div>
 
-      <div class="doc-signatures" style="margin-top: 55px;">
+      <div class="doc-signatures">
         <div class="sig-grid-3">
           ${renderSignatureItem(borrow.borrower_name, 'ผู้ยืมพัสดุหลวง', `วันที่ ${formatThaiDate(borrow.borrow_date)}`)}
           ${renderSignatureItem(settings.supply_officer_name, 'เจ้าหน้าที่พัสดุผู้จ่ายของ', `วันที่ ${formatThaiDate(borrow.borrow_date)}`)}
@@ -781,7 +784,7 @@ export function generateTransferVoucherHTML(transfer, settings) {
         </div>
       </div>
 
-      <div class="doc-signatures" style="margin-top: 65px;">
+      <div class="doc-signatures">
         <div class="sig-grid-2">
           ${renderSignatureItem(transfer.deliverer_name, `ผู้ส่งมอบ (${transfer.from_department_name})`, `วันที่ ${formatThaiDate(transfer.transfer_date)}`)}
           ${renderSignatureItem(transfer.receiver_name, `ผู้รับมอบ (${transfer.to_department_name})`, `วันที่ ${formatThaiDate(transfer.transfer_date)}`)}
@@ -822,7 +825,7 @@ export function generateSKR1HTML(skrData, monthName, year, settings) {
   `).join('');
 
   const itemCount = skrData.items?.length || 0;
-  const isSinglePage = itemCount <= 5;
+  const isSinglePage = itemCount <= 8;
 
   const content = `
     <div class="doc-body">
@@ -865,7 +868,7 @@ export function generateSKR1HTML(skrData, monthName, year, settings) {
       </table>
     </div>
 
-    <div class="doc-signatures" style="margin-top: ${isSinglePage ? '85px' : '30px'};">
+    <div class="doc-signatures"${isSinglePage ? '' : ' style="margin-top: 36px;"'}>
       <div class="sig-grid-3">
         ${renderSignatureItem(settings.supply_officer_name, 'เจ้าหน้าที่ผู้จัดทำสรุปรายงาน')}
         ${renderSignatureItem(settings.clerk_name, `${getExecutiveTitles(settings).clerkTitle} / หัวหน้าเจ้าหน้าที่พัสดุ`)}
@@ -951,7 +954,7 @@ export function generateST3HTML(asset, settings) {
         </div>
       </div>
 
-      <div class="doc-signatures" style="margin-top: 65px;">
+      <div class="doc-signatures">
         <!-- Official 4-tier Signature Block for ST.3 Land & Building Register -->
         <div class="sig-grid-4">
           ${renderSignatureItem(settings.supply_officer_name, 'เจ้าหน้าที่พัสดุผู้จัดทำ')}
@@ -1035,7 +1038,7 @@ export function generateDisposalVoucherHTML(disp, settings) {
         </div>
       </div>
 
-      <div class="doc-signatures" style="margin-top: 65px;">
+      <div class="doc-signatures">
         <div class="sig-grid-3">
           ${renderSignatureItem(settings.supply_officer_name, 'เจ้าหน้าที่พัสดุผู้รายงานตัดบัญชี')}
           ${renderSignatureItem(settings.clerk_name, `${getExecutiveTitles(settings).clerkTitle} / หัวหน้าเจ้าหน้าที่พัสดุ`)}
@@ -1052,8 +1055,7 @@ export function generateDisposalVoucherHTML(disp, settings) {
 export function generatePD2HTML(item, transactions = [], settings = {}) {
   const orgName = settings.org_name || 'เทศบาลตำบลสุขเกษมพัฒนา';
   const rowCount = transactions.length;
-  const isShort = rowCount <= 6;
-  const sigMarginTop = isShort ? '85px' : '35px';
+  const isShort = rowCount <= 12;
 
   const rows = transactions.map(t => `
     <tr>
@@ -1122,7 +1124,7 @@ export function generatePD2HTML(item, transactions = [], settings = {}) {
       </table>
     </div>
 
-    <div class="doc-signatures" style="margin-top: ${sigMarginTop};">
+    <div class="doc-signatures"${isShort ? '' : ' style="margin-top: 35px;"'}>
       <div class="sig-grid-2">
         ${renderSignatureItem(settings.supply_officer_name, 'เจ้าหน้าที่พัสดุผู้จัดทำบัญชีวัสดุ')}
         ${renderSignatureItem(settings.clerk_name, 'หัวหน้าเจ้าหน้าที่พัสดุ / ปลัดเทศบาล')}
@@ -1291,7 +1293,7 @@ export function generateInspectionHTML(ins, settings = {}) {
         </div>
       </div>
 
-      <div class="doc-signatures" style="margin-top: 60px;">
+      <div class="doc-signatures">
         <div style="text-align: center; font-weight: bold; margin-bottom: 12px; font-size: 12.5px;">คณะกรรมการตรวจรับพัสดุ</div>
         <div class="sig-grid-3">
           ${renderSignatureItem(ins.chairman_name, 'ประธานกรรมการตรวจรับพัสดุ', `วันที่ ${formatThaiDate(ins.inspection_date)}`)}
