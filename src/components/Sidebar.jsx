@@ -68,7 +68,7 @@ export default function Sidebar({
   ];
 
   const renderNavList = (isMobile = false) => (
-    <nav className="p-3 sm:p-4 space-y-1">
+    <nav className="p-2.5 sm:p-3 space-y-1">
       <div className="px-3 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center justify-between">
         <span>เมนูระบบงาน</span>
         {isDeptStaff && (
@@ -95,7 +95,7 @@ export default function Sidebar({
                 onCloseMobile();
               }
             }}
-            className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition-colors ${
+            className={`w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-colors ${
               isActive
                 ? 'bg-gov-700 text-white shadow-sm'
                 : isRestricted
@@ -103,14 +103,14 @@ export default function Sidebar({
                 : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
             }`}
           >
-            <div className="flex items-center space-x-3">
-              <Icon className={`w-4 h-4 ${isActive ? 'text-white' : isRestricted ? 'text-slate-400' : 'text-slate-500'}`} />
-              <span>{item.label}</span>
+            <div className="flex items-center space-x-2.5 min-w-0">
+              <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-white' : isRestricted ? 'text-slate-400' : 'text-slate-500'}`} />
+              <span className="whitespace-nowrap truncate">{item.label}</span>
             </div>
             {isRestricted ? (
-              <Lock className="w-3.5 h-3.5 text-slate-400" title="เฉพาะส่วนกลาง/แอดมิน" />
+              <Lock className="w-3.5 h-3.5 shrink-0 text-slate-400" title="เฉพาะส่วนกลาง/แอดมิน" />
             ) : item.badge ? (
-              <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${item.badgeColor}`}>
+              <span className={`shrink-0 text-[11px] font-bold px-2 py-0.5 rounded-full ${item.badgeColor}`}>
                 {item.badge}
               </span>
             ) : null}
@@ -135,7 +135,7 @@ export default function Sidebar({
   return (
     <>
       {/* 1. Desktop Static Sidebar (Visible on screens >= md) */}
-      <aside className="hidden md:flex w-56 xl:w-60 flex-shrink-0 bg-white border-r border-slate-200 min-h-[calc(100vh-4rem)] flex-col justify-between shadow-sm">
+      <aside className="hidden md:flex w-60 xl:w-[248px] flex-shrink-0 bg-white border-r border-slate-200 min-h-[calc(100vh-4rem)] flex-col justify-between shadow-sm">
         {renderNavList(false)}
         {renderFooterInfo()}
       </aside>
