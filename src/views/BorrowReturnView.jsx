@@ -275,31 +275,29 @@ export default function BorrowReturnView({ settings, currentUser }) {
         </div>
       </div>
 
-      {/* Table */}
+      {/* Table & Mobile Cards */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
+        <div className="hidden md:block">
+          <table className="w-full text-left text-sm table-auto">
             <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 text-xs uppercase font-semibold">
               <tr>
-                <th className="py-3 px-4">เลขที่ใบยืม</th>
-                <th className="py-3 px-4">ครุภัณฑ์ที่ยืม</th>
-                <th className="py-3 px-4">ผู้ยืม / สังกัดหน่วยงาน</th>
-                <th className="py-3 px-4">วัตถุประสงค์</th>
-                <th className="py-3 px-4 text-center">วันที่ยืม - กำหนดคืน</th>
-                <th className="py-3 px-4 text-center">สถานะ</th>
-                <th className="py-3 px-4 text-center">จัดการ</th>
+                <th className="py-3 px-3.5 w-[28%]">ใบยืม / ครุภัณฑ์ที่ยืม</th>
+                <th className="py-3 px-3.5 w-[32%]">ผู้ยืม / สังกัด &amp; วัตถุประสงค์</th>
+                <th className="py-3 px-3.5 text-center w-36 whitespace-nowrap">วันที่ยืม - กำหนดคืน</th>
+                <th className="py-3 px-3.5 text-center w-32 whitespace-nowrap">สถานะ</th>
+                <th className="py-3 px-3.5 text-center w-32 whitespace-nowrap">จัดการ</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {loading ? (
                 <tr>
-                  <td colSpan="7" className="text-center py-10 text-slate-400">
+                  <td colSpan="5" className="text-center py-10 text-slate-400">
                     กำลังโหลดข้อมูลการยืม-คืน...
                   </td>
                 </tr>
               ) : borrows.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="text-center py-10 text-slate-400">
+                  <td colSpan="5" className="text-center py-10 text-slate-400">
                     ไม่พบรายการยืม-คืนในเงื่อนไขนี้
                   </td>
                 </tr>
@@ -307,30 +305,34 @@ export default function BorrowReturnView({ settings, currentUser }) {
                 borrows.map((b) => {
                   const isOverdue = b.is_overdue;
                   return (
-                    <tr key={b.id} className="hover:bg-slate-50/80 transition">
-                      <td className="py-3.5 px-4 font-mono font-bold text-gov-800 whitespace-nowrap">
-                        {b.borrow_code}
+                    <tr key={b.id} className="hover:bg-slate-50/80 transition align-top">
+                      <td className="py-3.5 px-3.5">
+                        <div className="font-mono text-xs font-bold text-gov-800">{b.borrow_code}</div>
+                        <div className="font-bold text-slate-900 leading-snug mt-0.5">{b.asset_name}</div>
+                        <div className="text-xs font-mono text-gov-700 font-semibold mt-0.5">{b.asset_code}</div>
+                        {(b.brand || b.model) && (
+                          <div className="text-[11px] text-slate-400">{b.brand} {b.model}</div>
+                        )}
                       </td>
-                      <td className="py-3.5 px-4">
-                        <div className="font-bold text-slate-900">{b.asset_name}</div>
-                        <div className="text-xs font-mono text-gov-700 font-semibold">{b.asset_code}</div>
-                        <div className="text-[11px] text-slate-400">{b.brand} {b.model}</div>
-                      </td>
-                      <td className="py-3.5 px-4 text-xs">
+                      <td className="py-3.5 px-3.5 text-xs">
                         <div className="font-bold text-slate-800">{b.borrower_name}</div>
-                        <div className="text-slate-500">{b.borrower_department || '-'}</div>
-                        {b.borrower_phone && <div className="text-slate-400">📞 {b.borrower_phone}</div>}
+                        <div className="text-slate-500">
+                          {b.borrower_department || '-'}
+                          {b.borrower_phone ? ` • 📞 ${b.borrower_phone}` : ''}
+                        </div>
+                        {b.purpose && (
+                          <div className="text-slate-600 mt-1 line-clamp-2 leading-snug">
+                            เหตุผล: {b.purpose}
+                          </div>
+                        )}
                       </td>
-                      <td className="py-3.5 px-4 text-xs text-slate-700 max-w-xs">
-                        <div className="line-clamp-2">{b.purpose}</div>
-                      </td>
-                      <td className="py-3.5 px-4 text-center text-xs whitespace-nowrap">
+                      <td className="py-3.5 px-3.5 text-center text-xs whitespace-nowrap">
                         <div className="text-slate-700 font-medium">{formatThaiDate(b.borrow_date)}</div>
                         <div className={`text-[11px] font-semibold mt-0.5 ${isOverdue ? 'text-rose-600 font-bold' : 'text-slate-500'}`}>
                           ถึง {formatThaiDate(b.expected_return_date)} {isOverdue && '(เลยกำหนด)'}
                         </div>
                       </td>
-                      <td className="py-3.5 px-4 text-center whitespace-nowrap">
+                      <td className="py-3.5 px-3.5 text-center whitespace-nowrap">
                         {b.status === 'returned' ? (
                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
                             <CheckCircle2 className="w-3.5 h-3.5 mr-1" /> ส่งคืนแล้ว
@@ -345,7 +347,7 @@ export default function BorrowReturnView({ settings, currentUser }) {
                           </span>
                         )}
                       </td>
-                      <td className="py-3.5 px-4 text-center whitespace-nowrap">
+                      <td className="py-3.5 px-3.5 text-center whitespace-nowrap">
                         <div className="flex items-center justify-center space-x-1.5">
                           {b.status === 'borrowed' && (
                             <button
@@ -370,6 +372,62 @@ export default function BorrowReturnView({ settings, currentUser }) {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile Card View */}
+        <div className="md:hidden divide-y divide-slate-100">
+          {loading ? (
+            <div className="text-center py-10 text-slate-400 text-sm">กำลังโหลดข้อมูลการยืม-คืน...</div>
+          ) : borrows.length === 0 ? (
+            <div className="text-center py-10 text-slate-400 text-sm">ไม่พบรายการยืม-คืนในเงื่อนไขนี้</div>
+          ) : (
+            borrows.map((b) => {
+              const isOverdue = b.is_overdue;
+              return (
+                <div key={b.id} className="p-4 space-y-2 text-xs">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <div className="font-mono font-bold text-gov-800">{b.borrow_code}</div>
+                      <div className="font-bold text-slate-900 text-sm mt-0.5">{b.asset_name}</div>
+                      <div className="font-mono text-gov-700 font-semibold">{b.asset_code}</div>
+                    </div>
+                    <div className="shrink-0">
+                      {b.status === 'returned' ? (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">ส่งคืนแล้ว</span>
+                      ) : isOverdue ? (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 text-rose-800 border border-rose-300">เกินกำหนดคืน</span>
+                      ) : (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-300">อยู่ระหว่างยืม</span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="text-slate-600 space-y-0.5">
+                    <div><span className="font-semibold text-slate-800">{b.borrower_name}</span> ({b.borrower_department || '-'})</div>
+                    {b.purpose && <div>วัตถุประสงค์: {b.purpose}</div>}
+                    <div className={isOverdue ? 'text-rose-600 font-bold' : ''}>
+                      ยืม {formatThaiDate(b.borrow_date)} ถึง {formatThaiDate(b.expected_return_date)}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 pt-1">
+                    {b.status === 'borrowed' && (
+                      <button
+                        onClick={() => openReturnModal(b)}
+                        className="flex-1 py-1.5 bg-emerald-50 text-emerald-700 font-bold rounded-lg border border-emerald-200"
+                      >
+                        รับคืนของ
+                      </button>
+                    )}
+                    <button
+                      onClick={() => handlePrint(b)}
+                      className="flex-1 py-1.5 text-slate-700 bg-slate-50 rounded-lg border border-slate-200 font-semibold flex items-center justify-center space-x-1"
+                    >
+                      <Printer className="w-3.5 h-3.5" /><span>พิมพ์ใบยืม-คืน</span>
+                    </button>
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
       </div>
 

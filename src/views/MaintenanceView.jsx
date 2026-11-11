@@ -213,7 +213,7 @@ export default function MaintenanceView({ currentUser }) {
       </div>
 
       {/* Filter Tabs */}
-      <div className="flex space-x-2 border-b border-slate-200 pb-2">
+      <div className="flex flex-wrap items-center gap-1.5 border-b border-slate-200 pb-2">
         {[
           { id: '', label: 'ทั้งหมด' },
           { id: 'reported', label: 'แจ้งซ่อมแล้ว' },

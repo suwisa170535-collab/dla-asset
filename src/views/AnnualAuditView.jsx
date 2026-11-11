@@ -797,99 +797,90 @@ export default function AnnualAuditView({ settings, currentUser, departments = [
         )}
       </div>
 
-      {/* Checklist Table */}
+      {/* Checklist Table & Mobile Cards */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
+        <div className="hidden md:block">
+          <table className="w-full text-left text-sm table-auto">
             <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 text-xs uppercase font-semibold">
               <tr>
-                <th className="py-3 px-4">รหัสครุภัณฑ์</th>
-                <th className="py-3 px-4">ชื่อรายการครุภัณฑ์</th>
-                <th className="py-3 px-4">สำนัก/กอง & ฝ่ายย่อย</th>
-                <th className="py-3 px-4">สถานที่ตั้ง & ผู้ถือครอง</th>
-                <th className="py-3 px-4 text-center">สถานะการตรวจ</th>
-                <th className="py-3 px-4">หมายเหตุ / ผู้ตรวจ</th>
-                <th className="py-3 px-4 text-center">เช็กสถานะรวดเร็ว</th>
+                <th className="py-3 px-3.5 w-[33%]">รหัส / รายการครุภัณฑ์</th>
+                <th className="py-3 px-3.5 w-[28%]">สำนัก/กอง &amp; ที่ตั้ง/ผู้ถือครอง</th>
+                <th className="py-3 px-3.5 w-[25%]">ผลตรวจ &amp; หมายเหตุ / ผู้ตรวจ</th>
+                <th className="py-3 px-3.5 text-center w-32 whitespace-nowrap">เช็กสถานะรวดเร็ว</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {currentViewItems.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-8 text-center text-slate-400 text-xs">
+                  <td colSpan={4} className="py-8 text-center text-slate-400 text-xs">
                     ไม่พบข้อมูลครุภัณฑ์ตามเงื่อนไขที่เลือก
                   </td>
                 </tr>
               ) : (
                 currentViewItems.map((item) => (
-                  <tr key={item.asset_id} className="hover:bg-slate-50/80 transition">
-                    <td className="py-3 px-4 font-mono font-bold text-gov-800 whitespace-nowrap">
-                      {item.asset_code}
-                    </td>
-                    <td className="py-3 px-4 font-semibold text-slate-900">
-                      {item.name}
-                      <div className="text-xs text-slate-400 font-normal">
+                  <tr key={item.asset_id} className="hover:bg-slate-50/80 transition align-top">
+                    <td className="py-3 px-3.5">
+                      <div className="font-mono text-xs font-bold text-gov-800">{item.asset_code}</div>
+                      <div className="font-semibold text-slate-900 leading-snug mt-0.5">{item.name}</div>
+                      <div className="text-xs text-slate-400 font-normal mt-0.5">
                         {[item.brand, item.model].filter(Boolean).join(' ') || item.category_name}
                       </div>
                     </td>
-                    <td className="py-3 px-4 text-xs">
-                      <div className="font-semibold text-slate-800 flex items-center space-x-1">
-                        <Building2 className="w-3 h-3 text-slate-400 inline" />
+                    <td className="py-3 px-3.5 text-xs">
+                      <div className="font-semibold text-slate-800 flex items-start space-x-1">
+                        <Building2 className="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5" />
                         <span>{item.department_name}</span>
                       </div>
                       {item.sub_department_name ? (
-                        <div className="mt-0.5">
+                        <div className="mt-1">
                           <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">
                             ฝ่าย/งาน: {item.sub_department_name}
                           </span>
                         </div>
                       ) : (
-                        <div className="text-[10px] text-slate-400">ส่วนกลางกอง</div>
+                        <div className="text-[10px] text-slate-400 mt-0.5">ส่วนกลางกอง</div>
                       )}
-                    </td>
-                    <td className="py-3 px-4 text-xs">
-                      <div className="text-slate-700">ห้อง: {item.location_room || '-'}</div>
+                      <div className="text-slate-600 mt-1">ห้อง: {item.location_room || '-'}</div>
                       {item.custodian_name && (
-                        <div className="text-[10.5px] text-slate-500 mt-0.5">
-                          ผู้ถือ: {item.custodian_name}
-                        </div>
+                        <div className="text-[11px] text-slate-500 mt-0.5">ผู้ถือ: {item.custodian_name}</div>
                       )}
                     </td>
-                    <td className="py-3 px-4 text-center whitespace-nowrap">
-                      {item.physical_status === 'normal' && (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
-                          <CheckCircle2 className="w-3.5 h-3.5 mr-1" /> ปกติ
-                        </span>
-                      )}
-                      {item.physical_status === 'damaged' && (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300">
-                          <AlertTriangle className="w-3.5 h-3.5 mr-1" /> ชำรุด
-                        </span>
-                      )}
-                      {item.physical_status === 'worn_out' && (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-100 text-purple-800 border border-purple-300">
-                          เสื่อมสภาพ
-                        </span>
-                      )}
-                      {item.physical_status === 'missing' && (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-100 text-rose-800 border border-rose-300">
-                          หาไม่พบ
-                        </span>
-                      )}
-                      {!item.physical_status && (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-500">
-                          รอตรวจนับ
-                        </span>
-                      )}
-                    </td>
-                    <td className="py-3 px-4 text-xs">
-                      <div className="text-slate-700">{item.remarks || '-'}</div>
+                    <td className="py-3 px-3.5 text-xs">
+                      <div>
+                        {item.physical_status === 'normal' && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                            <CheckCircle2 className="w-3 h-3 mr-1" /> ปกติ
+                          </span>
+                        )}
+                        {item.physical_status === 'damaged' && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
+                            <AlertTriangle className="w-3 h-3 mr-1" /> ชำรุด
+                          </span>
+                        )}
+                        {item.physical_status === 'worn_out' && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-purple-100 text-purple-800 border border-purple-300">
+                            เสื่อมสภาพ
+                          </span>
+                        )}
+                        {item.physical_status === 'missing' && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 text-rose-800 border border-rose-300">
+                            หาไม่พบ
+                          </span>
+                        )}
+                        {!item.physical_status && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-slate-100 text-slate-500">
+                            รอตรวจนับ
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-slate-700 mt-1.5 leading-snug">{item.remarks || '-'}</div>
                       {item.verified_by && (
-                        <div className="text-[10px] text-slate-400 mt-0.5">
+                        <div className="text-[10.5px] text-slate-400 mt-0.5">
                           ผู้ตรวจ: {item.verified_by} {item.verified_at ? `(${item.verified_at.split(' ')[0]})` : ''}
                         </div>
                       )}
                     </td>
-                    <td className="py-3 px-4 text-center whitespace-nowrap">
+                    <td className="py-3 px-3.5 text-center whitespace-nowrap">
                       <div className="flex items-center justify-center space-x-1">
                         <button
                           onClick={() => handleVerifyAsset(item.asset_id, 'normal', 'ตรวจสอบแล้ว สภาพดี')}
@@ -931,6 +922,74 @@ export default function AnnualAuditView({ settings, currentUser, departments = [
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile Card View */}
+        <div className="md:hidden divide-y divide-slate-100">
+          {currentViewItems.length === 0 ? (
+            <div className="py-8 text-center text-slate-400 text-xs">ไม่พบข้อมูลครุภัณฑ์ตามเงื่อนไขที่เลือก</div>
+          ) : (
+            currentViewItems.map((item) => (
+              <div key={item.asset_id} className="p-4 space-y-2.5 text-xs">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <div className="font-mono font-bold text-gov-800">{item.asset_code}</div>
+                    <div className="font-bold text-slate-900 text-sm mt-0.5">{item.name}</div>
+                  </div>
+                  <div className="shrink-0">
+                    {item.physical_status === 'normal' ? (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">ปกติ</span>
+                    ) : item.physical_status === 'damaged' ? (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-300">ชำรุด</span>
+                    ) : item.physical_status === 'worn_out' ? (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-purple-100 text-purple-800 border border-purple-300">เสื่อมสภาพ</span>
+                    ) : item.physical_status === 'missing' ? (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 text-rose-800 border border-rose-300">หาไม่พบ</span>
+                    ) : (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-slate-100 text-slate-500">รอตรวจนับ</span>
+                    )}
+                  </div>
+                </div>
+                <div className="text-slate-600 space-y-0.5">
+                  <div>{item.department_name} {item.sub_department_name ? `• ${item.sub_department_name}` : ''}</div>
+                  <div>ห้อง: {item.location_room || '-'} {item.custodian_name ? `| ผู้ถือ: ${item.custodian_name}` : ''}</div>
+                  {item.remarks && <div className="text-slate-700 font-medium">หมายเหตุ: {item.remarks}</div>}
+                </div>
+                <div className="flex items-center gap-2 pt-1">
+                  <button
+                    onClick={() => handleVerifyAsset(item.asset_id, 'normal', 'ตรวจสอบแล้ว สภาพดี')}
+                    className={`flex-1 py-1.5 rounded-lg border font-bold flex items-center justify-center space-x-1 ${
+                      item.physical_status === 'normal'
+                        ? 'bg-emerald-600 text-white border-emerald-600'
+                        : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                    }`}
+                  >
+                    <Check className="w-3.5 h-3.5" /><span>ปกติ</span>
+                  </button>
+                  <button
+                    onClick={() => handleVerifyAsset(item.asset_id, 'damaged', 'ตรวจพบอาการชำรุด')}
+                    className={`flex-1 py-1.5 rounded-lg border font-bold flex items-center justify-center space-x-1 ${
+                      item.physical_status === 'damaged'
+                        ? 'bg-amber-600 text-white border-amber-600'
+                        : 'bg-amber-50 text-amber-700 border-amber-200'
+                    }`}
+                  >
+                    <AlertTriangle className="w-3.5 h-3.5" /><span>ชำรุด</span>
+                  </button>
+                  <button
+                    onClick={() => handleVerifyAsset(item.asset_id, 'missing', 'ไม่พบตัวทรัพย์สินในพื้นที่')}
+                    className={`flex-1 py-1.5 rounded-lg border font-bold flex items-center justify-center space-x-1 ${
+                      item.physical_status === 'missing'
+                        ? 'bg-rose-600 text-white border-rose-600'
+                        : 'bg-rose-50 text-rose-700 border-rose-200'
+                    }`}
+                  >
+                    <HelpCircle className="w-3.5 h-3.5" /><span>หาไม่พบ</span>
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
 

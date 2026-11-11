@@ -265,39 +265,62 @@ export default function DashboardView({ summary, setActiveTab, auditLogs, invent
               <p className="text-xs">ไม่มีรายการใดที่ต่ำกว่าเกณฑ์สั่งซื้อขั้นต่ำ</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead>
-                  <tr className="border-b border-slate-100 text-slate-400 text-xs uppercase font-semibold">
-                    <th className="pb-2">รหัสพัสดุ</th>
-                    <th className="pb-2">ชื่อวัสดุ</th>
-                    <th className="pb-2">หมวดหมู่</th>
-                    <th className="pb-2 text-center">คงเหลือ</th>
-                    <th className="pb-2 text-center">เกณฑ์ต่ำสุด</th>
-                    <th className="pb-2 text-right">สถานะ</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {lowStockItems.map((item) => (
-                    <tr key={item.id} className="hover:bg-slate-50 transition">
-                      <td className="py-2.5 font-medium text-slate-700">{item.item_code}</td>
-                      <td className="py-2.5 font-semibold text-slate-900">{item.name}</td>
-                      <td className="py-2.5 text-slate-500 text-xs">{item.category}</td>
-                      <td className="py-2.5 text-center font-bold text-rose-600">
-                        {item.current_stock} {item.unit}
-                      </td>
-                      <td className="py-2.5 text-center text-slate-500 text-xs">
-                        {item.min_stock} {item.unit}
-                      </td>
-                      <td className="py-2.5 text-right">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-rose-100 text-rose-700 border border-rose-200">
-                          ต้องสั่งซื้อด่วน
-                        </span>
-                      </td>
+            <div>
+              <div className="hidden sm:block">
+                <table className="w-full text-left text-sm table-auto">
+                  <thead>
+                    <tr className="border-b border-slate-100 text-slate-400 text-xs uppercase font-semibold">
+                      <th className="pb-2">รายการวัสดุ &amp; หมวดหมู่</th>
+                      <th className="pb-2 text-center w-24 whitespace-nowrap">คงเหลือ</th>
+                      <th className="pb-2 text-center w-24 whitespace-nowrap">เกณฑ์ต่ำสุด</th>
+                      <th className="pb-2 text-right w-28 whitespace-nowrap">สถานะ</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {lowStockItems.map((item) => (
+                      <tr key={item.id} className="hover:bg-slate-50 transition align-top">
+                        <td className="py-2.5 pr-3">
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            <span className="font-mono text-xs font-bold text-slate-700">{item.item_code}</span>
+                            <span className="px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 text-[10.5px]">
+                              {item.category}
+                            </span>
+                          </div>
+                          <div className="font-semibold text-slate-900 leading-snug mt-0.5">{item.name}</div>
+                        </td>
+                        <td className="py-2.5 text-center font-bold text-rose-600 whitespace-nowrap">
+                          {item.current_stock} {item.unit}
+                        </td>
+                        <td className="py-2.5 text-center text-slate-500 text-xs whitespace-nowrap">
+                          {item.min_stock} {item.unit}
+                        </td>
+                        <td className="py-2.5 text-right whitespace-nowrap">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-rose-100 text-rose-700 border border-rose-200">
+                            ต้องสั่งซื้อด่วน
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="sm:hidden divide-y divide-slate-100">
+                {lowStockItems.map((item) => (
+                  <div key={item.id} className="py-3 flex items-start justify-between gap-2 text-xs">
+                    <div>
+                      <div className="font-mono font-bold text-slate-700">{item.item_code} • {item.category}</div>
+                      <div className="font-semibold text-slate-900 mt-0.5">{item.name}</div>
+                      <div className="text-slate-500 mt-0.5">
+                        คงเหลือ <strong className="text-rose-600">{item.current_stock} {item.unit}</strong> (เกณฑ์ {item.min_stock})
+                      </div>
+                    </div>
+                    <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-700 border border-rose-200 shrink-0">
+                      สั่งซื้อด่วน
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>

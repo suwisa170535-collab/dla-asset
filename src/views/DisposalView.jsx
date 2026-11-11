@@ -157,31 +157,29 @@ export default function DisposalView({ settings, currentUser }) {
         </div>
       </div>
 
-      {/* Disposals List Table */}
+      {/* Disposals List Table & Mobile Cards */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
+        <div className="hidden md:block">
+          <table className="w-full text-left text-sm table-auto">
             <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 text-xs uppercase font-semibold">
               <tr>
-                <th className="py-3 px-4">เลขที่แทงจำหน่าย</th>
-                <th className="py-3 px-4">รหัส / ชื่อครุภัณฑ์</th>
-                <th className="py-3 px-4">วิธีการจำหน่าย</th>
-                <th className="py-3 px-4">คำสั่งอนุมัติ / วันที่</th>
-                <th className="py-3 px-4 text-right">เงินที่ได้จากการขาย</th>
-                <th className="py-3 px-4">ผู้รับโอน / หมายเหตุ</th>
-                <th className="py-3 px-4 text-center">จัดการ / พิมพ์</th>
+                <th className="py-3 px-3.5 w-[30%]">รายการจำหน่าย &amp; วิธีการ</th>
+                <th className="py-3 px-3.5 w-[24%]">คำสั่งอนุมัติ / วันที่</th>
+                <th className="py-3 px-3.5 text-right w-28 whitespace-nowrap">เงินที่ได้จากการขาย</th>
+                <th className="py-3 px-3.5 w-[24%]">ผู้รับโอน / หมายเหตุ</th>
+                <th className="py-3 px-3.5 text-center w-32 whitespace-nowrap">จัดการ / พิมพ์</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {loading ? (
                 <tr>
-                  <td colSpan="7" className="text-center py-10 text-slate-400">
+                  <td colSpan="5" className="text-center py-10 text-slate-400">
                     กำลังโหลดข้อมูลการจำหน่าย...
                   </td>
                 </tr>
               ) : disposals.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="text-center py-10 text-slate-400">
+                  <td colSpan="5" className="text-center py-10 text-slate-400">
                     ยังไม่มีรายการแทงจำหน่าย
                   </td>
                 </tr>
@@ -189,39 +187,37 @@ export default function DisposalView({ settings, currentUser }) {
                 disposals.map((disp) => {
                   const method = DISPOSAL_METHOD_MAP[disp.disposal_method] || { label: disp.disposal_method };
                   return (
-                    <tr key={disp.id} className="hover:bg-slate-50/80 transition">
-                      <td className="py-3.5 px-4 font-mono font-bold text-gov-800 whitespace-nowrap">
-                        {disp.disposal_number}
-                      </td>
-                      <td className="py-3.5 px-4">
-                        <div className="font-bold text-slate-900">{disp.asset_name}</div>
-                        <div className="text-xs font-mono text-slate-500 font-semibold">{disp.asset_code}</div>
+                    <tr key={disp.id} className="hover:bg-slate-50/80 transition align-top">
+                      <td className="py-3.5 px-3.5">
+                        <div className="flex flex-wrap items-center gap-1.5 mb-1">
+                          <span className="font-mono text-xs font-bold text-gov-800">{disp.disposal_number}</span>
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-800 border border-slate-300">
+                            {method.label}
+                          </span>
+                        </div>
+                        <div className="font-bold text-slate-900 leading-snug">{disp.asset_name}</div>
+                        <div className="text-xs font-mono text-slate-500 font-semibold mt-0.5">{disp.asset_code}</div>
                         <div className="text-[11px] text-slate-400">ราคาทุนเดิม: {formatBaht(disp.cost_price)}</div>
                       </td>
-                      <td className="py-3.5 px-4 whitespace-nowrap">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-100 text-slate-800 border border-slate-300">
-                          {method.label}
-                        </span>
-                      </td>
-                      <td className="py-3.5 px-4 text-xs">
-                        <div className="font-semibold text-slate-800">{disp.approved_order_no}</div>
-                        <div className="text-slate-500">อนุมัติโดย: {disp.approved_by}</div>
+                      <td className="py-3.5 px-3.5 text-xs">
+                        <div className="font-semibold text-slate-800 leading-snug">{disp.approved_order_no}</div>
+                        <div className="text-slate-500 mt-0.5">อนุมัติโดย: {disp.approved_by}</div>
                         <div className="text-slate-400">วันที่: {formatThaiDate(disp.disposal_date)}</div>
                       </td>
-                      <td className="py-3.5 px-4 text-right font-bold text-emerald-600 whitespace-nowrap">
+                      <td className="py-3.5 px-3.5 text-right font-bold text-emerald-600 whitespace-nowrap">
                         {disp.sale_proceeds > 0 ? formatBaht(disp.sale_proceeds) : '-'}
                       </td>
-                      <td className="py-3.5 px-4 text-xs text-slate-600">
-                        <div>{disp.transfer_to || '-'}</div>
-                        <div className="text-slate-400">{disp.notes}</div>
+                      <td className="py-3.5 px-3.5 text-xs text-slate-600">
+                        <div className="font-medium text-slate-800">{disp.transfer_to || '-'}</div>
+                        {disp.notes && <div className="text-slate-400 mt-0.5 leading-snug">{disp.notes}</div>}
                       </td>
-                      <td className="py-3.5 px-4 text-center whitespace-nowrap">
+                      <td className="py-3.5 px-3.5 text-center whitespace-nowrap">
                         <button
                           onClick={() => {
                             const html = generateDisposalVoucherHTML(disp, settings);
                             openPrintWindow(html, `รายงานจำหน่ายพัสดุและตัดบัญชี (${disp.disposal_number})`);
                           }}
-                          className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-gov-700 hover:bg-gov-800 text-white rounded-xl text-xs font-bold shadow-sm transition"
+                          className="inline-flex items-center space-x-1.5 px-2.5 py-1.5 bg-gov-700 hover:bg-gov-800 text-white rounded-xl text-xs font-bold shadow-sm transition"
                         >
                           <Printer className="w-3.5 h-3.5 text-gold-400" />
                           <span>พิมพ์ใบจำหน่าย</span>
@@ -233,6 +229,46 @@ export default function DisposalView({ settings, currentUser }) {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile Card View */}
+        <div className="md:hidden divide-y divide-slate-100">
+          {loading ? (
+            <div className="text-center py-10 text-slate-400 text-sm">กำลังโหลดข้อมูลการจำหน่าย...</div>
+          ) : disposals.length === 0 ? (
+            <div className="text-center py-10 text-slate-400 text-sm">ยังไม่มีรายการแทงจำหน่าย</div>
+          ) : (
+            disposals.map((disp) => {
+              const method = DISPOSAL_METHOD_MAP[disp.disposal_method] || { label: disp.disposal_method };
+              return (
+                <div key={disp.id} className="p-4 space-y-2 text-xs">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <div className="font-mono font-bold text-gov-800">{disp.disposal_number}</div>
+                      <div className="font-bold text-slate-900 text-sm mt-0.5">{disp.asset_name}</div>
+                      <div className="font-mono text-slate-500">{disp.asset_code}</div>
+                    </div>
+                    <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-800 border border-slate-300 shrink-0">
+                      {method.label}
+                    </span>
+                  </div>
+                  <div className="text-slate-600 space-y-0.5">
+                    <div>{disp.approved_order_no} • {formatThaiDate(disp.disposal_date)}</div>
+                    <div>ผู้รับโอน: {disp.transfer_to || '-'} | ขายได้: <strong className="text-emerald-600">{disp.sale_proceeds > 0 ? formatBaht(disp.sale_proceeds) : '-'}</strong></div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      const html = generateDisposalVoucherHTML(disp, settings);
+                      openPrintWindow(html, `รายงานจำหน่ายพัสดุและตัดบัญชี (${disp.disposal_number})`);
+                    }}
+                    className="w-full py-1.5 bg-gov-700 hover:bg-gov-800 text-white rounded-xl font-bold flex items-center justify-center space-x-1.5"
+                  >
+                    <Printer className="w-3.5 h-3.5 text-gold-400" /><span>พิมพ์ใบจำหน่าย</span>
+                  </button>
+                </div>
+              );
+            })
+          )}
         </div>
       </div>
 

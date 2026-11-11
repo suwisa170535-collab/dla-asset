@@ -1172,7 +1172,7 @@ export default function SettingsView({
           </div>
 
           {/* Search categories */}
-          <div className="relative min-w-[220px]">
+          <div className="relative w-full sm:w-56">
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
@@ -1380,9 +1380,9 @@ export default function SettingsView({
             </div>
           </div>
 
-          <div className="flex items-center space-x-2">
+          <div className="flex flex-wrap items-center gap-2">
             {/* Search users */}
-            <div className="relative min-w-[200px]">
+            <div className="relative w-full sm:w-52">
               <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
@@ -1414,108 +1414,170 @@ export default function SettingsView({
         </div>
 
         {/* Users Table */}
-        <div className="overflow-x-auto border border-slate-200 rounded-xl">
-          <table className="w-full text-left text-xs divide-y divide-slate-200">
-            <thead className="bg-slate-50 text-slate-600 font-bold uppercase tracking-wider">
-              <tr>
-                <th className="py-3 px-4">ชื่อผู้ใช้ (Username)</th>
-                <th className="py-3 px-4">ชื่อ-นามสกุล / ตำแหน่ง</th>
-                <th className="py-3 px-4">สังกัดสำนัก/กอง</th>
-                <th className="py-3 px-4">สิทธิ์การใช้งาน (Role)</th>
-                <th className="py-3 px-4 text-center">การจัดการ</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 bg-white">
-              {usersList
-                .filter(u => {
-                  if (!userSearch.trim()) return true;
-                  const s = userSearch.toLowerCase();
-                  return (
-                    u.username?.toLowerCase().includes(s) ||
-                    u.name?.toLowerCase().includes(s) ||
-                    u.title?.toLowerCase().includes(s) ||
-                    u.dept?.toLowerCase().includes(s)
-                  );
-                })
-                .map(u => (
-                  <tr key={u.id} className="hover:bg-slate-50/80 transition">
-                    <td className="py-3 px-4 font-mono font-bold text-gov-800">
-                      <div className="flex items-center space-x-2">
-                        <span className="w-7 h-7 rounded-lg bg-gov-100 text-gov-700 flex items-center justify-center font-bold text-xs uppercase">
-                          {u.username.substring(0, 2)}
+        <div className="border border-slate-200 rounded-xl overflow-hidden">
+          <div className="hidden md:block">
+            <table className="w-full text-left text-xs divide-y divide-slate-200 table-auto">
+              <thead className="bg-slate-50 text-slate-600 font-bold uppercase tracking-wider">
+                <tr>
+                  <th className="py-3 px-3">ชื่อผู้ใช้ (Username)</th>
+                  <th className="py-3 px-3">ชื่อ-นามสกุล / ตำแหน่ง</th>
+                  <th className="py-3 px-3">สังกัดสำนัก/กอง</th>
+                  <th className="py-3 px-3">สิทธิ์การใช้งาน (Role)</th>
+                  <th className="py-3 px-3 text-center w-40 whitespace-nowrap">การจัดการ</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 bg-white">
+                {usersList
+                  .filter(u => {
+                    if (!userSearch.trim()) return true;
+                    const s = userSearch.toLowerCase();
+                    return (
+                      u.username?.toLowerCase().includes(s) ||
+                      u.name?.toLowerCase().includes(s) ||
+                      u.title?.toLowerCase().includes(s) ||
+                      u.dept?.toLowerCase().includes(s)
+                    );
+                  })
+                  .map(u => (
+                    <tr key={u.id} className="hover:bg-slate-50/80 transition align-top">
+                      <td className="py-3 px-3 font-mono font-bold text-gov-800 whitespace-nowrap">
+                        <div className="flex items-center space-x-2">
+                          <span className="w-7 h-7 rounded-lg bg-gov-100 text-gov-700 flex items-center justify-center font-bold text-xs uppercase shrink-0">
+                            {u.username.substring(0, 2)}
+                          </span>
+                          <span>{u.username}</span>
+                        </div>
+                      </td>
+                      <td className="py-3 px-3">
+                        <div className="font-bold text-slate-900">{u.name}</div>
+                        <div className="text-[11px] text-slate-500">{u.title || '-'}</div>
+                      </td>
+                      <td className="py-3 px-3 text-slate-700">
+                        <span className="inline-block bg-slate-100 px-2 py-0.5 rounded text-slate-600 font-medium">
+                          {u.dept || u.department_name || '-'}
                         </span>
-                        <span>{u.username}</span>
-                      </div>
-                    </td>
-                    <td className="py-3 px-4">
-                      <div className="font-bold text-slate-900">{u.name}</div>
-                      <div className="text-[11px] text-slate-500">{u.title || '-'}</div>
-                    </td>
-                    <td className="py-3 px-4 text-slate-700">
-                      <span className="bg-slate-100 px-2 py-0.5 rounded text-slate-600 font-medium">
-                        {u.dept || u.department_name || '-'}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4">
-                      {u.role_type === 'admin' ? (
-                        <span className="bg-rose-100 text-rose-800 font-bold px-2.5 py-0.5 rounded-full text-[11px] border border-rose-200">
-                          👑 พัสดุกลาง (Admin)
-                        </span>
-                      ) : u.role_type === 'executive' ? (
-                        <span className="bg-indigo-100 text-indigo-800 font-bold px-2.5 py-0.5 rounded-full text-[11px] border border-indigo-200">
-                          🏛️ ผู้บริหาร (นายก/ปลัด)
-                        </span>
-                      ) : u.role_type === 'auditor' ? (
-                        <span className="bg-purple-100 text-purple-800 font-bold px-2.5 py-0.5 rounded-full text-[11px] border border-purple-200">
-                          🔍 กรรมการตรวจนับ สตง.
-                        </span>
-                      ) : (
-                        <span className="bg-emerald-100 text-emerald-800 font-bold px-2.5 py-0.5 rounded-full text-[11px] border border-emerald-200">
-                          🏢 จนท. ประจำสำนัก/กอง
-                        </span>
-                      )}
-                    </td>
-                    <td className="py-3 px-4 text-center">
-                      <div className="flex items-center justify-center space-x-1.5">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setResetPassUser(u);
-                            setNewPasswordVal('');
-                            setConfirmPasswordVal('');
-                          }}
-                          className="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded-lg text-xs font-semibold flex items-center space-x-1 transition"
-                          title="ตั้งรหัสผ่านใหม่"
-                        >
-                          <KeyRound className="w-3 h-3 text-amber-700" />
-                          <span>เปลี่ยนรหัส</span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => setEditingUser(u)}
-                          className="p-1 text-slate-500 hover:text-gov-700 hover:bg-slate-100 rounded-lg transition"
-                          title="แก้ไขข้อมูลผู้ใช้"
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </button>
-
-                        {u.username !== 'admin' && (
+                      </td>
+                      <td className="py-3 px-3">
+                        {u.role_type === 'admin' ? (
+                          <span className="inline-block bg-rose-100 text-rose-800 font-bold px-2 py-0.5 rounded-full text-[11px] border border-rose-200">
+                            👑 พัสดุกลาง (Admin)
+                          </span>
+                        ) : u.role_type === 'executive' ? (
+                          <span className="inline-block bg-indigo-100 text-indigo-800 font-bold px-2 py-0.5 rounded-full text-[11px] border border-indigo-200">
+                            🏛️ ผู้บริหาร (นายก/ปลัด)
+                          </span>
+                        ) : u.role_type === 'auditor' ? (
+                          <span className="inline-block bg-purple-100 text-purple-800 font-bold px-2 py-0.5 rounded-full text-[11px] border border-purple-200">
+                            🔍 กรรมการตรวจนับ สตง.
+                          </span>
+                        ) : (
+                          <span className="inline-block bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full text-[11px] border border-emerald-200">
+                            🏢 จนท. ประจำสำนัก/กอง
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-3 px-3 text-center whitespace-nowrap">
+                        <div className="flex items-center justify-center space-x-1.5">
                           <button
                             type="button"
-                            onClick={() => handleDeleteUser(u)}
-                            className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
-                            title="ลบบัญชีผู้ใช้"
+                            onClick={() => {
+                              setResetPassUser(u);
+                              setNewPasswordVal('');
+                              setConfirmPasswordVal('');
+                            }}
+                            className="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded-lg text-xs font-semibold flex items-center space-x-1 transition"
+                            title="ตั้งรหัสผ่านใหม่"
                           >
-                            <Trash2 className="w-4 h-4" />
+                            <KeyRound className="w-3 h-3 text-amber-700" />
+                            <span>เปลี่ยนรหัส</span>
                           </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-            </tbody>
-          </table>
+
+                          <button
+                            type="button"
+                            onClick={() => setEditingUser(u)}
+                            className="p-1 text-slate-500 hover:text-gov-700 hover:bg-slate-100 rounded-lg transition"
+                            title="แก้ไขข้อมูลผู้ใช้"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+
+                          {u.username !== 'admin' && (
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteUser(u)}
+                              className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
+                              title="ลบบัญชีผู้ใช้"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile Card View */}
+          <div className="md:hidden divide-y divide-slate-100 bg-white">
+            {usersList
+              .filter(u => {
+                if (!userSearch.trim()) return true;
+                const s = userSearch.toLowerCase();
+                return (
+                  u.username?.toLowerCase().includes(s) ||
+                  u.name?.toLowerCase().includes(s) ||
+                  u.title?.toLowerCase().includes(s) ||
+                  u.dept?.toLowerCase().includes(s)
+                );
+              })
+              .map(u => (
+                <div key={u.id} className="p-3.5 space-y-2 text-xs">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <div className="font-mono font-bold text-gov-800">@{u.username}</div>
+                      <div className="font-bold text-slate-900 text-sm">{u.name}</div>
+                      <div className="text-slate-500">{u.title || '-'} • {u.dept || u.department_name || '-'}</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between pt-1 gap-2">
+                    <span className="bg-slate-100 px-2 py-0.5 rounded-full text-[11px] font-semibold text-slate-700">
+                      {u.role_type === 'admin' ? '👑 พัสดุกลาง' : u.role_type === 'executive' ? '🏛️ ผู้บริหาร' : u.role_type === 'auditor' ? '🔍 สตง.' : '🏢 จนท.กอง'}
+                    </span>
+                    <div className="flex items-center space-x-1.5">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setResetPassUser(u);
+                          setNewPasswordVal('');
+                          setConfirmPasswordVal('');
+                        }}
+                        className="px-2 py-1 bg-amber-50 text-amber-800 border border-amber-200 rounded-lg text-[11px] font-semibold"
+                      >
+                        เปลี่ยนรหัส
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setEditingUser(u)}
+                        className="p-1.5 text-slate-500 bg-slate-100 rounded-lg"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                      </button>
+                      {u.username !== 'admin' && (
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteUser(u)}
+                          className="p-1.5 text-rose-500 bg-rose-50 rounded-lg"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+          </div>
         </div>
       </div>
 

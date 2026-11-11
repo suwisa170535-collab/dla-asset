@@ -2133,27 +2133,28 @@ export default function AssetManagementView({ settings, departments = [], subDep
             </div>
 
             {/* Schedule Table */}
-            <div className="overflow-x-auto max-h-80 border border-slate-200 rounded-xl mb-4">
-              <table className="w-full text-left text-xs">
+            <div className="max-h-80 overflow-y-auto border border-slate-200 rounded-xl mb-4">
+              <table className="w-full text-left text-xs table-auto">
                 <thead className="bg-gov-900 text-white sticky top-0">
                   <tr>
-                    <th className="py-2.5 px-3 text-center">ปีที่</th>
-                    <th className="py-2.5 px-3 text-center">ปีงบประมาณ พ.ศ.</th>
-                    <th className="py-2.5 px-3 text-center">จำนวนวัน</th>
-                    <th className="py-2.5 px-3 text-right">ค่าเสื่อมราคาประจำปี</th>
-                    <th className="py-2.5 px-3 text-right">ค่าเสื่อมสะสม</th>
-                    <th className="py-2.5 px-3 text-right">มูลค่าสุทธิตามบัญชี</th>
+                    <th className="py-2 px-2 text-center w-12">ปีที่</th>
+                    <th className="py-2 px-2 text-center">ปีงบฯ (จำนวนวัน)</th>
+                    <th className="py-2 px-2.5 text-right">ค่าเสื่อมปีนี้</th>
+                    <th className="py-2 px-2.5 text-right">ค่าเสื่อมสะสม</th>
+                    <th className="py-2 px-2.5 text-right">มูลค่าสุทธิ</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {depSchedule?.schedule?.map(row => (
                     <tr key={row.yearIndex} className="hover:bg-slate-50">
-                      <td className="py-2.5 px-3 text-center font-medium">{row.yearIndex}</td>
-                      <td className="py-2.5 px-3 text-center font-bold text-gov-800">{row.fiscalYear}</td>
-                      <td className="py-2.5 px-3 text-center text-slate-500">{row.daysCount} วัน</td>
-                      <td className="py-2.5 px-3 text-right font-medium">{formatBaht(row.depreciationAmount)}</td>
-                      <td className="py-2.5 px-3 text-right text-rose-600 font-medium">{formatBaht(row.accumulatedDepreciation)}</td>
-                      <td className="py-2.5 px-3 text-right font-bold text-emerald-600">{formatBaht(row.bookValue)}</td>
+                      <td className="py-2 px-2 text-center font-medium">{row.yearIndex}</td>
+                      <td className="py-2 px-2 text-center">
+                        <span className="font-bold text-gov-800">{row.fiscalYear}</span>{' '}
+                        <span className="text-[11px] text-slate-500">({row.daysCount} วัน)</span>
+                      </td>
+                      <td className="py-2 px-2.5 text-right font-medium">{formatBaht(row.depreciationAmount)}</td>
+                      <td className="py-2 px-2.5 text-right text-rose-600 font-medium">{formatBaht(row.accumulatedDepreciation)}</td>
+                      <td className="py-2 px-2.5 text-right font-bold text-emerald-600">{formatBaht(row.bookValue)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -2344,31 +2345,34 @@ export default function AssetManagementView({ settings, departments = [], subDep
                     <span className="text-[11px] text-slate-400">แสดงตัวอย่าง 5 รายการแรก</span>
                   </div>
 
-                  <div className="overflow-x-auto border border-slate-200 rounded-lg">
-                    <table className="w-full text-left text-xs">
+                  <div className="border border-slate-200 rounded-lg overflow-hidden">
+                    <table className="w-full text-left text-xs table-auto">
                       <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold">
                         <tr>
-                          <th className="py-2 px-3">ที่</th>
-                          <th className="py-2 px-3">รหัสครุภัณฑ์</th>
-                          <th className="py-2 px-3">ชื่อครุภัณฑ์</th>
-                          <th className="py-2 px-3">หมวดหมู่</th>
-                          <th className="py-2 px-3">สำนัก/กอง</th>
-                          <th className="py-2 px-3 text-right">ราคาทุน (บาท)</th>
-                          <th className="py-2 px-3 text-center">วันที่ตรวจรับ</th>
+                          <th className="py-2 px-2.5 w-10 text-center">ที่</th>
+                          <th className="py-2 px-2.5">รหัส &amp; ชื่อครุภัณฑ์</th>
+                          <th className="py-2 px-2.5">หมวดหมู่ / สำนัก/กอง</th>
+                          <th className="py-2 px-2.5 text-right whitespace-nowrap">ราคาทุน &amp; วันที่รับ</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100">
                         {importRows.slice(0, 5).map((row, idx) => (
-                          <tr key={idx} className="hover:bg-slate-50">
-                            <td className="py-2 px-3 text-slate-400">{idx + 1}</td>
-                            <td className="py-2 px-3 font-mono font-bold text-gov-800">
-                              {row.asset_code || <span className="text-slate-400 font-normal italic">(สร้างให้อัตโนมัติ)</span>}
+                          <tr key={idx} className="hover:bg-slate-50 align-top">
+                            <td className="py-2 px-2.5 text-center text-slate-400">{idx + 1}</td>
+                            <td className="py-2 px-2.5">
+                              <div className="font-mono font-bold text-gov-800">
+                                {row.asset_code || <span className="text-slate-400 font-normal italic">(สร้างให้อัตโนมัติ)</span>}
+                              </div>
+                              <div className="font-semibold text-slate-900">{row.name}</div>
                             </td>
-                            <td className="py-2 px-3 font-semibold text-slate-900">{row.name}</td>
-                            <td className="py-2 px-3 text-slate-600">{row.category || '-'}</td>
-                            <td className="py-2 px-3 text-slate-600">{row.department || '-'}</td>
-                            <td className="py-2 px-3 text-right font-medium">{formatBaht(row.cost_price || 0)}</td>
-                            <td className="py-2 px-3 text-center text-slate-500">{row.acquired_date || '-'}</td>
+                            <td className="py-2 px-2.5 text-slate-600">
+                              <div>{row.category || '-'}</div>
+                              <div className="text-[11px] text-slate-400">{row.department || '-'}</div>
+                            </td>
+                            <td className="py-2 px-2.5 text-right whitespace-nowrap">
+                              <div className="font-medium text-slate-900">{formatBaht(row.cost_price || 0)}</div>
+                              <div className="text-[11px] text-slate-400">{row.acquired_date || '-'}</div>
+                            </td>
                           </tr>
                         ))}
                       </tbody>
@@ -2862,79 +2866,120 @@ export default function AssetManagementView({ settings, departments = [], subDep
             )}
 
             {/* Inspections List */}
-            <div className="overflow-x-auto max-h-[60vh]">
-              <table className="w-full text-left text-xs border border-slate-200">
-                <thead className="bg-slate-100 border-b border-slate-200 text-slate-700 font-bold">
-                  <tr>
-                    <th className="py-2.5 px-3">เลขที่ใบตรวจรับ</th>
-                    <th className="py-2.5 px-3">วันที่ตรวจรับ</th>
-                    <th className="py-2.5 px-3">รายการพัสดุ</th>
-                    <th className="py-2.5 px-3">ผู้ขาย / สัญญา</th>
-                    <th className="py-2.5 px-3 text-right">วงเงิน (บาท)</th>
-                    <th className="py-2.5 px-3 text-center">สถานะการขึ้นทะเบียน</th>
-                    <th className="py-2.5 px-3 text-center">การปฏิบัติการ</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {inspections.length === 0 ? (
+            <div className="max-h-[60vh] overflow-y-auto border border-slate-200 rounded-xl">
+              <div className="hidden md:block">
+                <table className="w-full text-left text-xs table-auto">
+                  <thead className="bg-slate-100 border-b border-slate-200 text-slate-700 font-bold sticky top-0">
                     <tr>
-                      <td colSpan="7" className="text-center py-10 text-slate-400">
-                        ยังไม่มีประวัติการบันทึกใบตรวจรับพัสดุ (กดปุ่ม "➕ ออกใบตรวจรับใหม่" เพื่อสร้างรายการ)
-                      </td>
+                      <th className="py-2.5 px-3 w-36">ใบตรวจรับ / วันที่</th>
+                      <th className="py-2.5 px-3">รายการพัสดุ / ผู้ขาย &amp; สัญญา</th>
+                      <th className="py-2.5 px-3 text-right w-28 whitespace-nowrap">วงเงิน (บาท)</th>
+                      <th className="py-2.5 px-3 text-center w-36 whitespace-nowrap">สถานะขึ้นทะเบียน</th>
+                      <th className="py-2.5 px-3 text-center w-28 whitespace-nowrap">ปฏิบัติการ</th>
                     </tr>
-                  ) : (
-                    inspections.map(ins => (
-                      <tr key={ins.id} className="hover:bg-slate-50 transition">
-                        <td className="py-3 px-3 font-mono font-bold text-slate-900 whitespace-nowrap">
-                          {ins.doc_number}
-                        </td>
-                        <td className="py-3 px-3 text-slate-600 whitespace-nowrap">
-                          {formatThaiDate(ins.inspection_date)}
-                        </td>
-                        <td className="py-3 px-3">
-                          <div className="font-bold text-slate-900">{ins.item_name}</div>
-                          <div className="text-[11px] text-slate-500">
-                            หมวด: {ins.category_name} | {ins.brand} {ins.model}
-                          </div>
-                        </td>
-                        <td className="py-3 px-3 text-slate-600">
-                          <div>{ins.vendor_name}</div>
-                          <div className="text-[10px] text-slate-400 font-mono">สัญญา: {ins.purchase_order_no}</div>
-                        </td>
-                        <td className="py-3 px-3 text-right font-bold text-slate-900 whitespace-nowrap">
-                          {formatBaht(ins.cost_price)}
-                        </td>
-                        <td className="py-3 px-3 text-center whitespace-nowrap">
-                          {ins.created_asset_id ? (
-                            <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10.5px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-300">
-                              <Check className="w-3 h-3 text-emerald-600" />
-                              <span>ขึ้นทะเบียนแล้ว</span>
-                            </span>
-                          ) : (
-                            <button
-                              onClick={() => handleConvertInspectionToAsset(ins)}
-                              className="inline-flex items-center space-x-1 px-2.5 py-1 bg-gov-700 hover:bg-gov-800 text-white rounded-lg text-[10.5px] font-bold shadow-xs transition"
-                              title="ตรวจรับผ่านแล้ว ขึ้นทะเบียนเป็นครุภัณฑ์ สท.1 รหัสใหม่อัตโนมัติ"
-                            >
-                              <span>✅ ขึ้นทะเบียน สท.1</span>
-                            </button>
-                          )}
-                        </td>
-                        <td className="py-3 px-3 text-center whitespace-nowrap">
-                          <button
-                            onClick={() => handlePrintInspection(ins)}
-                            className="inline-flex items-center space-x-1 px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded-lg text-xs font-bold transition"
-                            title="พิมพ์ใบตรวจรับพัสดุ (แบบ ตร.)"
-                          >
-                            <Printer className="w-3.5 h-3.5 text-amber-700" />
-                            <span>พิมพ์แบบ ตร.</span>
-                          </button>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {inspections.length === 0 ? (
+                      <tr>
+                        <td colSpan="5" className="text-center py-10 text-slate-400">
+                          ยังไม่มีประวัติการบันทึกใบตรวจรับพัสดุ (กดปุ่ม "➕ ออกใบตรวจรับใหม่" เพื่อสร้างรายการ)
                         </td>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+                    ) : (
+                      inspections.map(ins => (
+                        <tr key={ins.id} className="hover:bg-slate-50 transition align-top">
+                          <td className="py-3 px-3 whitespace-nowrap">
+                            <div className="font-mono font-bold text-slate-900">{ins.doc_number}</div>
+                            <div className="text-slate-500 mt-0.5">{formatThaiDate(ins.inspection_date)}</div>
+                          </td>
+                          <td className="py-3 px-3">
+                            <div className="font-bold text-slate-900">{ins.item_name}</div>
+                            <div className="text-[11px] text-slate-500">
+                              หมวด: {ins.category_name} {ins.brand || ins.model ? `| ${ins.brand} ${ins.model}` : ''}
+                            </div>
+                            <div className="text-[11px] text-slate-600 mt-1">
+                              ผู้ขาย: {ins.vendor_name} <span className="text-slate-400 font-mono">({ins.purchase_order_no})</span>
+                            </div>
+                          </td>
+                          <td className="py-3 px-3 text-right font-bold text-slate-900 whitespace-nowrap">
+                            {formatBaht(ins.cost_price)}
+                          </td>
+                          <td className="py-3 px-3 text-center whitespace-nowrap">
+                            {ins.created_asset_id ? (
+                              <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10.5px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-300">
+                                <Check className="w-3 h-3 text-emerald-600" />
+                                <span>ขึ้นทะเบียนแล้ว</span>
+                              </span>
+                            ) : (
+                              <button
+                                onClick={() => handleConvertInspectionToAsset(ins)}
+                                className="inline-flex items-center space-x-1 px-2.5 py-1 bg-gov-700 hover:bg-gov-800 text-white rounded-lg text-[10.5px] font-bold shadow-xs transition"
+                                title="ตรวจรับผ่านแล้ว ขึ้นทะเบียนเป็นครุภัณฑ์ สท.1 รหัสใหม่อัตโนมัติ"
+                              >
+                                <span>✅ ขึ้นทะเบียน สท.1</span>
+                              </button>
+                            )}
+                          </td>
+                          <td className="py-3 px-3 text-center whitespace-nowrap">
+                            <button
+                              onClick={() => handlePrintInspection(ins)}
+                              className="inline-flex items-center space-x-1 px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded-lg text-xs font-bold transition"
+                              title="พิมพ์ใบตรวจรับพัสดุ (แบบ ตร.)"
+                            >
+                              <Printer className="w-3.5 h-3.5 text-amber-700" />
+                              <span>พิมพ์แบบ ตร.</span>
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile Card View */}
+              <div className="md:hidden divide-y divide-slate-100">
+                {inspections.length === 0 ? (
+                  <div className="text-center py-10 text-slate-400 text-xs">
+                    ยังไม่มีประวัติการบันทึกใบตรวจรับพัสดุ
+                  </div>
+                ) : (
+                  inspections.map(ins => (
+                    <div key={ins.id} className="p-3.5 space-y-2 text-xs">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <div className="font-mono font-bold text-slate-900">{ins.doc_number} • {formatThaiDate(ins.inspection_date)}</div>
+                          <div className="font-bold text-slate-900 text-sm mt-0.5">{ins.item_name}</div>
+                        </div>
+                        <div className="font-bold text-gov-800 shrink-0">{formatBaht(ins.cost_price)}</div>
+                      </div>
+                      <div className="text-slate-600">
+                        ผู้ขาย: {ins.vendor_name} ({ins.purchase_order_no})
+                      </div>
+                      <div className="flex items-center gap-2 pt-1">
+                        {ins.created_asset_id ? (
+                          <span className="flex-1 text-center py-1 rounded-lg text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-300">
+                            ขึ้นทะเบียนแล้ว
+                          </span>
+                        ) : (
+                          <button
+                            onClick={() => handleConvertInspectionToAsset(ins)}
+                            className="flex-1 py-1.5 bg-gov-700 text-white rounded-lg text-[11px] font-bold"
+                          >
+                            ✅ ขึ้นทะเบียน สท.1
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handlePrintInspection(ins)}
+                          className="flex-1 py-1.5 bg-amber-50 text-amber-900 border border-amber-300 rounded-lg text-[11px] font-bold flex items-center justify-center space-x-1"
+                        >
+                          <Printer className="w-3.5 h-3.5 text-amber-700" /><span>พิมพ์แบบ ตร.</span>
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
 
             <div className="flex justify-end border-t border-slate-100 pt-3 mt-4">

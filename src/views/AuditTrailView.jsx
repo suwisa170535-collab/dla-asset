@@ -79,29 +79,28 @@ export default function AuditTrailView() {
         </select>
       </div>
 
-      {/* Audit Log Table */}
+      {/* Audit Log Table & Mobile Cards */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
+        <div className="hidden md:block">
+          <table className="w-full text-left text-xs table-auto">
             <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 uppercase font-semibold">
               <tr>
-                <th className="py-3 px-4">วันและเวลา</th>
-                <th className="py-3 px-4">ประเภทการกระทำ</th>
-                <th className="py-3 px-4">ระบบงาน</th>
-                <th className="py-3 px-4">ผู้ดำเนินการ / ตำแหน่ง</th>
-                <th className="py-3 px-4">รายละเอียดการดำเนินการ</th>
+                <th className="py-3 px-3.5 w-36">วัน-เวลา / ระบบงาน</th>
+                <th className="py-3 px-3.5 w-32 whitespace-nowrap">ประเภทการกระทำ</th>
+                <th className="py-3 px-3.5 w-44">ผู้ดำเนินการ / ตำแหน่ง</th>
+                <th className="py-3 px-3.5">รายละเอียดการดำเนินการ</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {loading ? (
                 <tr>
-                  <td colSpan="5" className="text-center py-10 text-slate-400">
+                  <td colSpan="4" className="text-center py-10 text-slate-400">
                     กำลังโหลดประวัติการใช้งาน...
                   </td>
                 </tr>
               ) : logs.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="text-center py-10 text-slate-400">
+                  <td colSpan="4" className="text-center py-10 text-slate-400">
                     ไม่มีประวัติการใช้งานในเงื่อนไขนี้
                   </td>
                 </tr>
@@ -109,23 +108,21 @@ export default function AuditTrailView() {
                 logs.map(log => {
                   const badgeColor = ACTION_COLORS[log.action] || 'bg-slate-100 text-slate-700';
                   return (
-                    <tr key={log.id} className="hover:bg-slate-50 transition">
-                      <td className="py-3 px-4 whitespace-nowrap text-slate-500 font-mono">
-                        {log.timestamp}
+                    <tr key={log.id} className="hover:bg-slate-50 transition align-top">
+                      <td className="py-3 px-3.5">
+                        <div className="text-slate-500 font-mono text-[11px]">{log.timestamp}</div>
+                        <div className="font-semibold text-slate-700 mt-0.5">{log.module}</div>
                       </td>
-                      <td className="py-3 px-4 whitespace-nowrap">
+                      <td className="py-3 px-3.5 whitespace-nowrap">
                         <span className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold border ${badgeColor}`}>
                           {log.action}
                         </span>
                       </td>
-                      <td className="py-3 px-4 whitespace-nowrap font-semibold text-slate-700">
-                        {log.module}
-                      </td>
-                      <td className="py-3 px-4 whitespace-nowrap">
+                      <td className="py-3 px-3.5">
                         <div className="font-bold text-slate-900">{log.actor_name}</div>
-                        <div className="text-[11px] text-slate-400">{log.actor_role}</div>
+                        <div className="text-[11px] text-slate-400 leading-snug">{log.actor_role}</div>
                       </td>
-                      <td className="py-3 px-4 text-slate-800 font-medium">
+                      <td className="py-3 px-3.5 text-slate-800 font-medium leading-snug">
                         {log.details}
                       </td>
                     </tr>
@@ -134,6 +131,33 @@ export default function AuditTrailView() {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile Card View */}
+        <div className="md:hidden divide-y divide-slate-100">
+          {loading ? (
+            <div className="text-center py-10 text-slate-400 text-sm">กำลังโหลดประวัติการใช้งาน...</div>
+          ) : logs.length === 0 ? (
+            <div className="text-center py-10 text-slate-400 text-sm">ไม่มีประวัติการใช้งานในเงื่อนไขนี้</div>
+          ) : (
+            logs.map(log => {
+              const badgeColor = ACTION_COLORS[log.action] || 'bg-slate-100 text-slate-700';
+              return (
+                <div key={log.id} className="p-4 space-y-1.5 text-xs">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold border ${badgeColor}`}>
+                      {log.action}
+                    </span>
+                    <span className="font-mono text-[11px] text-slate-400">{log.timestamp}</span>
+                  </div>
+                  <div className="font-bold text-slate-900">{log.details}</div>
+                  <div className="text-slate-500">
+                    ระบบ: {log.module} • โดย <span className="font-semibold text-slate-700">{log.actor_name}</span> ({log.actor_role})
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
       </div>
     </div>

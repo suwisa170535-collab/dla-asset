@@ -119,7 +119,7 @@ export default function App() {
         onToggleMobileMenu={() => setIsMobileMenuOpen(prev => !prev)}
       />
 
-      <div className="flex-1 flex max-w-7xl w-full mx-auto min-w-0">
+      <div className="flex-1 flex max-w-[1600px] w-full mx-auto min-w-0">
         <Sidebar
           activeTab={activeTab}
           setActiveTab={setActiveTab}
@@ -130,7 +130,7 @@ export default function App() {
           onCloseMobile={() => setIsMobileMenuOpen(false)}
         />
 
-        <main ref={mainRef} className="flex-1 min-w-0 p-3 sm:p-5 md:p-8 overflow-y-auto">
+        <main ref={mainRef} className="flex-1 min-w-0 p-3 sm:p-4 lg:p-5 overflow-y-auto">
           {activeTab === 'dashboard' && (
             <DashboardView
               summary={summary}

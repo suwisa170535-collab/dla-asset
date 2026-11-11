@@ -135,7 +135,7 @@ export default function Sidebar({
   return (
     <>
       {/* 1. Desktop Static Sidebar (Visible on screens >= md) */}
-      <aside className="hidden md:flex w-64 flex-shrink-0 bg-white border-r border-slate-200 min-h-[calc(100vh-4rem)] flex-col justify-between shadow-sm">
+      <aside className="hidden md:flex w-56 xl:w-60 flex-shrink-0 bg-white border-r border-slate-200 min-h-[calc(100vh-4rem)] flex-col justify-between shadow-sm">
         {renderNavList(false)}
         {renderFooterInfo()}
       </aside>

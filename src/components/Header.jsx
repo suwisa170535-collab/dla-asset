@@ -45,7 +45,7 @@ export default function Header({
 
   return (
     <header className="bg-gov-900 text-white shadow-md border-b border-gov-800 sticky top-0 z-30">
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+      <div className="max-w-[1600px] mx-auto px-3 sm:px-5 lg:px-6">
         <div className="flex justify-between items-center h-16 gap-2">
           {/* Brand & Municipality Logo + Mobile Hamburger Button */}
           <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">

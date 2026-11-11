@@ -167,65 +167,59 @@ export default function TransferView({ settings, departments, subDepartments = [
         </div>
       </div>
 
-      {/* Table */}
+      {/* Table & Mobile Cards */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
+        <div className="hidden md:block">
+          <table className="w-full text-left text-sm table-auto">
             <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 text-xs uppercase font-semibold">
               <tr>
-                <th className="py-3 px-4">เลขที่ใบโอน</th>
-                <th className="py-3 px-4">ครุภัณฑ์ที่โอนย้าย</th>
-                <th className="py-3 px-4">โอนจากกองเดิม ➡️ ไปยังกองใหม่</th>
-                <th className="py-3 px-4">ผู้ส่งมอบ & ผู้รับมอบ</th>
-                <th className="py-3 px-4">เหตุผลความจำเป็น</th>
-                <th className="py-3 px-4 text-center">วันที่โอน</th>
-                <th className="py-3 px-4 text-center">พิมพ์ใบส่งมอบ</th>
+                <th className="py-3 px-3.5 w-[26%]">ใบโอน / ครุภัณฑ์ที่โอนย้าย</th>
+                <th className="py-3 px-3.5 w-[24%]">โอนจาก ➡️ ไปยังกองใหม่</th>
+                <th className="py-3 px-3.5 w-[19%]">ผู้ส่งมอบ &amp; ผู้รับมอบ</th>
+                <th className="py-3 px-3.5 w-[21%]">เหตุผล &amp; วันที่โอน</th>
+                <th className="py-3 px-3.5 text-center w-32 whitespace-nowrap">พิมพ์ใบส่งมอบ</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {loading ? (
                 <tr>
-                  <td colSpan="7" className="text-center py-10 text-slate-400">
+                  <td colSpan="5" className="text-center py-10 text-slate-400">
                     กำลังโหลดประวัติการโอนย้าย...
                   </td>
                 </tr>
               ) : transfers.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="text-center py-10 text-slate-400">
+                  <td colSpan="5" className="text-center py-10 text-slate-400">
                     ยังไม่มีประวัติการโอนย้ายครุภัณฑ์
                   </td>
                 </tr>
               ) : (
                 transfers.map((t) => (
-                  <tr key={t.id} className="hover:bg-slate-50/80 transition">
-                    <td className="py-3.5 px-4 font-mono font-bold text-gov-800 whitespace-nowrap">
-                      {t.transfer_number}
-                    </td>
-                    <td className="py-3.5 px-4">
-                      <div className="font-bold text-slate-900">{t.asset_name}</div>
-                      <div className="text-xs font-mono text-gov-700 font-semibold">{t.asset_code}</div>
+                  <tr key={t.id} className="hover:bg-slate-50/80 transition align-top">
+                    <td className="py-3.5 px-3.5">
+                      <div className="font-mono text-xs font-bold text-gov-800">{t.transfer_number}</div>
+                      <div className="font-bold text-slate-900 leading-snug mt-0.5">{t.asset_name}</div>
+                      <div className="text-xs font-mono text-gov-700 font-semibold mt-0.5">{t.asset_code}</div>
                       <div className="text-[11px] text-slate-400">ราคาทุน: {formatBaht(t.cost_price)}</div>
                     </td>
-                    <td className="py-3.5 px-4 text-xs whitespace-nowrap">
+                    <td className="py-3.5 px-3.5 text-xs">
                       <div className="text-slate-500">จาก: <strong className="text-slate-700">{t.from_department_name}</strong></div>
                       <div className="text-emerald-700 font-bold mt-0.5">➡️ ไปยัง: {t.to_department_name}</div>
-                      <div className="text-[11px] text-slate-400">ห้อง: {t.new_location_room || '-'}</div>
+                      <div className="text-[11px] text-slate-400 mt-0.5">ห้อง: {t.new_location_room || '-'}</div>
                     </td>
-                    <td className="py-3.5 px-4 text-xs">
+                    <td className="py-3.5 px-3.5 text-xs">
                       <div>ผู้ส่ง: <span className="font-semibold text-slate-700">{t.deliverer_name}</span></div>
-                      <div>ผู้รับ: <span className="font-semibold text-slate-900">{t.receiver_name}</span></div>
+                      <div className="mt-0.5">ผู้รับ: <span className="font-semibold text-slate-900">{t.receiver_name}</span></div>
                     </td>
-                    <td className="py-3.5 px-4 text-xs text-slate-600 max-w-xs">
-                      <div className="line-clamp-2">{t.reason}</div>
+                    <td className="py-3.5 px-3.5 text-xs text-slate-600">
+                      <div className="line-clamp-2 leading-snug">{t.reason}</div>
+                      <div className="text-[11px] text-slate-400 mt-1">วันที่โอน: {formatThaiDate(t.transfer_date)}</div>
                     </td>
-                    <td className="py-3.5 px-4 text-center text-xs whitespace-nowrap text-slate-600">
-                      {formatThaiDate(t.transfer_date)}
-                    </td>
-                    <td className="py-3.5 px-4 text-center whitespace-nowrap">
+                    <td className="py-3.5 px-3.5 text-center whitespace-nowrap">
                       <button
                         onClick={() => handlePrint(t)}
                         title="พิมพ์ใบส่งมอบ-รับมอบทรัพย์สินทางราชการ"
-                        className="flex items-center space-x-1 px-3 py-1 bg-gov-50 hover:bg-gov-100 text-gov-800 font-bold rounded-xl text-xs border border-gov-200 transition mx-auto"
+                        className="flex items-center space-x-1 px-2.5 py-1.5 bg-gov-50 hover:bg-gov-100 text-gov-800 font-bold rounded-xl text-xs border border-gov-200 transition mx-auto"
                       >
                         <Printer className="w-3.5 h-3.5" />
                         <span>พิมพ์ใบส่งมอบ</span>
@@ -236,6 +230,40 @@ export default function TransferView({ settings, departments, subDepartments = [
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile Card View */}
+        <div className="md:hidden divide-y divide-slate-100">
+          {loading ? (
+            <div className="text-center py-10 text-slate-400 text-sm">กำลังโหลดประวัติการโอนย้าย...</div>
+          ) : transfers.length === 0 ? (
+            <div className="text-center py-10 text-slate-400 text-sm">ยังไม่มีประวัติการโอนย้ายครุภัณฑ์</div>
+          ) : (
+            transfers.map((t) => (
+              <div key={t.id} className="p-4 space-y-2 text-xs">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <div className="font-mono font-bold text-gov-800">{t.transfer_number}</div>
+                    <div className="font-bold text-slate-900 text-sm mt-0.5">{t.asset_name}</div>
+                    <div className="font-mono text-gov-700 font-semibold">{t.asset_code}</div>
+                  </div>
+                  <div className="text-slate-500 shrink-0">{formatThaiDate(t.transfer_date)}</div>
+                </div>
+                <div className="bg-slate-50 rounded-xl p-2.5 space-y-1">
+                  <div className="text-slate-600">จาก: <strong>{t.from_department_name}</strong></div>
+                  <div className="text-emerald-700 font-bold">➡️ ไปยัง: {t.to_department_name}</div>
+                  <div className="text-slate-500">ส่งมอบ: {t.deliverer_name} → รับมอบ: {t.receiver_name}</div>
+                </div>
+                {t.reason && <div className="text-slate-600">เหตุผล: {t.reason}</div>}
+                <button
+                  onClick={() => handlePrint(t)}
+                  className="w-full py-1.5 bg-gov-50 text-gov-800 font-bold rounded-xl border border-gov-200 flex items-center justify-center space-x-1"
+                >
+                  <Printer className="w-3.5 h-3.5" /><span>พิมพ์ใบส่งมอบ</span>
+                </button>
+              </div>
+            ))
+          )}
         </div>
       </div>
 

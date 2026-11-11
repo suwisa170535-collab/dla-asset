@@ -497,32 +497,36 @@ export default function ReportsView({ settings, departments = [], subDepartments
               <h2 className="font-bold text-slate-800 text-base">แบบ สท.2 ทะเบียนบัญชีครุภัณฑ์แยกตามสำนัก/กอง</h2>
               <span className="text-xs text-slate-500">รวม {assets.length} รายการ</span>
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
+            <div className="hidden md:block">
+              <table className="w-full text-left text-xs table-auto">
                 <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 uppercase font-semibold">
                   <tr>
-                    <th className="py-2.5 px-3">รหัสครุภัณฑ์</th>
-                    <th className="py-2.5 px-3">ชื่อครุภัณฑ์</th>
+                    <th className="py-2.5 px-3">รหัส &amp; รายการครุภัณฑ์</th>
                     <th className="py-2.5 px-3">สำนัก/กอง</th>
-                    <th className="py-2.5 px-3 text-right">ราคาทุน (บาท)</th>
-                    <th className="py-2.5 px-3 text-right">ค่าเสื่อมสะสม (บาท)</th>
-                    <th className="py-2.5 px-3 text-right">มูลค่าสุทธิตามบัญชี</th>
-                    <th className="py-2.5 px-3 text-center">สถานะ</th>
+                    <th className="py-2.5 px-3 text-right whitespace-nowrap">ราคาทุน / ค่าเสื่อมสะสม</th>
+                    <th className="py-2.5 px-3 text-right whitespace-nowrap">มูลค่าสุทธิตามบัญชี</th>
+                    <th className="py-2.5 px-3 text-center w-28 whitespace-nowrap">สถานะ</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {assets.map(a => (
-                    <tr key={a.id} className="hover:bg-slate-50">
-                      <td className="py-2 px-3 font-mono font-bold text-gov-800">{a.asset_code}</td>
-                      <td className="py-2 px-3 font-semibold text-slate-900">{a.name}</td>
-                      <td className="py-2 px-3 text-slate-600">
+                    <tr key={a.id} className="hover:bg-slate-50 align-top">
+                      <td className="py-2.5 px-3">
+                        <div className="font-mono font-bold text-gov-800">{a.asset_code}</div>
+                        <div className="font-semibold text-slate-900 mt-0.5">{a.name}</div>
+                      </td>
+                      <td className="py-2.5 px-3 text-slate-600">
                         <div>{a.department_name}</div>
                         {a.sub_department_name && <div className="text-[10px] text-indigo-700 font-semibold">• {a.sub_department_name}</div>}
                       </td>
-                      <td className="py-2 px-3 text-right">{formatBaht(a.cost_price)}</td>
-                      <td className="py-2 px-3 text-right text-rose-600">-{formatBaht(a.depreciation?.accumulated)}</td>
-                      <td className="py-2 px-3 text-right font-bold text-emerald-600">{formatBaht(a.depreciation?.bookValue)}</td>
-                      <td className="py-2 px-3 text-center">
+                      <td className="py-2.5 px-3 text-right whitespace-nowrap">
+                        <div className="font-medium text-slate-800">{formatBaht(a.cost_price)}</div>
+                        <div className="text-[11px] text-rose-600">-{formatBaht(a.depreciation?.accumulated)}</div>
+                      </td>
+                      <td className="py-2.5 px-3 text-right font-bold text-emerald-600 whitespace-nowrap">
+                        {formatBaht(a.depreciation?.bookValue)}
+                      </td>
+                      <td className="py-2.5 px-3 text-center whitespace-nowrap">
                         <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700">
                           {a.status}
                         </span>
@@ -531,6 +535,24 @@ export default function ReportsView({ settings, departments = [], subDepartments
                   ))}
                 </tbody>
               </table>
+            </div>
+            <div className="md:hidden divide-y divide-slate-100 border border-slate-200 rounded-xl overflow-hidden">
+              {assets.map(a => (
+                <div key={a.id} className="p-3 space-y-1 text-xs">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <div className="font-mono font-bold text-gov-800">{a.asset_code}</div>
+                      <div className="font-semibold text-slate-900">{a.name}</div>
+                    </div>
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700 shrink-0">{a.status}</span>
+                  </div>
+                  <div className="text-slate-500">{a.department_name}</div>
+                  <div className="flex items-center justify-between pt-1">
+                    <span className="text-slate-500">ทุน {formatBaht(a.cost_price)}</span>
+                    <span className="font-bold text-emerald-600">สุทธิ {formatBaht(a.depreciation?.bookValue)}</span>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         )}
@@ -541,35 +563,51 @@ export default function ReportsView({ settings, departments = [], subDepartments
               <h2 className="font-bold text-slate-800 text-base">รายงานค่าเสื่อมราคาครุภัณฑ์ประจำปี (ส่งกองคลังบันทึกบัญชี)</h2>
               <span className="text-xs text-slate-500">ปีงบประมาณ พ.ศ. {settings.fiscal_year || '2569'}</span>
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
+            <div className="hidden md:block">
+              <table className="w-full text-left text-xs table-auto">
                 <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 uppercase font-semibold">
                   <tr>
-                    <th className="py-2.5 px-3">รหัสครุภัณฑ์</th>
-                    <th className="py-2.5 px-3">ชื่อครุภัณฑ์</th>
-                    <th className="py-2.5 px-3 text-center">วันที่ตรวจรับ</th>
-                    <th className="py-2.5 px-3 text-center">อายุ (ปี)</th>
-                    <th className="py-2.5 px-3 text-right">ราคาทุนจัดซื้อ</th>
-                    <th className="py-2.5 px-3 text-right">ค่าเสื่อมปีนี้</th>
-                    <th className="py-2.5 px-3 text-right">ค่าเสื่อมราคาสะสม</th>
-                    <th className="py-2.5 px-3 text-right">มูลค่าคงเหลือสุทธิ</th>
+                    <th className="py-2.5 px-3">รหัส &amp; ชื่อครุภัณฑ์</th>
+                    <th className="py-2.5 px-3 text-center whitespace-nowrap">วันที่ตรวจรับ / อายุ</th>
+                    <th className="py-2.5 px-3 text-right whitespace-nowrap">ราคาทุนจัดซื้อ</th>
+                    <th className="py-2.5 px-3 text-right whitespace-nowrap">ค่าเสื่อมปีนี้ / สะสม</th>
+                    <th className="py-2.5 px-3 text-right whitespace-nowrap">มูลค่าคงเหลือสุทธิ</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {assets.map(a => (
-                    <tr key={a.id} className="hover:bg-slate-50">
-                      <td className="py-2 px-3 font-mono font-bold text-gov-800">{a.asset_code}</td>
-                      <td className="py-2 px-3 font-semibold text-slate-900">{a.name}</td>
-                      <td className="py-2 px-3 text-center text-slate-500">{formatThaiDate(a.acquired_date)}</td>
-                      <td className="py-2 px-3 text-center">{a.useful_life_years} ปี</td>
-                      <td className="py-2 px-3 text-right font-medium">{formatBaht(a.cost_price)}</td>
-                      <td className="py-2 px-3 text-right font-medium text-gov-700">{formatBaht(a.depreciation?.currentAnnual)}</td>
-                      <td className="py-2 px-3 text-right font-medium text-rose-600">-{formatBaht(a.depreciation?.accumulated)}</td>
-                      <td className="py-2 px-3 text-right font-bold text-emerald-600">{formatBaht(a.depreciation?.bookValue)}</td>
+                    <tr key={a.id} className="hover:bg-slate-50 align-top">
+                      <td className="py-2.5 px-3">
+                        <div className="font-mono font-bold text-gov-800">{a.asset_code}</div>
+                        <div className="font-semibold text-slate-900 mt-0.5">{a.name}</div>
+                      </td>
+                      <td className="py-2.5 px-3 text-center whitespace-nowrap">
+                        <div className="text-slate-600">{formatThaiDate(a.acquired_date)}</div>
+                        <div className="text-[11px] text-slate-400">อายุ {a.useful_life_years} ปี</div>
+                      </td>
+                      <td className="py-2.5 px-3 text-right font-medium whitespace-nowrap">{formatBaht(a.cost_price)}</td>
+                      <td className="py-2.5 px-3 text-right whitespace-nowrap">
+                        <div className="font-medium text-gov-700">{formatBaht(a.depreciation?.currentAnnual)}</div>
+                        <div className="text-[11px] text-rose-600">สะสม -{formatBaht(a.depreciation?.accumulated)}</div>
+                      </td>
+                      <td className="py-2.5 px-3 text-right font-bold text-emerald-600 whitespace-nowrap">{formatBaht(a.depreciation?.bookValue)}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
+            </div>
+            <div className="md:hidden divide-y divide-slate-100 border border-slate-200 rounded-xl overflow-hidden">
+              {assets.map(a => (
+                <div key={a.id} className="p-3 space-y-1 text-xs">
+                  <div className="font-mono font-bold text-gov-800">{a.asset_code}</div>
+                  <div className="font-semibold text-slate-900">{a.name}</div>
+                  <div className="text-slate-500">รับ {formatThaiDate(a.acquired_date)} • อายุ {a.useful_life_years} ปี</div>
+                  <div className="flex items-center justify-between pt-1">
+                    <span className="text-gov-700">ปีนี้ {formatBaht(a.depreciation?.currentAnnual)}</span>
+                    <span className="font-bold text-emerald-600">สุทธิ {formatBaht(a.depreciation?.bookValue)}</span>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         )}
@@ -580,33 +618,47 @@ export default function ReportsView({ settings, departments = [], subDepartments
               <h2 className="font-bold text-slate-800 text-base">รายงานพัสดุสิ้นเปลืองคงคลังย่อยและมูลค่าคงเหลือ</h2>
               <span className="text-xs text-slate-500">รวม {items.length} รายการ</span>
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
+            <div className="hidden md:block">
+              <table className="w-full text-left text-xs table-auto">
                 <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 uppercase font-semibold">
                   <tr>
-                    <th className="py-2.5 px-3">รหัสพัสดุ</th>
-                    <th className="py-2.5 px-3">ชื่อรายการวัสดุ</th>
+                    <th className="py-2.5 px-3">รหัส &amp; ชื่อรายการวัสดุ</th>
                     <th className="py-2.5 px-3">หมวดหมู่</th>
-                    <th className="py-2.5 px-3 text-center">ยอดคงเหลือ</th>
-                    <th className="py-2.5 px-3 text-center">เกณฑ์สั่งซื้อ</th>
-                    <th className="py-2.5 px-3 text-right">ราคาต่อหน่วย</th>
-                    <th className="py-2.5 px-3 text-right">มูลค่าสต็อกรวม</th>
+                    <th className="py-2.5 px-3 text-center whitespace-nowrap">คงเหลือ / เกณฑ์</th>
+                    <th className="py-2.5 px-3 text-right whitespace-nowrap">ราคาต่อหน่วย</th>
+                    <th className="py-2.5 px-3 text-right whitespace-nowrap">มูลค่าสต็อกรวม</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {items.map(i => (
-                    <tr key={i.id} className="hover:bg-slate-50">
-                      <td className="py-2 px-3 font-mono font-bold text-slate-700">{i.item_code}</td>
-                      <td className="py-2 px-3 font-semibold text-slate-900">{i.name}</td>
-                      <td className="py-2 px-3 text-slate-500">{i.category}</td>
-                      <td className="py-2 px-3 text-center font-bold">{i.current_stock} {i.unit}</td>
-                      <td className="py-2 px-3 text-center text-slate-400">{i.min_stock} {i.unit}</td>
-                      <td className="py-2 px-3 text-right">{formatBaht(i.unit_price)}</td>
-                      <td className="py-2 px-3 text-right font-bold text-slate-900">{formatBaht(i.current_stock * i.unit_price)}</td>
+                    <tr key={i.id} className="hover:bg-slate-50 align-top">
+                      <td className="py-2.5 px-3">
+                        <div className="font-mono font-bold text-slate-700">{i.item_code}</div>
+                        <div className="font-semibold text-slate-900 mt-0.5">{i.name}</div>
+                      </td>
+                      <td className="py-2.5 px-3 text-slate-600">{i.category}</td>
+                      <td className="py-2.5 px-3 text-center whitespace-nowrap">
+                        <div className="font-bold text-slate-900">{i.current_stock} {i.unit}</div>
+                        <div className="text-[11px] text-slate-400">เกณฑ์ {i.min_stock} {i.unit}</div>
+                      </td>
+                      <td className="py-2.5 px-3 text-right whitespace-nowrap">{formatBaht(i.unit_price)}</td>
+                      <td className="py-2.5 px-3 text-right font-bold text-slate-900 whitespace-nowrap">{formatBaht(i.current_stock * i.unit_price)}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
+            </div>
+            <div className="md:hidden divide-y divide-slate-100 border border-slate-200 rounded-xl overflow-hidden">
+              {items.map(i => (
+                <div key={i.id} className="p-3 space-y-1 text-xs">
+                  <div className="font-mono font-bold text-slate-700">{i.item_code} • {i.category}</div>
+                  <div className="font-semibold text-slate-900">{i.name}</div>
+                  <div className="flex items-center justify-between pt-1">
+                    <span>คงเหลือ <strong>{i.current_stock} {i.unit}</strong></span>
+                    <span className="font-bold text-slate-900">รวม {formatBaht(i.current_stock * i.unit_price)}</span>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         )}
@@ -635,43 +687,62 @@ export default function ReportsView({ settings, departments = [], subDepartments
                 <p className="text-xs">สามารถเลือกเดือนอื่น หรือตรวจสอบข้อมูลวันที่ตรวจรับในทะเบียนครุภัณฑ์</p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
-                  <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 uppercase font-semibold">
-                    <tr>
-                      <th className="py-2.5 px-2 text-center w-8">ที่</th>
-                      <th className="py-2.5 px-3">งานที่จัดซื้อหรือจัดจ้าง</th>
-                      <th className="py-2.5 px-3 text-right">วงเงินงบประมาณ</th>
-                      <th className="py-2.5 px-3 text-center">วิธีจัดซื้อ</th>
-                      <th className="py-2.5 px-3">ผู้เสนอราคา</th>
-                      <th className="py-2.5 px-3">ผู้ได้รับคัดเลือก & ราคา</th>
-                      <th className="py-2.5 px-3">เลขที่สัญญา/ข้อตกลง</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {skrData.items.map((it) => (
-                      <tr key={it.seq} className="hover:bg-slate-50">
-                        <td className="py-2 px-2 text-center font-bold text-slate-500">{it.seq}</td>
-                        <td className="py-2 px-3 font-semibold text-slate-900">
-                          <div>{it.project_name}</div>
-                          <div className="text-[10px] text-slate-400 font-normal">{it.department_name}</div>
-                        </td>
-                        <td className="py-2 px-3 text-right font-medium">{formatBaht(it.budget_amount)}</td>
-                        <td className="py-2 px-3 text-center">
-                          <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-700 text-[10px] font-medium border border-slate-200">
-                            {it.procurement_method}
-                          </span>
-                        </td>
-                        <td className="py-2 px-3 text-slate-600">{it.bidders}</td>
-                        <td className="py-2 px-3">
-                          <strong className="text-slate-800">{it.winner}</strong>
-                          <div className="text-[10px] text-emerald-700 font-bold">{formatBaht(it.agreed_price)}</div>
-                        </td>
-                        <td className="py-2 px-3 text-slate-500 text-[11px] font-mono">{it.contract_info}</td>
+              <div>
+                <div className="hidden md:block">
+                  <table className="w-full text-left text-xs table-auto">
+                    <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 uppercase font-semibold">
+                      <tr>
+                        <th className="py-2.5 px-3 w-[32%]">ที่ / งานที่จัดซื้อหรือจัดจ้าง</th>
+                        <th className="py-2.5 px-3 text-right whitespace-nowrap">วงเงิน / วิธีจัดซื้อ</th>
+                        <th className="py-2.5 px-3 w-[20%]">ผู้เสนอราคา</th>
+                        <th className="py-2.5 px-3 w-[22%]">ผู้ได้รับคัดเลือก &amp; ราคา</th>
+                        <th className="py-2.5 px-3 w-36">เลขที่สัญญา/ข้อตกลง</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {skrData.items.map((it) => (
+                        <tr key={it.seq} className="hover:bg-slate-50 align-top">
+                          <td className="py-2.5 px-3 font-semibold text-slate-900">
+                            <div className="flex items-start gap-2">
+                              <span className="inline-flex items-center justify-center w-5 h-5 rounded bg-slate-100 text-slate-600 font-bold text-[11px] shrink-0">
+                                {it.seq}
+                              </span>
+                              <div>
+                                <div className="leading-snug">{it.project_name}</div>
+                                <div className="text-[10.5px] text-slate-400 font-normal mt-0.5">{it.department_name}</div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="py-2.5 px-3 text-right whitespace-nowrap">
+                            <div className="font-semibold text-slate-800">{formatBaht(it.budget_amount)}</div>
+                            <span className="inline-block mt-1 px-2 py-0.5 rounded bg-slate-100 text-slate-700 text-[10px] font-medium border border-slate-200">
+                              {it.procurement_method}
+                            </span>
+                          </td>
+                          <td className="py-2.5 px-3 text-slate-600 leading-snug">{it.bidders}</td>
+                          <td className="py-2.5 px-3">
+                            <strong className="text-slate-800 leading-snug block">{it.winner}</strong>
+                            <div className="text-[11px] text-emerald-700 font-bold mt-0.5">{formatBaht(it.agreed_price)}</div>
+                          </td>
+                          <td className="py-2.5 px-3 text-slate-500 text-[11px] font-mono break-words">{it.contract_info}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="md:hidden divide-y divide-slate-100 border border-slate-200 rounded-xl overflow-hidden">
+                  {skrData.items.map((it) => (
+                    <div key={it.seq} className="p-3 space-y-1.5 text-xs">
+                      <div className="font-bold text-slate-900">{it.seq}. {it.project_name}</div>
+                      <div className="text-slate-500">{it.department_name} • {it.procurement_method}</div>
+                      <div className="flex items-center justify-between pt-1">
+                        <span className="text-slate-600">ผู้ชนะ: <strong>{it.winner}</strong></span>
+                        <span className="font-bold text-emerald-700">{formatBaht(it.agreed_price)}</span>
+                      </div>
+                      <div className="text-[11px] text-slate-400 font-mono">สัญญา: {it.contract_info}</div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>
@@ -691,51 +762,85 @@ export default function ReportsView({ settings, departments = [], subDepartments
               </span>
             </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 uppercase font-semibold">
-                  <tr>
-                    <th className="py-2.5 px-3">รหัสสินทรัพย์</th>
-                    <th className="py-2.5 px-3">ชื่อที่ดิน / สิ่งปลูกสร้าง</th>
-                    <th className="py-2.5 px-3">เอกสารสิทธิ์ / เลขที่โฉนด</th>
-                    <th className="py-2.5 px-3">เนื้อที่</th>
-                    <th className="py-2.5 px-3">สถานที่ตั้ง</th>
-                    <th className="py-2.5 px-3 text-right">ราคาทุนสิ่งปลูกสร้าง</th>
-                    <th className="py-2.5 px-3 text-center">จัดการ</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {assets.filter(a => a.category_name?.includes('ที่ดิน') || a.asset_code?.startsWith('สท.3')).map(a => (
-                    <tr key={a.id} className="hover:bg-slate-50">
-                      <td className="py-2.5 px-3 font-mono font-bold text-gov-800">{a.asset_code}</td>
-                      <td className="py-2.5 px-3 font-semibold text-slate-900">{a.name}</td>
-                      <td className="py-2.5 px-3 text-slate-600">{a.deed_number || 'โฉนดที่ดินสาธารณะ'}</td>
-                      <td className="py-2.5 px-3 text-slate-600">{a.land_area || '-'}</td>
-                      <td className="py-2.5 px-3 text-slate-500">{a.location_room || '-'}</td>
-                      <td className="py-2.5 px-3 text-right font-bold text-emerald-700">{formatBaht(a.cost_price)}</td>
-                      <td className="py-2.5 px-3 text-center">
-                        <button
-                          onClick={() => {
-                            const html = generateST3HTML(a, settings);
-                            openPrintWindow(html, `แบบ สท.3 ทะเบียนคุมที่ดินและสิ่งปลูกสร้าง (${a.asset_code})`);
-                          }}
-                          className="inline-flex items-center space-x-1 px-2.5 py-1 bg-gov-700 hover:bg-gov-800 text-white rounded-lg text-[11px] font-bold shadow-sm transition"
-                        >
-                          <Printer className="w-3 h-3 text-gold-400" />
-                          <span>พิมพ์ สท.3</span>
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                  {assets.filter(a => a.category_name?.includes('ที่ดิน') || a.asset_code?.startsWith('สท.3')).length === 0 && (
+            <div>
+              <div className="hidden md:block">
+                <table className="w-full text-left text-xs table-auto">
+                  <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 uppercase font-semibold">
                     <tr>
-                      <td colSpan="7" className="text-center py-8 text-slate-400">
-                        ยังไม่มีรายการที่ดินหรือสิ่งปลูกสร้างในระบบ (สามารถลงทะเบียนเพิ่มได้ในเมนู ทะเบียนครุภัณฑ์)
-                      </td>
+                      <th className="py-2.5 px-3 w-[28%]">รหัส / ชื่อที่ดินและสิ่งปลูกสร้าง</th>
+                      <th className="py-2.5 px-3 w-[24%]">เอกสารสิทธิ์ / เลขที่โฉนด &amp; เนื้อที่</th>
+                      <th className="py-2.5 px-3 w-[22%]">สถานที่ตั้ง</th>
+                      <th className="py-2.5 px-3 text-right w-32 whitespace-nowrap">ราคาทุนสิ่งปลูกสร้าง</th>
+                      <th className="py-2.5 px-3 text-center w-28 whitespace-nowrap">จัดการ</th>
                     </tr>
-                  )}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {assets.filter(a => a.category_name?.includes('ที่ดิน') || a.asset_code?.startsWith('สท.3')).map(a => (
+                      <tr key={a.id} className="hover:bg-slate-50 align-top">
+                        <td className="py-2.5 px-3">
+                          <div className="font-mono font-bold text-gov-800">{a.asset_code}</div>
+                          <div className="font-semibold text-slate-900 mt-0.5">{a.name}</div>
+                        </td>
+                        <td className="py-2.5 px-3 text-slate-600">
+                          <div>{a.deed_number || 'โฉนดที่ดินสาธารณะ'}</div>
+                          <div className="text-[11px] text-slate-400 mt-0.5">เนื้อที่: {a.land_area || '-'}</div>
+                        </td>
+                        <td className="py-2.5 px-3 text-slate-500">{a.location_room || '-'}</td>
+                        <td className="py-2.5 px-3 text-right font-bold text-emerald-700 whitespace-nowrap">{formatBaht(a.cost_price)}</td>
+                        <td className="py-2.5 px-3 text-center whitespace-nowrap">
+                          <button
+                            onClick={() => {
+                              const html = generateST3HTML(a, settings);
+                              openPrintWindow(html, `แบบ สท.3 ทะเบียนคุมที่ดินและสิ่งปลูกสร้าง (${a.asset_code})`);
+                            }}
+                            className="inline-flex items-center space-x-1 px-2.5 py-1 bg-gov-700 hover:bg-gov-800 text-white rounded-lg text-[11px] font-bold shadow-sm transition"
+                          >
+                            <Printer className="w-3 h-3 text-gold-400" />
+                            <span>พิมพ์ สท.3</span>
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                    {assets.filter(a => a.category_name?.includes('ที่ดิน') || a.asset_code?.startsWith('สท.3')).length === 0 && (
+                      <tr>
+                        <td colSpan="5" className="text-center py-8 text-slate-400">
+                          ยังไม่มีรายการที่ดินหรือสิ่งปลูกสร้างในระบบ (สามารถลงทะเบียนเพิ่มได้ในเมนู ทะเบียนครุภัณฑ์)
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+              <div className="md:hidden divide-y divide-slate-100 border border-slate-200 rounded-xl overflow-hidden">
+                {assets.filter(a => a.category_name?.includes('ที่ดิน') || a.asset_code?.startsWith('สท.3')).length === 0 ? (
+                  <div className="text-center py-8 text-slate-400 text-xs">
+                    ยังไม่มีรายการที่ดินหรือสิ่งปลูกสร้างในระบบ
+                  </div>
+                ) : (
+                  assets.filter(a => a.category_name?.includes('ที่ดิน') || a.asset_code?.startsWith('สท.3')).map(a => (
+                    <div key={a.id} className="p-3 space-y-1.5 text-xs">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <div className="font-mono font-bold text-gov-800">{a.asset_code}</div>
+                          <div className="font-semibold text-slate-900">{a.name}</div>
+                        </div>
+                        <div className="font-bold text-emerald-700 shrink-0">{formatBaht(a.cost_price)}</div>
+                      </div>
+                      <div className="text-slate-600">{a.deed_number || 'โฉนดที่ดินสาธารณะ'} • เนื้อที่ {a.land_area || '-'}</div>
+                      <div className="text-slate-500">{a.location_room || '-'}</div>
+                      <button
+                        onClick={() => {
+                          const html = generateST3HTML(a, settings);
+                          openPrintWindow(html, `แบบ สท.3 ทะเบียนคุมที่ดินและสิ่งปลูกสร้าง (${a.asset_code})`);
+                        }}
+                        className="w-full py-1.5 bg-gov-700 text-white rounded-lg font-bold flex items-center justify-center space-x-1"
+                      >
+                        <Printer className="w-3 h-3 text-gold-400" /><span>พิมพ์ สท.3</span>
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
           </div>
         )}
@@ -804,111 +909,138 @@ export default function ReportsView({ settings, departments = [], subDepartments
               </div>
             )}
 
-            {/* Reconciliation Table */}
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs border border-slate-200">
-                <thead className="bg-slate-100 border-b border-slate-200 text-slate-700 font-bold">
-                  <tr>
-                    <th rowSpan="2" className="py-2 px-2.5 text-center border-r border-slate-200">รหัส</th>
-                    <th rowSpan="2" className="py-2 px-3 border-r border-slate-200">หมวดหมู่ครุภัณฑ์</th>
-                    <th colSpan="4" className="py-1 px-2 text-center border-r border-slate-200 bg-slate-50">
-                      มูลค่าราคาทุน (Cost)
-                    </th>
-                    <th colSpan="3" className="py-1 px-2 text-center border-r border-slate-200 bg-amber-50/70">
-                      ค่าเสื่อมราคาสะสม (Accum Dep)
-                    </th>
-                    <th rowSpan="2" className="py-2 px-3 text-right bg-sky-50 text-sky-900">
-                      มูลค่าสุทธิตามบัญชี
-                    </th>
-                  </tr>
-                  <tr className="text-[11px]">
-                    <th className="py-1.5 px-2 text-right border-r border-slate-200 font-medium">ยอดยกมา</th>
-                    <th className="py-1.5 px-2 text-right border-r border-slate-200 font-medium text-emerald-700">ได้มา</th>
-                    <th className="py-1.5 px-2 text-right border-r border-slate-200 font-medium text-rose-700">จำหน่าย</th>
-                    <th className="py-1.5 px-2 text-right border-r border-slate-200 font-bold">ยอดยกไป</th>
-                    <th className="py-1.5 px-2 text-right border-r border-slate-200 font-medium">ยอดยกมา</th>
-                    <th className="py-1.5 px-2 text-right border-r border-slate-200 font-medium text-amber-700">ปีนี้</th>
-                    <th className="py-1.5 px-2 text-right border-r border-slate-200 font-bold">สะสมยกไป</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {!reconData ? (
+            {/* Reconciliation Table & Responsive Cards */}
+            <div>
+              <div className="hidden lg:block border border-slate-200 rounded-xl overflow-hidden">
+                <table className="w-full text-left text-[11px] table-auto">
+                  <thead className="bg-slate-100 border-b border-slate-200 text-slate-700 font-bold">
                     <tr>
-                      <td colSpan="10" className="text-center py-8 text-slate-400">
-                        กำลังคำนวณงบกระทบยอดสินทรัพย์...
-                      </td>
+                      <th rowSpan="2" className="py-2 px-2.5 border-r border-slate-200 w-[22%]">รหัส / หมวดหมู่ครุภัณฑ์</th>
+                      <th colSpan="4" className="py-1 px-1.5 text-center border-r border-slate-200 bg-slate-50">
+                        มูลค่าราคาทุน (Cost)
+                      </th>
+                      <th colSpan="3" className="py-1 px-1.5 text-center border-r border-slate-200 bg-amber-50/70">
+                        ค่าเสื่อมราคาสะสม (Accum Dep)
+                      </th>
+                      <th rowSpan="2" className="py-2 px-2 text-right bg-sky-50 text-sky-900">
+                        มูลค่าสุทธิตามบัญชี
+                      </th>
                     </tr>
-                  ) : (
-                    reconData.categories?.map(r => (
-                      <tr key={r.category_id} className="hover:bg-slate-50/80 transition text-[11px]">
-                        <td className="py-2 px-2 text-center font-mono font-bold text-slate-700 border-r border-slate-100">
-                          {r.prefix}
-                        </td>
-                        <td className="py-2 px-3 font-semibold text-slate-900 border-r border-slate-100">
-                          {r.name}
-                        </td>
-                        <td className="py-2 px-2 text-right border-r border-slate-100 text-slate-600">
-                          {formatBaht(r.beginning_cost)}
-                        </td>
-                        <td className="py-2 px-2 text-right border-r border-slate-100 font-semibold text-emerald-600">
-                          {r.additions_cost > 0 ? formatBaht(r.additions_cost) : '-'}
-                        </td>
-                        <td className="py-2 px-2 text-right border-r border-slate-100 font-semibold text-rose-600">
-                          {(r.disposals_cost + r.transfers_out_cost) > 0 ? formatBaht(r.disposals_cost + r.transfers_out_cost) : '-'}
-                        </td>
-                        <td className="py-2 px-2 text-right border-r border-slate-100 font-bold text-slate-900 bg-slate-50/50">
-                          {formatBaht(r.ending_cost)}
-                        </td>
-                        <td className="py-2 px-2 text-right border-r border-slate-100 text-slate-600">
-                          {formatBaht(r.beginning_accum_dep)}
-                        </td>
-                        <td className="py-2 px-2 text-right border-r border-slate-100 font-semibold text-amber-700">
-                          {formatBaht(r.year_depreciation)}
-                        </td>
-                        <td className="py-2 px-2 text-right border-r border-slate-100 font-bold text-slate-900 bg-amber-50/30">
-                          {formatBaht(r.ending_accum_dep)}
-                        </td>
-                        <td className="py-2 px-3 text-right font-bold text-sky-900 bg-sky-50/60">
-                          {formatBaht(r.ending_net_book_value)}
+                    <tr className="text-[10.5px]">
+                      <th className="py-1.5 px-1.5 text-right border-r border-slate-200 font-medium">ยอดยกมา</th>
+                      <th className="py-1.5 px-1.5 text-right border-r border-slate-200 font-medium text-emerald-700">ได้มา</th>
+                      <th className="py-1.5 px-1.5 text-right border-r border-slate-200 font-medium text-rose-700">จำหน่าย</th>
+                      <th className="py-1.5 px-1.5 text-right border-r border-slate-200 font-bold">ยอดยกไป</th>
+                      <th className="py-1.5 px-1.5 text-right border-r border-slate-200 font-medium">ยอดยกมา</th>
+                      <th className="py-1.5 px-1.5 text-right border-r border-slate-200 font-medium text-amber-700">ปีนี้</th>
+                      <th className="py-1.5 px-1.5 text-right border-r border-slate-200 font-bold">สะสมยกไป</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {!reconData ? (
+                      <tr>
+                        <td colSpan="9" className="text-center py-8 text-slate-400">
+                          กำลังคำนวณงบกระทบยอดสินทรัพย์...
                         </td>
                       </tr>
-                    ))
+                    ) : (
+                      reconData.categories?.map(r => (
+                        <tr key={r.category_id} className="hover:bg-slate-50/80 transition text-[11px] tabular-nums align-top">
+                          <td className="py-2 px-2.5 font-semibold text-slate-900 border-r border-slate-100">
+                            <span className="font-mono font-bold text-gov-800 mr-1.5">{r.prefix}</span>
+                            <span>{r.name}</span>
+                          </td>
+                          <td className="py-2 px-1.5 text-right border-r border-slate-100 text-slate-600">
+                            {formatBaht(r.beginning_cost)}
+                          </td>
+                          <td className="py-2 px-1.5 text-right border-r border-slate-100 font-semibold text-emerald-600">
+                            {r.additions_cost > 0 ? formatBaht(r.additions_cost) : '-'}
+                          </td>
+                          <td className="py-2 px-1.5 text-right border-r border-slate-100 font-semibold text-rose-600">
+                            {(r.disposals_cost + r.transfers_out_cost) > 0 ? formatBaht(r.disposals_cost + r.transfers_out_cost) : '-'}
+                          </td>
+                          <td className="py-2 px-1.5 text-right border-r border-slate-100 font-bold text-slate-900 bg-slate-50/50">
+                            {formatBaht(r.ending_cost)}
+                          </td>
+                          <td className="py-2 px-1.5 text-right border-r border-slate-100 text-slate-600">
+                            {formatBaht(r.beginning_accum_dep)}
+                          </td>
+                          <td className="py-2 px-1.5 text-right border-r border-slate-100 font-semibold text-amber-700">
+                            {formatBaht(r.year_depreciation)}
+                          </td>
+                          <td className="py-2 px-1.5 text-right border-r border-slate-100 font-bold text-slate-900 bg-amber-50/30">
+                            {formatBaht(r.ending_accum_dep)}
+                          </td>
+                          <td className="py-2 px-2 text-right font-bold text-sky-900 bg-sky-50/60">
+                            {formatBaht(r.ending_net_book_value)}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                  {reconData && (
+                    <tfoot>
+                      <tr className="bg-slate-100 font-bold text-slate-900 border-t-2 border-slate-300 text-[11px] tabular-nums">
+                        <td className="py-2.5 px-2.5 border-r border-slate-200">
+                          รวมทั้งสิ้น (18 หมวดหมู่)
+                        </td>
+                        <td className="py-2.5 px-1.5 text-right border-r border-slate-200">
+                          {formatBaht(reconData.totals?.beginning_cost || 0)}
+                        </td>
+                        <td className="py-2.5 px-1.5 text-right border-r border-slate-200 text-emerald-700">
+                          {formatBaht(reconData.totals?.additions_cost || 0)}
+                        </td>
+                        <td className="py-2.5 px-1.5 text-right border-r border-slate-200 text-rose-700">
+                          {formatBaht((reconData.totals?.disposals_cost || 0) + (reconData.totals?.transfers_out_cost || 0))}
+                        </td>
+                        <td className="py-2.5 px-1.5 text-right border-r border-slate-200 bg-slate-200/50">
+                          {formatBaht(reconData.totals?.ending_cost || 0)}
+                        </td>
+                        <td className="py-2.5 px-1.5 text-right border-r border-slate-200">
+                          {formatBaht(reconData.totals?.beginning_accum_dep || 0)}
+                        </td>
+                        <td className="py-2.5 px-1.5 text-right border-r border-slate-200 text-amber-800">
+                          {formatBaht(reconData.totals?.year_depreciation || 0)}
+                        </td>
+                        <td className="py-2.5 px-1.5 text-right border-r border-slate-200 bg-amber-100/50">
+                          {formatBaht(reconData.totals?.ending_accum_dep || 0)}
+                        </td>
+                        <td className="py-2.5 px-2 text-right text-sky-900 bg-sky-100 text-xs">
+                          {formatBaht(reconData.totals?.ending_net_book_value || 0)}
+                        </td>
+                      </tr>
+                    </tfoot>
                   )}
-                </tbody>
-                {reconData && (
-                  <tfoot>
-                    <tr className="bg-slate-100 font-bold text-slate-900 border-t-2 border-slate-300 text-xs">
-                      <td colSpan="2" className="py-2.5 px-3 text-center border-r border-slate-200">
-                        รวมทั้งสิ้น (18 หมวดหมู่)
-                      </td>
-                      <td className="py-2.5 px-2 text-right border-r border-slate-200">
-                        {formatBaht(reconData.totals?.beginning_cost || 0)}
-                      </td>
-                      <td className="py-2.5 px-2 text-right border-r border-slate-200 text-emerald-700">
-                        {formatBaht(reconData.totals?.additions_cost || 0)}
-                      </td>
-                      <td className="py-2.5 px-2 text-right border-r border-slate-200 text-rose-700">
-                        {formatBaht((reconData.totals?.disposals_cost || 0) + (reconData.totals?.transfers_out_cost || 0))}
-                      </td>
-                      <td className="py-2.5 px-2 text-right border-r border-slate-200 bg-slate-200/50">
-                        {formatBaht(reconData.totals?.ending_cost || 0)}
-                      </td>
-                      <td className="py-2.5 px-2 text-right border-r border-slate-200">
-                        {formatBaht(reconData.totals?.beginning_accum_dep || 0)}
-                      </td>
-                      <td className="py-2.5 px-2 text-right border-r border-slate-200 text-amber-800">
-                        {formatBaht(reconData.totals?.year_depreciation || 0)}
-                      </td>
-                      <td className="py-2.5 px-2 text-right border-r border-slate-200 bg-amber-100/50">
-                        {formatBaht(reconData.totals?.ending_accum_dep || 0)}
-                      </td>
-                      <td className="py-2.5 px-3 text-right text-sky-900 bg-sky-100 text-sm">
-                        {formatBaht(reconData.totals?.ending_net_book_value || 0)}
-                      </td>
-                    </tr>
-                  </tfoot>
+                </table>
+              </div>
+
+              {/* Tablet/Mobile Card View for Reconciliation */}
+              <div className="lg:hidden divide-y divide-slate-100 border border-slate-200 rounded-xl overflow-hidden">
+                {!reconData ? (
+                  <div className="text-center py-8 text-slate-400 text-xs">กำลังคำนวณงบกระทบยอดสินทรัพย์...</div>
+                ) : (
+                  reconData.categories?.map(r => (
+                    <div key={r.category_id} className="p-3.5 space-y-2 text-xs">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="font-bold text-slate-900">
+                          <span className="font-mono text-gov-800 mr-1.5">{r.prefix}</span>{r.name}
+                        </div>
+                        <span className="font-bold text-sky-900 shrink-0">{formatBaht(r.ending_net_book_value)}</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 bg-slate-50 rounded-lg p-2 text-[11px]">
+                        <div>
+                          <div className="text-slate-400">ราคาทุนยกไป</div>
+                          <div className="font-bold text-slate-800">{formatBaht(r.ending_cost)}</div>
+                        </div>
+                        <div>
+                          <div className="text-slate-400">ค่าเสื่อมสะสมยกไป</div>
+                          <div className="font-bold text-amber-800">{formatBaht(r.ending_accum_dep)}</div>
+                        </div>
+                      </div>
+                    </div>
+                  ))
                 )}
-              </table>
+              </div>
             </div>
           </div>
         )}
