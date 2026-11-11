@@ -348,12 +348,12 @@ export default function InventoryView({ settings = {}, currentUser }) {
           <table className="w-full text-left text-sm table-auto">
             <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 text-xs uppercase font-semibold">
               <tr>
-                <th className="py-3 px-3 w-24 whitespace-nowrap">รหัสวัสดุ</th>
-                <th className="py-3 px-3">ชื่อวัสดุสิ้นเปลือง</th>
-                <th className="py-3 px-3 w-[22%]">หมวดหมู่ &amp; ที่เก็บ</th>
-                <th className="py-3 px-3 text-center w-36 whitespace-nowrap">คงเหลือ / สถานะ</th>
-                <th className="py-3 px-3 text-right w-24 whitespace-nowrap">ราคา/หน่วย</th>
-                <th className="py-3 px-3 text-center w-44 whitespace-nowrap">การปฏิบัติการ</th>
+                <th className="py-3 px-2.5 w-20 whitespace-nowrap">รหัสวัสดุ</th>
+                <th className="py-3 px-2.5">ชื่อวัสดุสิ้นเปลือง</th>
+                <th className="py-3 px-2.5 w-[21%]">หมวดหมู่ &amp; ที่เก็บ</th>
+                <th className="py-3 px-2.5 text-center w-32 whitespace-nowrap">คงเหลือ / สถานะ</th>
+                <th className="py-3 px-2.5 text-right w-20 whitespace-nowrap">ราคา/หน่วย</th>
+                <th className="py-3 px-2.5 text-center w-52 whitespace-nowrap">การปฏิบัติการ</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -372,16 +372,16 @@ export default function InventoryView({ settings = {}, currentUser }) {
               ) : (
                 items.map((item) => (
                   <tr key={item.id} className="hover:bg-slate-50/80 transition align-top">
-                    <td className="py-3.5 px-3 font-mono font-bold text-slate-800 whitespace-nowrap">
+                    <td className="py-3.5 px-2.5 font-mono font-bold text-slate-800 whitespace-nowrap">
                       {item.item_code}
                     </td>
-                    <td className="py-3.5 px-3">
+                    <td className="py-3.5 px-2.5">
                       <div className="font-bold text-slate-900 leading-snug">{item.name}</div>
                       <div className="text-xs text-slate-400 mt-1">
                         หน่วยนับ: <span className="font-medium text-slate-600">{item.unit}</span>
                       </div>
                     </td>
-                    <td className="py-3.5 px-3">
+                    <td className="py-3.5 px-2.5">
                       <span className="inline-block px-2 py-0.5 rounded-md font-medium text-[11px] bg-slate-100 text-slate-700 border border-slate-200/80 leading-snug">
                         {item.category}
                       </span>
@@ -390,7 +390,7 @@ export default function InventoryView({ settings = {}, currentUser }) {
                         <span>{item.storage_location || 'คลังพัสดุกลาง'}</span>
                       </div>
                     </td>
-                    <td className="py-3.5 px-3 text-center">
+                    <td className="py-3.5 px-2.5 text-center">
                       <div>
                         <span className={`text-base font-bold ${item.is_low_stock ? 'text-rose-600' : 'text-slate-900'}`}>
                           {item.current_stock}
@@ -414,33 +414,33 @@ export default function InventoryView({ settings = {}, currentUser }) {
                         )}
                       </div>
                     </td>
-                    <td className="py-3.5 px-3 text-right font-medium text-slate-800 whitespace-nowrap">
+                    <td className="py-3.5 px-2.5 text-right font-medium text-slate-800 whitespace-nowrap">
                       {formatBaht(item.unit_price)}
                     </td>
-                    <td className="py-3.5 px-3 text-center">
-                      <div className="flex flex-wrap items-center justify-center gap-1.5">
+                    <td className="py-3.5 px-2.5 text-center whitespace-nowrap">
+                      <div className="flex items-center justify-center space-x-1">
                         <button
                           onClick={() => openReceiveModal(item)}
                           title="รับวัสดุเข้าคลัง (เพิ่มล็อต FIFO)"
-                          className="flex items-center space-x-1 px-2 py-1 bg-gov-50 hover:bg-gov-100 text-gov-700 rounded-lg text-[11px] font-bold border border-gov-200 transition"
+                          className="inline-flex items-center space-x-1 px-2 py-1 bg-gov-50 hover:bg-gov-100 text-gov-700 rounded-lg text-[11px] font-bold border border-gov-200 transition whitespace-nowrap"
                         >
-                          <ArrowDownToLine className="w-3 h-3" />
+                          <ArrowDownToLine className="w-3 h-3 shrink-0" />
                           <span>รับเข้า</span>
                         </button>
                         <button
                           onClick={() => openLotsModal(item)}
                           title="ดูทุกล็อต FIFO ในคลัง"
-                          className="flex items-center space-x-1 px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-[11px] font-medium transition"
+                          className="inline-flex items-center space-x-1 px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-[11px] font-medium transition whitespace-nowrap"
                         >
-                          <Layers className="w-3 h-3 text-slate-500" />
+                          <Layers className="w-3 h-3 shrink-0 text-slate-500" />
                           <span>ล็อต ({item.lots?.length || 0})</span>
                         </button>
                         <button
                           onClick={() => handlePrintStockCard(item)}
                           title="พิมพ์บัญชีวัสดุ แบบ พด.2 (Stock Card) ตามระเบียบข้อ 205"
-                          className="flex items-center space-x-1 px-2 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded-lg text-[11px] font-bold border border-amber-200 transition"
+                          className="inline-flex items-center space-x-1 px-2 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded-lg text-[11px] font-bold border border-amber-200 transition whitespace-nowrap"
                         >
-                          <Printer className="w-3 h-3" />
+                          <Printer className="w-3 h-3 shrink-0" />
                           <span>พด.2</span>
                         </button>
                       </div>
