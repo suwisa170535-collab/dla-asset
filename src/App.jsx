@@ -54,23 +54,33 @@ export default function App() {
   // Load Initial Settings & Metadata
   const loadInitialData = async () => {
     try {
+      const safeFetch = async (url, fallback) => {
+        try {
+          const r = await fetch(url);
+          if (!r.ok) return fallback;
+          return await r.json();
+        } catch {
+          return fallback;
+        }
+      };
+
       const [resS, resD, resSubD, resC, resSum, resLogs, resInv] = await Promise.all([
-        fetch('/api/settings').then(r => r.json()),
-        fetch('/api/departments').then(r => r.json()),
-        fetch('/api/sub-departments').then(r => r.json()),
-        fetch('/api/categories').then(r => r.json()),
-        fetch('/api/reports/summary').then(r => r.json()),
-        fetch('/api/audit-logs?limit=10').then(r => r.json()),
-        fetch('/api/inventory').then(r => r.json())
+        safeFetch('/api/settings', null),
+        safeFetch('/api/departments', []),
+        safeFetch('/api/sub-departments', []),
+        safeFetch('/api/categories', []),
+        safeFetch('/api/reports/summary', null),
+        safeFetch('/api/audit-logs?limit=10', []),
+        safeFetch('/api/inventory', [])
       ]);
 
-      if (resS && Object.keys(resS).length > 0) setSettings(resS);
-      if (resD) setDepartments(resD);
-      if (resSubD) setSubDepartments(resSubD);
-      if (resC) setCategories(resC);
-      if (resSum) setSummary(resSum);
-      if (resLogs) setAuditLogs(resLogs);
-      if (resInv) setInventoryItems(resInv);
+      if (resS && !resS.error && Object.keys(resS).length > 0) setSettings(resS);
+      if (Array.isArray(resD)) setDepartments(resD);
+      if (Array.isArray(resSubD)) setSubDepartments(resSubD);
+      if (Array.isArray(resC)) setCategories(resC);
+      if (resSum && !resSum.error) setSummary(resSum);
+      if (Array.isArray(resLogs)) setAuditLogs(resLogs);
+      if (Array.isArray(resInv)) setInventoryItems(resInv);
     } catch (err) {
       console.error('Failed to load initial data:', err);
     }

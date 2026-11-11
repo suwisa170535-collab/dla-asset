@@ -23,7 +23,9 @@ import {
 import { formatBaht, formatNumber, formatThaiDate } from '../utils/formatters.js';
 
 export default function DashboardView({ summary, setActiveTab, auditLogs, inventoryItems }) {
-  const lowStockItems = inventoryItems?.filter(i => i.current_stock <= i.min_stock) || [];
+  const lowStockItems = Array.isArray(inventoryItems)
+    ? inventoryItems.filter(i => i.current_stock <= i.min_stock)
+    : [];
   const [complianceAlerts, setComplianceAlerts] = useState([]);
 
   useEffect(() => {
@@ -438,7 +440,7 @@ export default function DashboardView({ summary, setActiveTab, auditLogs, invent
         </div>
 
         <div className="space-y-3">
-          {auditLogs?.slice(0, 5).map((log) => (
+          {Array.isArray(auditLogs) && auditLogs.slice(0, 5).map((log) => (
             <div key={log.id} className="flex items-start justify-between p-3 rounded-xl bg-slate-50 border border-slate-100 text-sm">
               <div className="flex items-start space-x-3">
                 <div className="w-2 h-2 rounded-full bg-gov-600 mt-2"></div>

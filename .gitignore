@@ -6,3 +6,6 @@ bin/
 .DS_Store
 *.log
 server/backups/
+server/*.sqlite-wal
+server/*.sqlite-shm
+server/*.sqlite-journal

@@ -58,7 +58,7 @@ export default function InventoryView({ settings = {}, currentUser }) {
       const res = await fetch('/api/inventory/categories');
       if (res.ok) {
         const data = await res.json();
-        setCategoriesSummary(data);
+        if (Array.isArray(data)) setCategoriesSummary(data);
       }
     } catch (err) {
       console.error('Failed to fetch categories summary:', err);
@@ -128,7 +128,11 @@ export default function InventoryView({ settings = {}, currentUser }) {
 
       const res = await fetch(`/api/inventory?${params.toString()}`);
       const data = await res.json();
-      setItems(data);
+      if (res.ok && Array.isArray(data)) {
+        setItems(data);
+      } else {
+        setItems([]);
+      }
     } catch (err) {
       console.error(err);
     } finally {
